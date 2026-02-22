@@ -1,0 +1,196 @@
+{
+  "version": "3.21.0",
+  "description": "Elementor widget schema for the hero-single template. Maps each data-slot to the appropriate Elementor widget type and settings fields.",
+  "widgets": {
+    "heading": {
+      "widgetType": "heading",
+      "description": "Use for headlines and section titles (h1, h2, h3)",
+      "settings": {
+        "title": "string — the heading text (HTML allowed)",
+        "header_size": "h1 | h2 | h3 | h4 | h5 | h6",
+        "align": "left | center | right",
+        "typography_font_size": { "unit": "px", "size": 48 },
+        "typography_font_weight": "800 | 700 | 600 | 400",
+        "color": "#hex"
+      }
+    },
+    "text-editor": {
+      "widgetType": "text-editor",
+      "description": "Use for paragraphs, body copy, and multi-line text blocks",
+      "settings": {
+        "editor": "string — HTML content",
+        "align": "left | center | right",
+        "typography_font_size": { "unit": "px", "size": 16 },
+        "color": "#hex"
+      }
+    },
+    "button": {
+      "widgetType": "button",
+      "description": "Use for CTA buttons and links",
+      "settings": {
+        "text": "string — button label",
+        "url": { "url": "string", "is_external": false, "nofollow": false },
+        "align": "left | center | right",
+        "size": "xs | sm | md | lg | xl",
+        "button_type": "default | info | success | warning | danger",
+        "background_color": "#hex",
+        "border_radius": { "unit": "px", "top": 10, "right": 10, "bottom": 10, "left": 10 }
+      }
+    },
+    "image": {
+      "widgetType": "image",
+      "description": "Use for images, logos, and visual placeholders",
+      "settings": {
+        "image": { "url": "string", "alt": "string" },
+        "image_size": "thumbnail | medium | large | full",
+        "align": "left | center | right",
+        "caption_type": "none | attachment | custom",
+        "caption": "string"
+      }
+    },
+    "spacer": {
+      "widgetType": "spacer",
+      "description": "Use for vertical whitespace between elements",
+      "settings": {
+        "space": { "unit": "px", "size": 40 }
+      }
+    },
+    "divider": {
+      "widgetType": "divider",
+      "description": "Use for horizontal rules / visual separators",
+      "settings": {
+        "style": "solid | double | dotted | dashed",
+        "weight": "1",
+        "color": "#e5e7eb",
+        "gap": { "unit": "px", "size": 15 }
+      }
+    },
+    "icon-box": {
+      "widgetType": "icon-box",
+      "description": "Use for benefit cards: icon + title + description",
+      "settings": {
+        "icon": { "value": "fas fa-rocket", "library": "fa-solid" },
+        "title_text": "string — card title",
+        "description_text": "string — card body",
+        "position": "top | left | right",
+        "title_size": "h3 | h4 | h5",
+        "icon_color": "#hex",
+        "icon_primary_color": "#hex"
+      }
+    },
+    "counter": {
+      "widgetType": "counter",
+      "description": "Use for animated stat numbers (stats bar)",
+      "settings": {
+        "starting_number": 0,
+        "ending_number": 500,
+        "prefix": "string",
+        "suffix": "string — e.g. '+'",
+        "duration": 2000,
+        "title": "string — label below number",
+        "typography_font_size": { "unit": "px", "size": 40 }
+      }
+    },
+    "testimonial": {
+      "widgetType": "testimonial",
+      "description": "Use for individual client testimonials",
+      "settings": {
+        "content": "string — the quote text",
+        "name": "string — reviewer name",
+        "job": "string — reviewer role/company",
+        "image": { "url": "", "alt": "" },
+        "alignment": "left | center | right"
+      }
+    },
+    "html": {
+      "widgetType": "html",
+      "description": "Fallback for custom HTML snippets not covered by other widgets",
+      "settings": {
+        "html": "string — raw HTML"
+      }
+    }
+  },
+  "slotToWidget": {
+    "headline":               { "widget": "heading",     "settings_key": "title",        "header_size": "h1" },
+    "subheadline":            { "widget": "text-editor",  "settings_key": "editor" },
+    "body":                   { "widget": "text-editor",  "settings_key": "editor" },
+    "body-copy":              { "widget": "text-editor",  "settings_key": "editor" },
+    "cta":                    { "widget": "button",       "settings_key": "text" },
+    "cta-secondary":          { "widget": "button",       "settings_key": "text" },
+    "cta-headline":           { "widget": "heading",      "settings_key": "title",       "header_size": "h2" },
+    "cta-subheadline":        { "widget": "text-editor",  "settings_key": "editor" },
+    "nav-logo":               { "widget": "heading",      "settings_key": "title",       "header_size": "h4" },
+    "nav-cta":                { "widget": "button",       "settings_key": "text" },
+    "hero-badge":             { "widget": "text-editor",  "settings_key": "editor" },
+    "hero-trust":             { "widget": "text-editor",  "settings_key": "editor" },
+    "benefits-label":         { "widget": "text-editor",  "settings_key": "editor" },
+    "benefits-title":         { "widget": "heading",      "settings_key": "title",       "header_size": "h2" },
+    "benefits-subtitle":      { "widget": "text-editor",  "settings_key": "editor" },
+    "benefit-1-title":        { "widget": "icon-box",     "settings_key": "title_text" },
+    "benefit-1-text":         { "widget": "icon-box",     "settings_key": "description_text" },
+    "benefit-2-title":        { "widget": "icon-box",     "settings_key": "title_text" },
+    "benefit-2-text":         { "widget": "icon-box",     "settings_key": "description_text" },
+    "benefit-3-title":        { "widget": "icon-box",     "settings_key": "title_text" },
+    "benefit-3-text":         { "widget": "icon-box",     "settings_key": "description_text" },
+    "hiw-label":              { "widget": "text-editor",  "settings_key": "editor" },
+    "hiw-title":              { "widget": "heading",      "settings_key": "title",       "header_size": "h2" },
+    "step-1-title":           { "widget": "heading",      "settings_key": "title",       "header_size": "h4" },
+    "step-1-text":            { "widget": "text-editor",  "settings_key": "editor" },
+    "step-2-title":           { "widget": "heading",      "settings_key": "title",       "header_size": "h4" },
+    "step-2-text":            { "widget": "text-editor",  "settings_key": "editor" },
+    "step-3-title":           { "widget": "heading",      "settings_key": "title",       "header_size": "h4" },
+    "step-3-text":            { "widget": "text-editor",  "settings_key": "editor" },
+    "sp-label":               { "widget": "text-editor",  "settings_key": "editor" },
+    "sp-title":               { "widget": "heading",      "settings_key": "title",       "header_size": "h2" },
+    "testimonial-1-quote":    { "widget": "testimonial",  "settings_key": "content" },
+    "testimonial-1-name":     { "widget": "testimonial",  "settings_key": "name" },
+    "testimonial-1-role":     { "widget": "testimonial",  "settings_key": "job" },
+    "testimonial-2-quote":    { "widget": "testimonial",  "settings_key": "content" },
+    "testimonial-2-name":     { "widget": "testimonial",  "settings_key": "name" },
+    "testimonial-2-role":     { "widget": "testimonial",  "settings_key": "job" },
+    "testimonial-3-quote":    { "widget": "testimonial",  "settings_key": "content" },
+    "testimonial-3-name":     { "widget": "testimonial",  "settings_key": "name" },
+    "testimonial-3-role":     { "widget": "testimonial",  "settings_key": "job" },
+    "stat-1-number":          { "widget": "counter",      "settings_key": "ending_number" },
+    "stat-1-label":           { "widget": "counter",      "settings_key": "title" },
+    "stat-2-number":          { "widget": "counter",      "settings_key": "ending_number" },
+    "stat-2-label":           { "widget": "counter",      "settings_key": "title" },
+    "stat-3-number":          { "widget": "counter",      "settings_key": "ending_number" },
+    "stat-3-label":           { "widget": "counter",      "settings_key": "title" },
+    "stat-4-number":          { "widget": "counter",      "settings_key": "ending_number" },
+    "stat-4-label":           { "widget": "counter",      "settings_key": "title" },
+    "footer-text":            { "widget": "text-editor",  "settings_key": "editor" }
+  },
+  "sectionLayout": {
+    "hero": {
+      "background_color": "brand_color",
+      "padding": { "unit": "px", "top": 96, "right": 24, "bottom": 80, "left": 24 },
+      "columns": 1
+    },
+    "stats": {
+      "background_color": "#ffffff",
+      "columns": 4
+    },
+    "benefits": {
+      "background_color": "#ffffff",
+      "columns": 3
+    },
+    "how-it-works": {
+      "background_color": "#f9fafb",
+      "columns": 2
+    },
+    "social-proof": {
+      "background_color": "#ffffff",
+      "columns": 3
+    },
+    "final-cta": {
+      "background_color": "brand_color",
+      "padding": { "unit": "px", "top": 100, "right": 24, "bottom": 100, "left": 24 },
+      "columns": 1
+    },
+    "footer": {
+      "background_color": "#111827",
+      "columns": 1
+    }
+  }
+}

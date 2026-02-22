@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scale For Impact — Funnels & Ads Agency for Course Creators</title>
+  <style>
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #fbd10c;
+      --yellow-dark: #d4b00a;
+      --black: #060606;
+      --surface: #111111;
+      --surface2: #181818;
+      --border: rgba(251,209,12,0.15);
+      --white: #ffffff;
+      --muted: rgba(255,255,255,0.55);
+      --radius: 14px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--black);
+      color: var(--white);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ─── Typography ─── */
+    h1, h2, h3, h4 { line-height: 1.15; letter-spacing: -0.02em; }
+    h1 { font-size: clamp(2.8rem, 7vw, 6rem); font-weight: 800; }
+    h2 { font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 700; }
+    h3 { font-size: clamp(1.2rem, 2vw, 1.6rem); font-weight: 600; }
+    p  { font-size: clamp(1rem, 1.2vw, 1.125rem); color: var(--muted); }
+
+    .yellow { color: var(--yellow); }
+    .highlight {
+      background: var(--yellow);
+      color: var(--black);
+      padding: 0 .18em;
+      border-radius: 4px;
+    }
+
+    /* ─── Nav ─── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 5%;
+      background: rgba(6,6,6,0.72);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      transition: background .3s;
+    }
+    .nav-logo {
+      font-size: 1.35rem; font-weight: 800; letter-spacing: -.03em;
+      color: var(--white); text-decoration: none;
+    }
+    .nav-logo span { color: var(--yellow); }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: .95rem;
+      font-weight: 500; transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta {
+      background: var(--yellow); color: var(--black);
+      padding: .65rem 1.6rem; border-radius: 50px;
+      font-weight: 700; font-size: .9rem; text-decoration: none;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(251,209,12,.35); }
+
+    /* ─── Hero ─── */
+    #hero {
+      position: relative; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; padding: 8rem 5% 4rem;
+    }
+    #hero-canvas {
+      position: absolute; inset: 0; z-index: 0;
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      text-align: center; max-width: 900px;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(251,209,12,.12); border: 1px solid rgba(251,209,12,.3);
+      color: var(--yellow); font-size: .82rem; font-weight: 600;
+      padding: .4rem 1rem; border-radius: 50px; margin-bottom: 2rem;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+    .hero-badge::before {
+      content: ''; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--yellow); animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .4; transform: scale(.8); }
+    }
+    .hero-content h1 { margin-bottom: 1.5rem; }
+    .hero-content p {
+      font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+      max-width: 620px; margin: 0 auto 2.5rem;
+    }
+    .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--yellow); color: var(--black);
+      padding: 1rem 2.2rem; border-radius: 50px;
+      font-weight: 700; font-size: 1rem; text-decoration: none;
+      transition: transform .2s, box-shadow .2s;
+      display: inline-flex; align-items: center; gap: .5rem;
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(251,209,12,.4); }
+    .btn-secondary {
+      background: transparent; color: var(--white);
+      padding: 1rem 2.2rem; border-radius: 50px;
+      font-weight: 600; font-size: 1rem; text-decoration: none;
+      border: 1px solid rgba(255,255,255,.2);
+      transition: border-color .2s, background .2s;
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); }
+    .hero-scroll {
+      position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: .5rem;
+      color: var(--muted); font-size: .8rem; z-index: 2;
+    }
+    .scroll-line {
+      width: 1px; height: 50px;
+      background: linear-gradient(to bottom, var(--yellow), transparent);
+      animation: scrollAnim 2s infinite;
+    }
+    @keyframes scrollAnim {
+      0% { transform: scaleY(0); transform-origin: top; }
+      50% { transform: scaleY(1); transform-origin: top; }
+      51% { transform: scaleY(1); transform-origin: bottom; }
+      100% { transform: scaleY(0); transform-origin: bottom; }
+    }
+
+    /* ─── Stats Bar ─── */
+    #stats {
+      background: var(--yellow);
+      padding: 2.5rem 5%;
+      display: flex; justify-content: center; gap: 4rem; flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-number {
+      font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;
+      color: var(--black); line-height: 1; display: block;
+    }
+    .stat-label {
+      font-size: .9rem; font-weight: 600; color: rgba(0,0,0,.6);
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+
+    /* ─── Section Wrapper ─── */
+    section { padding: 7rem 5%; }
+    .section-label {
+      font-size: .8rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--yellow);
+      margin-bottom: 1rem; display: block;
+    }
+    .section-heading { margin-bottom: 1.2rem; }
+    .section-sub { max-width: 560px; margin-bottom: 3.5rem; }
+    .text-center { text-align: center; }
+    .text-center .section-sub { margin-left: auto; margin-right: auto; }
+
+    /* ─── Services ─── */
+    #services { background: var(--surface); }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .service-card {
+      background: var(--black); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2.5rem;
+      transition: transform .3s, border-color .3s, box-shadow .3s;
+      cursor: default; position: relative; overflow: hidden;
+    }
+    .service-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(251,209,12,.08), transparent 60%);
+      opacity: 0; transition: opacity .3s;
+    }
+    .service-card:hover { transform: translateY(-6px); border-color: rgba(251,209,12,.4); box-shadow: 0 20px 40px rgba(0,0,0,.4); }
+    .service-card:hover::before { opacity: 1; }
+    .service-icon {
+      width: 56px; height: 56px; border-radius: 12px;
+      background: rgba(251,209,12,.12); border: 1px solid rgba(251,209,12,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; margin-bottom: 1.5rem;
+    }
+    .service-card h3 { margin-bottom: .6rem; color: var(--white); }
+    .service-card p { font-size: .95rem; }
+    .service-tag {
+      display: inline-block; margin-top: 1.2rem;
+      background: rgba(251,209,12,.1); color: var(--yellow);
+      font-size: .75rem; font-weight: 600; padding: .3rem .8rem;
+      border-radius: 50px; letter-spacing: .04em;
+    }
+
+    /* ─── 3D Scene Section ─── */
+    #scene-section {
+      position: relative; overflow: hidden;
+      padding: 0; height: 500px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #funnel-canvas { position: absolute; inset: 0; }
+    .scene-text {
+      position: relative; z-index: 2; text-align: center;
+      pointer-events: none;
+    }
+    .scene-text h2 { font-size: clamp(2.2rem, 5vw, 4rem); }
+
+    /* ─── Process ─── */
+    #process { background: var(--surface); }
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem; position: relative;
+    }
+    .process-step {
+      text-align: center; padding: 2rem 1.5rem;
+      position: relative;
+    }
+    .step-number {
+      font-size: 4rem; font-weight: 900;
+      color: rgba(251,209,12,.12); line-height: 1;
+      margin-bottom: .5rem; display: block;
+    }
+    .step-icon {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: var(--yellow); color: var(--black);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; font-weight: 800; margin: 0 auto 1.2rem;
+      position: relative; z-index: 1;
+    }
+    .process-step h3 { margin-bottom: .5rem; color: var(--white); }
+    .process-step p { font-size: .9rem; }
+
+    /* ─── Results / Case Studies ─── */
+    #results {}
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .result-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem; position: relative; overflow: hidden;
+      transition: transform .3s, box-shadow .3s;
+    }
+    .result-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,.4); }
+    .result-metric {
+      font-size: 3rem; font-weight: 800; color: var(--yellow);
+      line-height: 1; margin-bottom: .4rem;
+    }
+    .result-label { font-size: .85rem; color: var(--muted); margin-bottom: 1.2rem; }
+    .result-card h3 { font-size: 1.1rem; color: var(--white); margin-bottom: .4rem; }
+    .result-card p { font-size: .9rem; }
+    .result-stripe {
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--yellow);
+    }
+
+    /* ─── Testimonials ─── */
+    #testimonials { background: var(--surface); overflow: hidden; }
+    .testimonials-track-wrapper { overflow: hidden; margin: 0 -5%; }
+    .testimonials-track {
+      display: flex; gap: 1.5rem; width: max-content;
+      animation: scrollTrack 30s linear infinite;
+    }
+    .testimonials-track:hover { animation-play-state: paused; }
+    @keyframes scrollTrack {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .testimonial-card {
+      background: var(--black); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem; width: 360px; flex-shrink: 0;
+    }
+    .testimonial-stars {
+      color: var(--yellow); font-size: 1rem; margin-bottom: 1rem; letter-spacing: .1em;
+    }
+    .testimonial-card blockquote {
+      font-size: .95rem; color: var(--white); line-height: 1.7; margin-bottom: 1.5rem;
+      font-style: italic;
+    }
+    .testimonial-author { display: flex; align-items: center; gap: .85rem; }
+    .author-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--yellow), #f59e0b);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1rem; color: var(--black);
+      flex-shrink: 0;
+    }
+    .author-name { font-weight: 600; font-size: .95rem; }
+    .author-role { font-size: .82rem; color: var(--muted); }
+
+    /* ─── CTA ─── */
+    #cta {
+      position: relative; overflow: hidden;
+      text-align: center; padding: 8rem 5%;
+    }
+    #cta-canvas { position: absolute; inset: 0; z-index: 0; }
+    .cta-inner { position: relative; z-index: 2; max-width: 700px; margin: 0 auto; }
+    .cta-inner h2 { margin-bottom: 1.2rem; }
+    .cta-inner p { margin-bottom: 2.5rem; font-size: 1.15rem; }
+
+    /* ─── Footer ─── */
+    footer {
+      background: var(--black); border-top: 1px solid var(--border);
+      padding: 3rem 5%; display: flex;
+      justify-content: space-between; align-items: center; flex-wrap: gap;
+      gap: 1.5rem;
+    }
+    .footer-logo { font-size: 1.2rem; font-weight: 800; letter-spacing: -.02em; }
+    .footer-logo span { color: var(--yellow); }
+    .footer-links { display: flex; gap: 2rem; list-style: none; flex-wrap: wrap; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: .9rem; transition: color .2s; }
+    .footer-links a:hover { color: var(--white); }
+    .footer-copy { font-size: .85rem; color: var(--muted); }
+
+    /* ─── Scroll animations ─── */
+    .reveal {
+      opacity: 0; transform: translateY(40px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: .1s; }
+    .reveal-delay-2 { transition-delay: .2s; }
+    .reveal-delay-3 { transition-delay: .3s; }
+    .reveal-delay-4 { transition-delay: .4s; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      #stats { gap: 2rem; }
+      .process-steps { grid-template-columns: 1fr 1fr; }
+      footer { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .process-steps { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── Navigation ─── -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">Scale<span>For</span>Impact</a>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#testimonials">Testimonials</a></li>
+  </ul>
+  <a href="#cta" class="nav-cta">Book a Call →</a>
+</nav>
+
+<!-- ─── Hero ─── -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-badge">Funnels & Ads Agency</div>
+    <h1>Scale Your Course.<br><span class="yellow">Multiply Your Impact.</span></h1>
+    <p>We build and scale high-converting funnels, webinars, and evergreen ads for course creators — strategy, creative, and execution under one roof.</p>
+    <div class="hero-buttons">
+      <a href="#cta" class="btn-primary">Get Your Growth Plan ↗</a>
+      <a href="#results" class="btn-secondary">See Case Studies</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ─── Stats ─── -->
+<div id="stats">
+  <div class="stat"><span class="stat-number" data-target="47">0</span><span class="stat-label">M+ Revenue Generated</span></div>
+  <div class="stat"><span class="stat-number" data-target="200">0</span><span class="stat-label">+ Course Creators Scaled</span></div>
+  <div class="stat"><span class="stat-number" data-target="8">0</span><span class="stat-label">× Avg. ROAS Achieved</span></div>
+  <div class="stat"><span class="stat-number" data-target="96">0</span><span class="stat-label">% Client Retention Rate</span></div>
+</div>
+
+<!-- ─── Services ─── -->
+<section id="services">
+  <div class="text-center">
+    <span class="section-label reveal">What We Do</span>
+    <h2 class="section-heading reveal reveal-delay-1">Everything You Need<br>to <span class="yellow">Scale</span></h2>
+    <p class="section-sub reveal reveal-delay-2">One agency. All the pieces. From ad creative to funnel architecture — we handle the full stack of your growth engine.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-card reveal reveal-delay-1">
+      <div class="service-icon">📣</div>
+      <h3>Paid Ads</h3>
+      <p>Meta, YouTube, and TikTok campaigns engineered to drive qualified traffic at scale. We obsess over ROAS so you don't have to.</p>
+      <span class="service-tag">Meta · YouTube · TikTok</span>
+    </div>
+    <div class="service-card reveal reveal-delay-2">
+      <div class="service-icon">✍️</div>
+      <h3>Funnel Copywriting</h3>
+      <p>Sales pages, VSLs, email sequences, and webinar scripts that convert cold traffic into loyal customers.</p>
+      <span class="service-tag">Sales Pages · VSLs · Email</span>
+    </div>
+    <div class="service-card reveal reveal-delay-3">
+      <div class="service-icon">🎨</div>
+      <h3>Creative Design</h3>
+      <p>High-impact ad creatives, landing page design, and brand assets that stop the scroll and build instant trust.</p>
+      <span class="service-tag">Ad Creative · Landing Pages</span>
+    </div>
+    <div class="service-card reveal reveal-delay-4">
+      <div class="service-icon">🎬</div>
+      <h3>Video Production</h3>
+      <p>Professional video ads, webinar recordings, and VSL production optimised for conversion, not just views.</p>
+      <span class="service-tag">VSL · Webinars · Ads</span>
+    </div>
+    <div class="service-card reveal reveal-delay-1">
+      <div class="service-icon">🔄</div>
+      <h3>Evergreen Funnels</h3>
+      <p>Automated evergreen webinar funnels that sell your course on autopilot — 24/7, without launching stress.</p>
+      <span class="service-tag">Automated · Always-On</span>
+    </div>
+    <div class="service-card reveal reveal-delay-2">
+      <div class="service-icon">📊</div>
+      <h3>Analytics & Optimisation</h3>
+      <p>Data-driven iteration across every touchpoint. We track, test, and optimise until the numbers can't get better.</p>
+      <span class="service-tag">CRO · A/B Testing · Reporting</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 3D Scene Break ─── -->
+<div id="scene-section">
+  <canvas id="funnel-canvas"></canvas>
+  <div class="scene-text">
+    <h2>Your Funnel,<br><span class="yellow">Engineered to Convert</span></h2>
+  </div>
+</div>
+
+<!-- ─── Process ─── -->
+<section id="process">
+  <div class="text-center">
+    <span class="section-label reveal">How It Works</span>
+    <h2 class="section-heading reveal reveal-delay-1">From Zero to <span class="yellow">Scaled</span><br>in 4 Steps</h2>
+    <p class="section-sub reveal reveal-delay-2">A clear, proven process that removes the guesswork and gets your funnel producing revenue fast.</p>
+  </div>
+  <div class="process-steps">
+    <div class="process-step reveal reveal-delay-1">
+      <span class="step-number">01</span>
+      <div class="step-icon">🎯</div>
+      <h3>Strategy Sprint</h3>
+      <p>We audit your offer, audience, and market position to build a custom growth blueprint.</p>
+    </div>
+    <div class="process-step reveal reveal-delay-2">
+      <span class="step-number">02</span>
+      <div class="step-icon">🛠️</div>
+      <h3>Build & Launch</h3>
+      <p>Our team builds your full funnel stack — copy, creative, video, and tech — then we launch.</p>
+    </div>
+    <div class="process-step reveal reveal-delay-3">
+      <span class="step-number">03</span>
+      <div class="step-icon">📈</div>
+      <h3>Scale & Optimise</h3>
+      <p>We push winning ads harder, cut what's losing, and optimise every funnel step weekly.</p>
+    </div>
+    <div class="process-step reveal reveal-delay-4">
+      <span class="step-number">04</span>
+      <div class="step-icon">🚀</div>
+      <h3>Compound Growth</h3>
+      <p>Profits reinvested into evergreen systems that grow your revenue month after month.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Results ─── -->
+<section id="results">
+  <div class="text-center">
+    <span class="section-label reveal">Case Studies</span>
+    <h2 class="section-heading reveal reveal-delay-1">Real Creators.<br><span class="yellow">Real Results.</span></h2>
+    <p class="section-sub reveal reveal-delay-2">These aren't cherry-picked wins — they're the standard we hold ourselves to for every client.</p>
+  </div>
+  <div class="results-grid">
+    <div class="result-card reveal reveal-delay-1">
+      <div class="result-stripe"></div>
+      <div class="result-metric">$2.4M</div>
+      <div class="result-label">Revenue in 90 days</div>
+      <h3>Online Business Coaching</h3>
+      <p>Rebuilt their entire evergreen webinar funnel, cut CPA by 62%, and scaled ad spend from $18k to $110k/mo.</p>
+    </div>
+    <div class="result-card reveal reveal-delay-2">
+      <div class="result-stripe"></div>
+      <div class="result-metric">11.4×</div>
+      <div class="result-label">Return on Ad Spend</div>
+      <h3>Fitness & Nutrition Course</h3>
+      <p>Launched cold traffic Meta campaigns with custom video creatives. Hit 11.4× ROAS within 6 weeks of launch.</p>
+    </div>
+    <div class="result-card reveal reveal-delay-3">
+      <div class="result-stripe"></div>
+      <div class="result-metric">83%</div>
+      <div class="result-label">Webinar show-up rate</div>
+      <h3>High-Ticket Consulting Offer</h3>
+      <p>Redesigned the entire registration flow and follow-up sequence. Show-up rate went from 31% to 83% in 30 days.</p>
+    </div>
+    <div class="result-card reveal reveal-delay-1">
+      <div class="result-stripe"></div>
+      <div class="result-metric">$780k</div>
+      <div class="result-label">From evergreen funnel alone</div>
+      <h3>Real Estate Investing Course</h3>
+      <p>Built a fully automated evergreen funnel that now generates $65k/mo with zero live launches required.</p>
+    </div>
+    <div class="result-card reveal reveal-delay-2">
+      <div class="result-stripe"></div>
+      <div class="result-metric">4.2×</div>
+      <div class="result-label">List growth in 60 days</div>
+      <h3>Mindset & Productivity Coach</h3>
+      <p>Launched a lead gen funnel with TikTok ads that quadrupled her email list and filled her group program.</p>
+    </div>
+    <div class="result-card reveal reveal-delay-3">
+      <div class="result-stripe"></div>
+      <div class="result-metric">–58%</div>
+      <div class="result-label">Cost per acquisition</div>
+      <h3>E-Commerce & Dropshipping Course</h3>
+      <p>Rewrote VSL, redesigned sales page, and restructured ad creative. CPA dropped 58% while volume tripled.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Testimonials ─── -->
+<section id="testimonials">
+  <div class="text-center">
+    <span class="section-label reveal">What Clients Say</span>
+    <h2 class="section-heading reveal reveal-delay-1">Trusted by <span class="yellow">Course Creators</span><br>Worldwide</h2>
+  </div>
+  <div class="testimonials-track-wrapper">
+    <div class="testimonials-track" id="testimonials-track">
+      <!-- Cards duplicated for infinite scroll -->
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"Scale For Impact didn't just run our ads — they rebuilt our entire funnel from scratch. We went from $30k/mo to $180k/mo in 4 months. Genuinely life-changing."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">JM</div>
+          <div><div class="author-name">James Marsh</div><div class="author-role">Online Business Coach</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"Their copywriters are the best I've ever worked with. The VSL they wrote for my course converted at 7.8% from cold traffic. I've never seen numbers like that before."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">SK</div>
+          <div><div class="author-name">Sarah Kim</div><div class="author-role">Fitness Course Creator</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"I was sceptical of agencies after getting burned twice. SFI is completely different — they're data-obsessed, transparent, and they genuinely care about results."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">TR</div>
+          <div><div class="author-name">Tom Richardson</div><div class="author-role">Real Estate Educator</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"Our evergreen webinar now runs 24/7 and brings in $50-80k every single month. SFI built something I truly didn't think was possible for my business."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">AP</div>
+          <div><div class="author-name">Alicia Park</div><div class="author-role">Mindset Coach</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"Best ROI of any agency investment I've ever made. Period. Within 90 days they'd paid for themselves 12 times over. I only wish I'd found them sooner."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">DC</div>
+          <div><div class="author-name">David Chen</div><div class="author-role">E-Commerce Educator</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"The creative team is world-class. Every ad they made felt like it was speaking directly to my audience's soul. CTR went up 3× and conversions followed."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">LN</div>
+          <div><div class="author-name">Laura Nguyen</div><div class="author-role">Productivity Course Creator</div></div>
+        </div>
+      </div>
+      <!-- Duplicate for seamless loop -->
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"Scale For Impact didn't just run our ads — they rebuilt our entire funnel from scratch. We went from $30k/mo to $180k/mo in 4 months. Genuinely life-changing."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">JM</div>
+          <div><div class="author-name">James Marsh</div><div class="author-role">Online Business Coach</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"Their copywriters are the best I've ever worked with. The VSL they wrote for my course converted at 7.8% from cold traffic. I've never seen numbers like that before."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">SK</div>
+          <div><div class="author-name">Sarah Kim</div><div class="author-role">Fitness Course Creator</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"I was sceptical of agencies after getting burned twice. SFI is completely different — they're data-obsessed, transparent, and they genuinely care about results."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">TR</div>
+          <div><div class="author-name">Tom Richardson</div><div class="author-role">Real Estate Educator</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"Our evergreen webinar now runs 24/7 and brings in $50-80k every single month. SFI built something I truly didn't think was possible for my business."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">AP</div>
+          <div><div class="author-name">Alicia Park</div><div class="author-role">Mindset Coach</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"Best ROI of any agency investment I've ever made. Period. Within 90 days they'd paid for themselves 12 times over. I only wish I'd found them sooner."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">DC</div>
+          <div><div class="author-name">David Chen</div><div class="author-role">E-Commerce Educator</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <blockquote>"The creative team is world-class. Every ad they made felt like it was speaking directly to my audience's soul. CTR went up 3× and conversions followed."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">LN</div>
+          <div><div class="author-name">Laura Nguyen</div><div class="author-role">Productivity Course Creator</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ─── -->
+<section id="cta">
+  <canvas id="cta-canvas"></canvas>
+  <div class="cta-inner">
+    <span class="section-label">Ready to Scale?</span>
+    <h2>Let's Build Your <span class="yellow">Revenue Machine</span></h2>
+    <p>Book a free 45-minute strategy call. We'll audit your current funnel, identify your biggest growth levers, and map out exactly how we'd scale your course to the next level.</p>
+    <a href="#" class="btn-primary" style="font-size:1.1rem; padding: 1.2rem 2.8rem;">Book Your Free Strategy Call →</a>
+  </div>
+</section>
+
+<!-- ─── Footer ─── -->
+<footer>
+  <div class="footer-logo">Scale<span>For</span>Impact</div>
+  <ul class="footer-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#results">Case Studies</a></li>
+    <li><a href="#testimonials">Testimonials</a></li>
+    <li><a href="#">Privacy Policy</a></li>
+  </ul>
+  <div class="footer-copy">© 2025 Scale For Impact. All rights reserved.</div>
+</footer>
+
+<!-- ─── Three.js CDN ─── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════
+   HERO 3D SCENE — Floating geometric network
+════════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+  camera.position.z = 6;
+
+  // Mouse tracking
+  const mouse = { x: 0, y: 0 };
+  document.addEventListener('mousemove', e => {
+    mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
+    mouse.y = -(e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // ── Particle field ──
+  const particleCount = 1800;
+  const positions = new Float32Array(particleCount * 3);
+  const colors = new Float32Array(particleCount * 3);
+  const sizes = new Float32Array(particleCount);
+
+  const yellowColor = new THREE.Color('#fbd10c');
+  const whiteColor = new THREE.Color('#ffffff');
+
+  for (let i = 0; i < particleCount; i++) {
+    positions[i * 3]     = (Math.random() - 0.5) * 18;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 12;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+
+    const mix = Math.random();
+    const c = mix > 0.7 ? yellowColor : whiteColor;
+    colors[i * 3]     = c.r;
+    colors[i * 3 + 1] = c.g;
+    colors[i * 3 + 2] = c.b;
+
+    sizes[i] = Math.random() * 3 + 0.5;
+  }
+
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  pGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  pGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+  const pMat = new THREE.PointsMaterial({
+    size: 0.04,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.7,
+    sizeAttenuation: true,
+  });
+  const particles = new THREE.Points(pGeo, pMat);
+  scene.add(particles);
+
+  // ── Floating geometric shapes ──
+  const shapes = [];
+
+  function addShape(geo, x, y, z, scale = 1, yellow = false) {
+    const mat = new THREE.MeshStandardMaterial({
+      color: yellow ? '#fbd10c' : '#ffffff',
+      metalness: 0.3,
+      roughness: 0.4,
+      transparent: true,
+      opacity: yellow ? 0.85 : 0.15,
+      wireframe: !yellow,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+    mesh.scale.setScalar(scale);
+    mesh.userData = {
+      rotSpeed: { x: (Math.random()-.5)*.008, y: (Math.random()-.5)*.008, z: (Math.random()-.5)*.005 },
+      floatSpeed: Math.random() * 0.5 + 0.3,
+      floatAmp: Math.random() * 0.3 + 0.1,
+      initY: y,
+    };
+    scene.add(mesh);
+    shapes.push(mesh);
+    return mesh;
+  }
+
+  // Yellow solid accent shapes
+  addShape(new THREE.OctahedronGeometry(0.4), -2.5, 1.2, 0.5, 1, true);
+  addShape(new THREE.TetrahedronGeometry(0.5), 2.8, -0.8, -0.5, 1, true);
+  addShape(new THREE.IcosahedronGeometry(0.35), 0.5, -1.8, 1, 1, true);
+
+  // White wireframe background shapes
+  addShape(new THREE.TorusGeometry(0.8, 0.15, 8, 24), -3.5, -0.5, -2, 1.2);
+  addShape(new THREE.OctahedronGeometry(1.2), 3.2, 1.5, -2);
+  addShape(new THREE.IcosahedronGeometry(0.9), -1, 1.5, -3);
+  addShape(new THREE.BoxGeometry(1, 1, 1), 1.5, 1, -1.5);
+  addShape(new THREE.TorusGeometry(0.5, 0.1, 6, 16), 2, -2, -1);
+
+  // ── Ambient & directional light ──
+  scene.add(new THREE.AmbientLight('#ffffff', 0.5));
+  const dirLight = new THREE.DirectionalLight('#fbd10c', 1.5);
+  dirLight.position.set(3, 5, 5);
+  scene.add(dirLight);
+  const dirLight2 = new THREE.DirectionalLight('#ffffff', 0.8);
+  dirLight2.position.set(-5, -3, 2);
+  scene.add(dirLight2);
+
+  // ── Resize ──
+  function resize() {
+    const hero = document.getElementById('hero');
+    const w = hero.offsetWidth, h = hero.offsetHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // ── Animate ──
+  const clock = new THREE.Clock();
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    particles.rotation.y = t * 0.03;
+    particles.rotation.x = t * 0.01;
+
+    shapes.forEach(s => {
+      s.rotation.x += s.userData.rotSpeed.x;
+      s.rotation.y += s.userData.rotSpeed.y;
+      s.rotation.z += s.userData.rotSpeed.z;
+      s.position.y = s.userData.initY + Math.sin(t * s.userData.floatSpeed) * s.userData.floatAmp;
+    });
+
+    // Subtle camera parallax
+    camera.position.x += (mouse.x * 0.8 - camera.position.x) * 0.04;
+    camera.position.y += (mouse.y * 0.5 - camera.position.y) * 0.04;
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+
+/* ════════════════════════════════════════════════
+   FUNNEL 3D SCENE — Rotating funnel / torus rings
+════════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('funnel-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+  camera.position.set(0, 1, 7);
+  camera.lookAt(0, 0, 0);
+
+  scene.add(new THREE.AmbientLight('#ffffff', 0.4));
+  const keyLight = new THREE.DirectionalLight('#fbd10c', 2);
+  keyLight.position.set(4, 6, 4);
+  scene.add(keyLight);
+  const fillLight = new THREE.DirectionalLight('#ffffff', 0.6);
+  fillLight.position.set(-4, -2, 2);
+  scene.add(fillLight);
+
+  // Funnel made of stacked torus rings
+  const rings = [];
+  const ringCount = 7;
+  for (let i = 0; i < ringCount; i++) {
+    const t = i / (ringCount - 1); // 0 → 1
+    const radius = 0.4 + t * 2.2;
+    const tubeRadius = 0.04 + t * 0.02;
+    const geo = new THREE.TorusGeometry(radius, tubeRadius, 12, 60);
+    const yellowMix = 1 - t;
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color().lerpColors(new THREE.Color('#fbd10c'), new THREE.Color('#333333'), t),
+      metalness: 0.5,
+      roughness: 0.3,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.y = 1.5 - t * 3.5;
+    mesh.rotation.x = Math.PI / 2;
+    scene.add(mesh);
+    rings.push({ mesh, phase: i * 0.4, speed: 0.3 + (1-t) * 0.7 });
+  }
+
+  // Central glowing sphere
+  const sphereGeo = new THREE.SphereGeometry(0.25, 32, 32);
+  const sphereMat = new THREE.MeshStandardMaterial({
+    color: '#fbd10c',
+    emissive: '#fbd10c',
+    emissiveIntensity: 0.8,
+    metalness: 0.2,
+    roughness: 0.1,
+  });
+  const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+  sphere.position.y = -1.8;
+  scene.add(sphere);
+
+  // Particles around funnel
+  const pCount = 400;
+  const pPos = new Float32Array(pCount * 3);
+  for (let i = 0; i < pCount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const r = 2.8 + (Math.random() - 0.5) * 1.5;
+    pPos[i*3]   = Math.cos(angle) * r;
+    pPos[i*3+1] = (Math.random() - 0.5) * 5;
+    pPos[i*3+2] = Math.sin(angle) * r;
+  }
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  const pMat = new THREE.PointsMaterial({ color: '#fbd10c', size: 0.04, transparent: true, opacity: 0.5 });
+  scene.add(new THREE.Points(pGeo, pMat));
+
+  function resize() {
+    const el = document.getElementById('scene-section');
+    const w = el.offsetWidth, h = el.offsetHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const clock = new THREE.Clock();
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    rings.forEach(r => {
+      r.mesh.rotation.z = t * r.speed + r.phase;
+      r.mesh.rotation.x = Math.PI / 2 + Math.sin(t * 0.4 + r.phase) * 0.15;
+    });
+
+    sphere.position.y = -1.8 + Math.sin(t * 2) * 0.12;
+    sphere.material.emissiveIntensity = 0.6 + Math.sin(t * 3) * 0.3;
+
+    camera.position.x = Math.sin(t * 0.15) * 1.5;
+    camera.position.y = 1 + Math.sin(t * 0.1) * 0.5;
+    camera.lookAt(0, -0.5, 0);
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+
+/* ════════════════════════════════════════════════
+   CTA 3D SCENE — Rising particles / energy field
+════════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('cta-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(65, 1, 0.1, 100);
+  camera.position.z = 5;
+
+  const count = 2000;
+  const pos = new Float32Array(count * 3);
+  const vel = new Float32Array(count);
+  const col = new Float32Array(count * 3);
+
+  const yc = new THREE.Color('#fbd10c');
+  const wc = new THREE.Color('#ffffff');
+
+  for (let i = 0; i < count; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * 14;
+    pos[i*3+1] = (Math.random() - 0.5) * 8 - 4;
+    pos[i*3+2] = (Math.random() - 0.5) * 6;
+    vel[i]     = 0.002 + Math.random() * 0.006;
+    const c = Math.random() > 0.6 ? yc : wc;
+    col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+  }
+
+  const geo = new THREE.BufferGeometry();
+  const posAttr = new THREE.BufferAttribute(pos, 3);
+  geo.setAttribute('position', posAttr);
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+
+  const mat = new THREE.PointsMaterial({
+    size: 0.05, vertexColors: true,
+    transparent: true, opacity: 0.75, sizeAttenuation: true,
+  });
+  const points = new THREE.Points(geo, mat);
+  scene.add(points);
+
+  function resize() {
+    const el = document.getElementById('cta');
+    const w = el.offsetWidth, h = el.offsetHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const p = posAttr.array;
+    for (let i = 0; i < count; i++) {
+      p[i*3+1] += vel[i];
+      if (p[i*3+1] > 5) p[i*3+1] = -5;
+    }
+    posAttr.needsUpdate = true;
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+
+/* ════════════════════════════════════════════════
+   SCROLL REVEAL
+════════════════════════════════════════════════ */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+
+/* ════════════════════════════════════════════════
+   COUNTER ANIMATION
+════════════════════════════════════════════════ */
+function animateCounter(el, target, suffix) {
+  let start = 0;
+  const duration = 1800;
+  const startTime = performance.now();
+  function step(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(ease * target) + (suffix || '');
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = target + (suffix || '');
+  }
+  requestAnimationFrame(step);
+}
+
+const statsObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const nums = e.target.querySelectorAll('.stat-number');
+      nums.forEach(n => {
+        const t = parseInt(n.dataset.target);
+        animateCounter(n, t, '');
+      });
+      statsObserver.disconnect();
+    }
+  });
+}, { threshold: 0.5 });
+statsObserver.observe(document.getElementById('stats'));
+
+
+/* ════════════════════════════════════════════════
+   NAV SCROLL EFFECT
+════════════════════════════════════════════════ */
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  if (window.scrollY > 50) nav.style.background = 'rgba(6,6,6,0.95)';
+  else nav.style.background = 'rgba(6,6,6,0.72)';
+});
+</script>
+</body>
+</html>

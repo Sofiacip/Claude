@@ -1,0 +1,129 @@
+{
+  "version": "3.21.0",
+  "description": "Elementor widget schema for the webinar-funnel template — full page, all 8 sections",
+  "sourceType": "url-import",
+  "widgets": {
+    "heading": {
+      "widgetType": "heading",
+      "description": "Headings h1-h6",
+      "settings": { "title": "string", "header_size": "h1|h2|h3|h4", "align": "left|center|right" }
+    },
+    "text-editor": {
+      "widgetType": "text-editor",
+      "description": "Paragraphs and body text",
+      "settings": { "editor": "string — HTML content" }
+    },
+    "button": {
+      "widgetType": "button",
+      "description": "CTA buttons",
+      "settings": { "text": "string", "url": { "url": "string" }, "background_color": "#hex" }
+    },
+    "icon-list": {
+      "widgetType": "icon-list",
+      "description": "Bullet lists with icons (pain points, benefits)",
+      "settings": { "icon_list": "array of {text, icon}" }
+    },
+    "counter": {
+      "widgetType": "counter",
+      "description": "Animated statistics",
+      "settings": { "ending_number": 0, "suffix": "string", "title": "string" }
+    },
+    "testimonial": {
+      "widgetType": "testimonial",
+      "description": "Client testimonial quotes",
+      "settings": { "content": "string", "name": "string", "job": "string" }
+    },
+    "image-box": {
+      "widgetType": "image-box",
+      "description": "Bonus items with image + title + description",
+      "settings": { "title_text": "string", "description_text": "string" }
+    },
+    "countdown": {
+      "widgetType": "countdown",
+      "description": "Countdown timer to webinar date",
+      "settings": { "due_date": "YYYY-MM-DD HH:MM" }
+    },
+    "form": {
+      "widgetType": "form",
+      "description": "Registration form",
+      "settings": { "button_text": "string", "form_name": "string" }
+    },
+    "image": {
+      "widgetType": "image",
+      "description": "Images",
+      "settings": { "image": { "url": "string", "alt": "string" } }
+    }
+  },
+  "slotToWidget": {
+    "pre-headline":           { "widget": "heading",      "settings_key": "title" },
+    "headline":               { "widget": "heading",      "settings_key": "title" },
+    "subheadline":            { "widget": "text-editor",  "settings_key": "editor" },
+    "webinar-status":         { "widget": "text-editor",  "settings_key": "editor" },
+    "waitlist-text":          { "widget": "text-editor",  "settings_key": "editor" },
+
+    "stat-1-number":          { "widget": "counter",      "settings_key": "ending_number" },
+    "stat-1-label":           { "widget": "counter",      "settings_key": "title" },
+    "stat-2-number":          { "widget": "counter",      "settings_key": "ending_number" },
+    "stat-2-label":           { "widget": "counter",      "settings_key": "title" },
+    "stat-3-label":           { "widget": "text-editor",  "settings_key": "editor" },
+
+    "section-pain-title":     { "widget": "heading",      "settings_key": "title" },
+    "section-pain-subtitle":  { "widget": "heading",      "settings_key": "title" },
+    "pain-1":                 { "widget": "icon-list",    "settings_key": "icon_list[0].text" },
+    "pain-2":                 { "widget": "icon-list",    "settings_key": "icon_list[1].text" },
+    "pain-3":                 { "widget": "icon-list",    "settings_key": "icon_list[2].text" },
+    "pain-4":                 { "widget": "icon-list",    "settings_key": "icon_list[3].text" },
+    "pain-5":                 { "widget": "icon-list",    "settings_key": "icon_list[4].text" },
+    "pain-6":                 { "widget": "icon-list",    "settings_key": "icon_list[5].text" },
+
+    "body-1":                 { "widget": "text-editor",  "settings_key": "editor" },
+    "body-2":                 { "widget": "text-editor",  "settings_key": "editor" },
+    "body-3":                 { "widget": "text-editor",  "settings_key": "editor" },
+    "body-4":                 { "widget": "text-editor",  "settings_key": "editor" },
+
+    "cta":                    { "widget": "button",       "settings_key": "text" },
+    "cta-closing":            { "widget": "button",       "settings_key": "text" },
+
+    "section-benefits-title": { "widget": "heading",      "settings_key": "title" },
+    "benefit-1-title":        { "widget": "text-editor",  "settings_key": "editor" },
+    "benefit-1-text":         { "widget": "text-editor",  "settings_key": "editor" },
+    "benefit-2-title":        { "widget": "text-editor",  "settings_key": "editor" },
+    "benefit-2-text":         { "widget": "text-editor",  "settings_key": "editor" },
+    "benefit-3-title":        { "widget": "text-editor",  "settings_key": "editor" },
+    "benefit-3-text":         { "widget": "text-editor",  "settings_key": "editor" },
+
+    "section-testimonials-title": { "widget": "heading",     "settings_key": "title" },
+    "testimonial-1-quote":    { "widget": "testimonial",  "settings_key": "content" },
+    "testimonial-1-name":     { "widget": "testimonial",  "settings_key": "name" },
+    "testimonial-2-quote":    { "widget": "testimonial",  "settings_key": "content" },
+    "testimonial-2-name":     { "widget": "testimonial",  "settings_key": "name" },
+    "testimonial-3-quote":    { "widget": "testimonial",  "settings_key": "content" },
+    "testimonial-3-name":     { "widget": "testimonial",  "settings_key": "name" },
+
+    "section-cta-headline":   { "widget": "heading",      "settings_key": "title" },
+    "section-bonuses-title":  { "widget": "heading",      "settings_key": "title" },
+    "bonus-1-title":          { "widget": "image-box",    "settings_key": "title_text" },
+    "bonus-1-value":          { "widget": "image-box",    "settings_key": "description_text" },
+    "bonus-2-title":          { "widget": "image-box",    "settings_key": "title_text" },
+    "bonus-2-value":          { "widget": "image-box",    "settings_key": "description_text" },
+    "bonus-3-title":          { "widget": "image-box",    "settings_key": "title_text" },
+    "bonus-3-value":          { "widget": "image-box",    "settings_key": "description_text" },
+    "bonus-4-title":          { "widget": "image-box",    "settings_key": "title_text" },
+    "bonus-4-value":          { "widget": "image-box",    "settings_key": "description_text" },
+
+    "total-value":            { "widget": "heading",      "settings_key": "title" },
+    "offer-text":             { "widget": "heading",      "settings_key": "title" },
+    "webinar-countdown-date": { "widget": "countdown",    "settings_key": "due_date" },
+    "form-submit-label":      { "widget": "form",         "settings_key": "button_text" }
+  },
+  "sectionLayout": {
+    "hero":             { "background_color": "brand_color", "columns": 2 },
+    "stats":            { "background_color": "#1a1a2e",     "columns": 3 },
+    "pain-points":      { "background_color": "#ffffff",     "columns": 2 },
+    "benefits":         { "background_color": "#f8f9fa",     "columns": 1 },
+    "testimonials":     { "background_color": "#ffffff",     "columns": 1 },
+    "bonuses":          { "background_color": "#f8f9fa",     "columns": 2 },
+    "closing-cta":      { "background_color": "brand_color", "columns": 1 },
+    "registration-form":{ "background_color": "#ffffff",     "columns": 1 }
+  }
+}

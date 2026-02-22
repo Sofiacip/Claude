@@ -1,0 +1,24 @@
+# Environment and secrets (never commit)
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Logs and generated output (optional: remove these lines if you want to track them)
+pageforge/logs/*.json
+pageforge/output/
+
+# OS and IDE
+.DS_Store
+*.log
+.idea/
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/

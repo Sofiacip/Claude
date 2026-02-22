@@ -1,0 +1,117 @@
+{
+  "version": "3.21.0",
+  "description": "Elementor widget schema for the webinar-funnel-2 template",
+  "widgets": {
+    "heading": {
+      "widgetType": "heading",
+      "description": "Headings h1-h6",
+      "settings": {
+        "title": "string",
+        "header_size": "h1|h2|h3|h4|h5|h6",
+        "align": "left|center|right"
+      }
+    },
+    "text-editor": {
+      "widgetType": "text-editor",
+      "description": "Paragraphs and body text",
+      "settings": {
+        "editor": "string — HTML content"
+      }
+    },
+    "button": {
+      "widgetType": "button",
+      "description": "CTA buttons",
+      "settings": {
+        "text": "string",
+        "url": {
+          "url": "string"
+        },
+        "background_color": "#hex"
+      }
+    },
+    "icon-box": {
+      "widgetType": "icon-box",
+      "description": "Feature cards with icon+title+text",
+      "settings": {
+        "title_text": "string",
+        "description_text": "string"
+      }
+    },
+    "testimonial": {
+      "widgetType": "testimonial",
+      "description": "Client quotes",
+      "settings": {
+        "content": "string",
+        "name": "string",
+        "job": "string"
+      }
+    },
+    "counter": {
+      "widgetType": "counter",
+      "description": "Animated stats",
+      "settings": {
+        "ending_number": 0,
+        "suffix": "string",
+        "title": "string"
+      }
+    },
+    "image": {
+      "widgetType": "image",
+      "description": "Images",
+      "settings": {
+        "image": {
+          "url": "string",
+          "alt": "string"
+        }
+      }
+    }
+  },
+  "slotToWidget": {
+    "pre-headline": {
+      "widget": "heading",
+      "settings_key": "title"
+    },
+    "headline": {
+      "widget": "heading",
+      "settings_key": "title"
+    },
+    "subheadline": {
+      "widget": "text-editor",
+      "settings_key": "editor"
+    },
+    "host-name": {
+      "widget": "heading",
+      "settings_key": "title"
+    },
+    "stat-1-label": {
+      "widget": "heading",
+      "settings_key": "title"
+    },
+    "stat-2-label": {
+      "widget": "heading",
+      "settings_key": "title"
+    },
+    "webinar-duration": {
+      "widget": "heading",
+      "settings_key": "title"
+    },
+    "cta": {
+      "widget": "button",
+      "settings_key": "text"
+    }
+  },
+  "sectionLayout": {
+    "hero": {
+      "background_color": "classic",
+      "columns": 2
+    },
+    "stats": {
+      "background_color": "classic",
+      "columns": 1
+    },
+    "pain-points": {
+      "background_color": "classic",
+      "columns": 1
+    }
+  }
+}

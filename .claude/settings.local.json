@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:scaleforimpact.co)",
+      "WebFetch(domain:terryreal.com)",
+      "WebFetch(domain:www.youtube.com)",
+      "WebFetch(domain:relationallife.com)",
+      "WebSearch",
+      "Bash(brew list:*)",
+      "Bash(curl:*)",
+      "Bash(/opt/homebrew/bin/brew install:*)",
+      "Bash(/opt/homebrew/opt/node@20/bin/npm config delete prefix)",
+      "Bash(export PATH=\"/opt/homebrew/opt/node@20/bin:$PATH\")",
+      "Bash(node:*)",
+      "Bash(npm --version:*)",
+      "Bash(npm install:*)",
+      "Bash(export PATH:*)",
+      "Bash(npx playwright install:*)",
+      "Bash(open:*)",
+      "Bash(/opt/homebrew/opt/node@20/bin/node:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Bash(export PATH=\"/opt/homebrew/opt/node@20/bin:/usr/bin:/bin:$PATH\")",
+      "Bash(PATH=\"/opt/homebrew/opt/node@20/bin:$PATH\" node:*)",
+      "Bash(then)",
+      "Bash(else)"
+    ]
+  }
+}

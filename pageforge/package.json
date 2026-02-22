@@ -1,0 +1,24 @@
+{
+  "name": "pageforge",
+  "version": "1.0.0",
+  "description": "AI-powered landing page automation pipeline for marketing agencies",
+  "type": "module",
+  "main": "pipeline.js",
+  "scripts": {
+    "start": "node pipeline.js",
+    "server": "node server.js",
+    "test:brief": "node pipeline.js ./briefs/example.json",
+    "install:playwright": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "get-intrinsic": "^1.3.0",
+    "playwright": "^1.48.0",
+    "resend": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

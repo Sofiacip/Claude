@@ -1,0 +1,45 @@
+{
+  "_comment": "PageForge brief for the webinar-funnel Elementor template. Slot names match {{markers}} in elementor-base.json.",
+
+  "templateName":   "webinar-funnel",
+  "targetSlug":     "webinar-lp-v2",
+  "reviewerEmail":  "admin@scaleforimpact.co",
+  "brandColor":     "#2563EB",
+
+  "headline":     "Stop Guessing. Start Growing.",
+  "subheadline":  "Join our FREE webinar and discover the proven system that helps founders double revenue in 90 days — without burning out.",
+  "ctaText":      "Reserve My Free Spot Now",
+  "ctaUrl":       "https://scaleforimpact.co/webinar-register",
+
+  "slots": {
+    "headline":             "Stop Guessing. Start Growing.",
+    "subheadline":          "Join our FREE webinar and discover the proven system that helps founders double revenue in 90 days — without burning out.",
+    "cta-text":             "Reserve My Free Spot Now",
+    "cta-url":              "https://scaleforimpact.co/webinar-register",
+
+    "host-image-url":       "https://go.scaleforimpact.co/wp-content/uploads/2023/05/Alessio-Pieroni.png",
+    "host-name":            "ALESSIO",
+    "host-bio":             "<p>And if you don't know me it's pretty normal. I have always been the man behind the scenes — the one creating marketing campaigns but doesn't show up too much.</p><p>I have been doing that for incredible authors and businesses in the online education space: from Mindvalley, Tony Robbins, Foundr, Jordan Peterson, Marisa Peer, Danette May, Terry Real, Shefali Tsabary, Roger Hamilton, Scott's Bass Lessons, Alex Howard, Soma Breath, School of Bots and many more.</p><p>I have generated millions of dollars in revenue through marketing funnels and I decided to organize training sessions to pass on this knowledge.</p><p>Sign up and get access to the training for free.</p>",
+
+    "stat-1-number":        "7",
+    "stat-1-label":         "Years of experience in the industry",
+    "stat-2-number":        "8",
+    "stat-2-suffix":        "M+",
+    "stat-2-label":         "Sold through marketing funnels",
+    "stat-3-number":        "123",
+    "stat-3-suffix":        "K",
+    "stat-3-label":         "People impacted through the journey",
+
+    "benefits-heading":     "In This Training You'll Learn",
+    "benefit-1":            "The #1 revenue leak most founders never see — and the exact fix",
+    "benefit-2":            "The 3-lever growth framework to compound revenue without more ad spend",
+    "benefit-3":            "How to build a 90-day revenue sprint you can implement immediately",
+    "benefit-4":            "The Linchpin strategy that simplifies your entire offering",
+    "benefits-image-url":   "https://go.scaleforimpact.co/wp-content/uploads/2023/05/9b777db956dda7ff1ccff56c8956a218.jpg",
+
+    "testimonials-label":   "Testimonials",
+    "testimonials-heading": "Feedback from <span style=\"color:#FECE00\">our clients</span>",
+
+    "cta-image-url":        "https://go.scaleforimpact.co/wp-content/uploads/2023/05/f8cfadeb65f305236723a2cb1dd70b8e.png"
+  }
+}

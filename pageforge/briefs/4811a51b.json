@@ -1,0 +1,111 @@
+{
+  "ctaUrl": "/webinar-register",
+  "brandColor": "#2563EB",
+  "status": "draft",
+  "_comment": "PageForge brief for the webinar-funnel template. Fill in all fields for each new client webinar.",
+  "templateName": "webinar-funnel",
+  "targetSlug": "webinar-lp-v1",
+  "reviewerEmail": "admin@scaleforimpact.co",
+  "headline": "Stop Guessing. Start Growing.",
+  "subheadline": "Join our FREE webinar and discover the proven system that helps founders double revenue in 90 days — without burning out.",
+  "ctaText": "Reserve My Free Spot Now",
+  "bodyCopy": "This session reveals the exact growth levers top-performing SaaS companies pull to compound revenue without adding headcount. Join 500+ founders who've already transformed their pipeline.",
+  "webinarSpecific": {
+    "preHeadline": "FREE Live Webinar — Limited Spots Available",
+    "webinarDate": "Thursday, March 27th at 11:00 AM EST",
+    "webinarCountdownDate": "2026-03-27 11:00",
+    "webinarStatus": "Registration is now open — save your seat before it fills up.",
+    "waitlistText": "Can't make it live? Register anyway and we'll send you the recording.",
+    "stats": [
+      {
+        "number": "500",
+        "label": "Founders Trained"
+      },
+      {
+        "number": "90",
+        "label": "Days to Results"
+      },
+      {
+        "number": "2",
+        "suffix": "x",
+        "label": "Average Revenue Growth"
+      }
+    ],
+    "painSection": {
+      "title": "Is This Webinar Right for You?",
+      "subtitle": "Does any of this feel familiar?",
+      "items": [
+        "You're working harder than ever but revenue growth has flatlined.",
+        "You have a great product but struggle to translate it into predictable sales.",
+        "You've tried marketing agencies and still can't crack consistent lead flow.",
+        "You rely on referrals and word-of-mouth — and it's not scaling.",
+        "Your team is stretched thin but hiring feels too risky right now.",
+        "You know something needs to change but you don't know where to start."
+      ]
+    },
+    "benefitsSection": {
+      "title": "In This Free Webinar, You Will Learn:",
+      "items": [
+        {
+          "title": "The #1 revenue leak most founders never see",
+          "text": "Why your current funnel is leaving 40–60% of revenue on the table — and the exact fix."
+        },
+        {
+          "title": "The 3-lever growth framework",
+          "text": "How to stack acquisition, conversion, and retention levers to compound growth without more ad spend."
+        },
+        {
+          "title": "How to build a 90-day revenue sprint",
+          "text": "A step-by-step roadmap you can implement the week after the webinar, with zero new hires."
+        }
+      ]
+    },
+    "testimonialSection": {
+      "title": "What People Say About Our Webinars",
+      "items": [
+        {
+          "quote": "This webinar completely changed how I think about growth. We implemented the framework and saw a 40% increase in qualified leads within 60 days.",
+          "name": "Sarah M., CEO TechStart Inc."
+        },
+        {
+          "quote": "Practical, no-fluff, and immediately actionable. I've attended dozens of webinars — this is the only one where I walked away with a clear 90-day plan.",
+          "name": "James K., Founder ScaleOps"
+        },
+        {
+          "quote": "I was skeptical, but the ROI data was undeniable. We ran the sprint and hit our quarterly target 3 weeks early.",
+          "name": "Maria L., COO GrowthBase"
+        }
+      ]
+    },
+    "closingCta": {
+      "headline": "One Webinar Could Change the Trajectory of Your Business.",
+      "buttonText": "Yes — Save My Free Spot Now →"
+    },
+    "bonusSection": {
+      "title": "What's Included When You Sign Up Today:",
+      "items": [
+        {
+          "title": "✓ Live 90-Minute Growth Webinar Access",
+          "value": "Value: $197"
+        },
+        {
+          "title": "✓ Bonus 1: Revenue Audit Spreadsheet",
+          "value": "Value: $97"
+        },
+        {
+          "title": "✓ Bonus 2: 90-Day Sprint Planner (Notion)",
+          "value": "Value: $49"
+        },
+        {
+          "title": "✓ Bonus 3: Live Q&A Session With Host",
+          "value": "Value: $297"
+        }
+      ],
+      "totalValue": "Total Value: $640",
+      "offerText": "Yours Today — FREE"
+    },
+    "registrationForm": {
+      "submitLabel": "Save My Free Spot →"
+    }
+  }
+}

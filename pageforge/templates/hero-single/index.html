@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-slot="headline">Placeholder</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand-color: #2563EB;
+      --brand-dark:  #1d4ed8;
+      --text-dark:   #111827;
+      --text-mid:    #374151;
+      --text-light:  #6b7280;
+      --bg-light:    #f9fafb;
+      --bg-white:    #ffffff;
+      --radius:      10px;
+      --max-w:       1140px;
+      --section-pad: 80px 24px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: var(--text-dark); background: var(--bg-white); line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+
+    /* ── Navigation ── */
+    .nav { background: var(--bg-white); border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 100; }
+    .nav__inner { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .nav__logo { font-weight: 700; font-size: 18px; color: var(--brand-color); }
+    .nav__cta { background: var(--brand-color); color: #fff; padding: 9px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 600; transition: background .2s; }
+    .nav__cta:hover { background: var(--brand-dark); }
+
+    /* ── Hero ── */
+    .hero { background: var(--brand-color); color: #fff; padding: 96px 24px 80px; text-align: center; }
+    .hero__badge { display: inline-block; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 6px 16px; border-radius: 999px; margin-bottom: 24px; }
+    .hero__headline { font-size: clamp(32px, 5vw, 56px); font-weight: 800; line-height: 1.15; max-width: 760px; margin: 0 auto 20px; letter-spacing: -.02em; }
+    .hero__subheadline { font-size: clamp(16px, 2.2vw, 22px); opacity: .88; max-width: 640px; margin: 0 auto 40px; font-weight: 400; }
+    .hero__cta-group { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: #fff; color: var(--brand-color); padding: 16px 36px; border-radius: var(--radius); font-size: 17px; font-weight: 700; display: inline-block; transition: transform .15s, box-shadow .15s; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+    .btn-ghost { border: 2px solid rgba(255,255,255,.6); color: #fff; padding: 14px 32px; border-radius: var(--radius); font-size: 17px; font-weight: 600; display: inline-block; transition: border-color .15s; }
+    .btn-ghost:hover { border-color: #fff; }
+    .hero__trust { margin-top: 48px; opacity: .7; font-size: 13px; }
+
+    /* ── Stats bar ── */
+    .stats { background: var(--bg-white); border-bottom: 1px solid #e5e7eb; }
+    .stats__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); text-align: center; }
+    .stats__item { padding: 28px 16px; border-right: 1px solid #e5e7eb; }
+    .stats__item:last-child { border-right: none; }
+    .stats__number { font-size: 32px; font-weight: 800; color: var(--brand-color); line-height: 1; }
+    .stats__label { font-size: 13px; color: var(--text-light); margin-top: 6px; }
+
+    /* ── Benefits ── */
+    .benefits { padding: var(--section-pad); background: var(--bg-white); }
+    .section-label { font-size: 13px; font-weight: 700; color: var(--brand-color); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+    .section-title { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+    .section-subtitle { font-size: 18px; color: var(--text-mid); max-width: 580px; }
+    .benefits__header { margin-bottom: 56px; }
+    .benefits__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; }
+    .benefit-card { padding: 32px; background: var(--bg-light); border-radius: 14px; border: 1px solid #e5e7eb; transition: box-shadow .2s, transform .2s; }
+    .benefit-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,.08); transform: translateY(-4px); }
+    .benefit-card__icon { width: 52px; height: 52px; background: var(--brand-color); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 20px; }
+    .benefit-card__title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .benefit-card__text { color: var(--text-mid); font-size: 15px; line-height: 1.65; }
+
+    /* ── Body copy / How it works ── */
+    .how-it-works { padding: var(--section-pad); background: var(--bg-light); }
+    .how-it-works__inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .how-it-works__body { font-size: 16px; color: var(--text-mid); line-height: 1.8; }
+    .steps { list-style: none; margin-top: 32px; }
+    .steps li { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 28px; }
+    .steps__num { flex-shrink: 0; width: 36px; height: 36px; background: var(--brand-color); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }
+    .steps__content h4 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .steps__content p { font-size: 14px; color: var(--text-light); }
+    .how-it-works__visual { background: var(--bg-white); border-radius: 18px; border: 1px solid #e5e7eb; padding: 40px; min-height: 320px; display: flex; align-items: center; justify-content: center; }
+    .how-it-works__visual-placeholder { text-align: center; color: var(--text-light); }
+
+    /* ── Social Proof ── */
+    .social-proof { padding: var(--section-pad); background: var(--bg-white); }
+    .social-proof__header { text-align: center; margin-bottom: 56px; }
+    .testimonials { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+    .testimonial { background: var(--bg-light); border-radius: 14px; padding: 32px; border: 1px solid #e5e7eb; }
+    .testimonial__stars { color: #f59e0b; font-size: 18px; margin-bottom: 16px; }
+    .testimonial__quote { font-size: 16px; line-height: 1.7; color: var(--text-mid); margin-bottom: 24px; font-style: italic; }
+    .testimonial__author { display: flex; align-items: center; gap: 12px; }
+    .testimonial__avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--brand-color); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 16px; }
+    .testimonial__name { font-weight: 700; font-size: 15px; }
+    .testimonial__role { font-size: 13px; color: var(--text-light); }
+
+    /* ── Final CTA ── */
+    .final-cta { padding: 100px 24px; background: var(--brand-color); color: #fff; text-align: center; }
+    .final-cta__headline { font-size: clamp(28px, 4vw, 48px); font-weight: 800; max-width: 700px; margin: 0 auto 20px; line-height: 1.2; }
+    .final-cta__sub { font-size: 18px; opacity: .85; margin-bottom: 40px; }
+    .final-cta__disclaimer { font-size: 13px; opacity: .6; margin-top: 20px; }
+
+    /* ── Footer ── */
+    .footer { background: #111827; color: #9ca3af; padding: 40px 24px; text-align: center; font-size: 14px; }
+    .footer a { color: #d1d5db; }
+    .footer a:hover { color: #fff; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .how-it-works__inner { grid-template-columns: 1fr; gap: 40px; }
+      .stats__grid { grid-template-columns: 1fr 1fr; }
+      .stats__item { border-bottom: 1px solid #e5e7eb; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navigation ── -->
+  <nav class="nav" data-section="nav">
+    <div class="nav__inner">
+      <div class="nav__logo" data-slot="nav-logo">Agency</div>
+      <a class="nav__cta" data-slot="nav-cta" href="#cta">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- ── Hero Section ── -->
+  <section class="hero" data-section="hero">
+    <div class="container">
+      <div class="hero__badge" data-slot="hero-badge">Trusted by 500+ companies</div>
+      <h1 class="hero__headline" data-slot="headline">Placeholder</h1>
+      <p class="hero__subheadline" data-slot="subheadline">Placeholder</p>
+      <div class="hero__cta-group">
+        <a class="btn-primary" data-slot="cta" href="#">Click here</a>
+        <a class="btn-ghost"   data-slot="cta-secondary" href="#how-it-works">See How It Works</a>
+      </div>
+      <p class="hero__trust" data-slot="hero-trust">No credit card required · 30-day money-back guarantee</p>
+    </div>
+  </section>
+
+  <!-- ── Stats Bar ── -->
+  <section class="stats" data-section="stats">
+    <div class="stats__grid container">
+      <div class="stats__item">
+        <div class="stats__number" data-slot="stat-1-number">500+</div>
+        <div class="stats__label" data-slot="stat-1-label">Clients Served</div>
+      </div>
+      <div class="stats__item">
+        <div class="stats__number" data-slot="stat-2-number">2x</div>
+        <div class="stats__label" data-slot="stat-2-label">Average Revenue Growth</div>
+      </div>
+      <div class="stats__item">
+        <div class="stats__number" data-slot="stat-3-number">90</div>
+        <div class="stats__label" data-slot="stat-3-label">Days to Results</div>
+      </div>
+      <div class="stats__item">
+        <div class="stats__number" data-slot="stat-4-number">98%</div>
+        <div class="stats__label" data-slot="stat-4-label">Client Satisfaction</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Benefits ── -->
+  <section class="benefits" data-section="benefits">
+    <div class="container">
+      <div class="benefits__header">
+        <div class="section-label" data-slot="benefits-label">Why Choose Us</div>
+        <h2 class="section-title" data-slot="benefits-title">Everything you need to grow faster</h2>
+        <p class="section-subtitle" data-slot="benefits-subtitle">Placeholder</p>
+      </div>
+      <div class="benefits__grid">
+        <div class="benefit-card">
+          <div class="benefit-card__icon">🚀</div>
+          <h3 class="benefit-card__title" data-slot="benefit-1-title">Rapid Results</h3>
+          <p class="benefit-card__text" data-slot="benefit-1-text">Placeholder benefit description.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-card__icon">📊</div>
+          <h3 class="benefit-card__title" data-slot="benefit-2-title">Data-Driven</h3>
+          <p class="benefit-card__text" data-slot="benefit-2-text">Placeholder benefit description.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-card__icon">🎯</div>
+          <h3 class="benefit-card__title" data-slot="benefit-3-title">Proven Strategy</h3>
+          <p class="benefit-card__text" data-slot="benefit-3-text">Placeholder benefit description.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How It Works ── -->
+  <section class="how-it-works" id="how-it-works" data-section="how-it-works">
+    <div class="container">
+      <div class="how-it-works__inner">
+        <div>
+          <div class="section-label" data-slot="hiw-label">How It Works</div>
+          <h2 class="section-title" data-slot="hiw-title">A simple process that delivers results</h2>
+          <div class="how-it-works__body">
+            <p data-slot="body">Placeholder</p>
+            <ul class="steps">
+              <li>
+                <span class="steps__num">1</span>
+                <div class="steps__content">
+                  <h4 data-slot="step-1-title">Discovery Call</h4>
+                  <p data-slot="step-1-text">We learn about your business and goals.</p>
+                </div>
+              </li>
+              <li>
+                <span class="steps__num">2</span>
+                <div class="steps__content">
+                  <h4 data-slot="step-2-title">Custom Strategy</h4>
+                  <p data-slot="step-2-text">We build a tailored growth plan for you.</p>
+                </div>
+              </li>
+              <li>
+                <span class="steps__num">3</span>
+                <div class="steps__content">
+                  <h4 data-slot="step-3-title">Execute &amp; Grow</h4>
+                  <p data-slot="step-3-text">We implement, iterate, and deliver results.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="how-it-works__visual">
+          <div class="how-it-works__visual-placeholder" data-slot="hiw-visual">
+            <div style="font-size:64px;margin-bottom:16px;">📈</div>
+            <p style="font-size:15px;">Results Dashboard Preview</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Social Proof ── -->
+  <section class="social-proof" data-section="social-proof">
+    <div class="container">
+      <div class="social-proof__header">
+        <div class="section-label" data-slot="sp-label">Client Results</div>
+        <h2 class="section-title" data-slot="sp-title">What our clients say</h2>
+      </div>
+      <div class="testimonials">
+        <div class="testimonial">
+          <div class="testimonial__stars">★★★★★</div>
+          <p class="testimonial__quote" data-slot="testimonial-1-quote">"Placeholder testimonial quote."</p>
+          <div class="testimonial__author">
+            <div class="testimonial__avatar">JD</div>
+            <div>
+              <div class="testimonial__name" data-slot="testimonial-1-name">Jane Doe</div>
+              <div class="testimonial__role" data-slot="testimonial-1-role">CEO, Company</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="testimonial__stars">★★★★★</div>
+          <p class="testimonial__quote" data-slot="testimonial-2-quote">"Placeholder testimonial quote."</p>
+          <div class="testimonial__author">
+            <div class="testimonial__avatar">MS</div>
+            <div>
+              <div class="testimonial__name" data-slot="testimonial-2-name">Mike Smith</div>
+              <div class="testimonial__role" data-slot="testimonial-2-role">CRO, Startup</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="testimonial__stars">★★★★★</div>
+          <p class="testimonial__quote" data-slot="testimonial-3-quote">"Placeholder testimonial quote."</p>
+          <div class="testimonial__author">
+            <div class="testimonial__avatar">AL</div>
+            <div>
+              <div class="testimonial__name" data-slot="testimonial-3-name">Amy Lee</div>
+              <div class="testimonial__role" data-slot="testimonial-3-role">VP Marketing</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Final CTA ── -->
+  <section class="final-cta" id="cta" data-section="final-cta">
+    <div class="container">
+      <h2 class="final-cta__headline" data-slot="cta-headline">Ready to start growing?</h2>
+      <p class="final-cta__sub" data-slot="cta-subheadline">Join hundreds of companies already scaling with us.</p>
+      <a class="btn-primary" data-slot="cta" href="#">Click here</a>
+      <p class="final-cta__disclaimer" data-slot="cta-disclaimer">Free 30-minute strategy call · No commitment required</p>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="footer" data-section="footer">
+    <div class="container">
+      <p data-slot="footer-text">&copy; 2025 Agency. All rights reserved. &bull; <a href="/privacy">Privacy</a> &bull; <a href="/terms">Terms</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>

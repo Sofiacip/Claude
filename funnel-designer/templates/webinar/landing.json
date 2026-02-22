@@ -1,0 +1,141 @@
+{
+  "page_type": "landing_page",
+  "funnel": "webinar",
+  "sticky_cta": true,
+  "nav": false,
+  "sections": [
+    {
+      "id": "S1",
+      "name": "Logo Bar",
+      "component": "logo_bar",
+      "slots": ["logo"],
+      "mobile": "centered, 60px height, no nav links, no distractions"
+    },
+    {
+      "id": "S2",
+      "name": "Pre-Headline",
+      "component": "pre_headline",
+      "slots": ["host_credentials"],
+      "mobile": "centered text, small caps, muted color"
+    },
+    {
+      "id": "S3",
+      "name": "Hero Headline",
+      "component": "hero_headline",
+      "slots": ["webinar_title"],
+      "mobile": "full width, 2-3 lines max",
+      "design_rules": ["FREE always capitalized/uppercase wherever it appears", "largest text on page", "benefit-driven headline"]
+    },
+    {
+      "id": "S4",
+      "name": "Hero Subheadline",
+      "component": "hero_subheadline",
+      "slots": ["hero_subheadline"],
+      "mobile": "full width, lighter weight than headline"
+    },
+    {
+      "id": "S5",
+      "name": "Registration Form",
+      "component": "registration_form",
+      "anchor": "#form",
+      "slots": ["cta_text"],
+      "fields": ["first_name", "email"],
+      "mobile": "full width, stacked fields, prominent CTA button"
+    },
+    {
+      "id": "S6",
+      "name": "Countdown Timer",
+      "component": "countdown_timer",
+      "slots": ["webinar_date"],
+      "format": "days / hours / minutes / seconds",
+      "mobile": "4-column grid, each unit in a card"
+    },
+    {
+      "id": "S7",
+      "name": "Social Proof Stats",
+      "component": "stats_bar",
+      "slots": ["social_proof_stats"],
+      "mobile": "2x2 grid or horizontal scroll",
+      "design_rules": ["3-4 numbers showing students, results, years, etc."]
+    },
+    {
+      "id": "S8",
+      "name": "Media Logos",
+      "component": "logo_strip",
+      "slots": ["media_logos"],
+      "mobile": "horizontal scroll or 2-row grid, grayscale treatment",
+      "design_rules": ["'As Seen In' label above logos"]
+    },
+    {
+      "id": "S9",
+      "name": "Pain Section",
+      "component": "pain_checklist",
+      "slots": ["pain_points"],
+      "mobile": "full width, checkbox-style list items",
+      "design_rules": ["header: 'Does this feel familiar?'", "unchecked checkbox visual state", "3-5 pain statements as checklist"]
+    },
+    {
+      "id": "S10",
+      "name": "Bridge Paragraph",
+      "component": "text_block",
+      "slots": ["bridge_paragraph"],
+      "mobile": "centered text, max-width 680px"
+    },
+    {
+      "id": "S11",
+      "name": "What You'll Learn",
+      "component": "numbered_list",
+      "slots": ["outcomes"],
+      "mobile": "full width, numbered items with icons",
+      "design_rules": ["header: 'What You'll Learn'", "numbered outcomes list"]
+    },
+    {
+      "id": "S12",
+      "name": "Mid-Page CTA",
+      "component": "cta_button",
+      "anchor_target": "#form",
+      "slots": ["cta_text"],
+      "mobile": "full width button"
+    },
+    {
+      "id": "S13",
+      "name": "Meet Your Guide",
+      "component": "host_bio",
+      "slots": ["host_name", "bio_text", "host_credentials"],
+      "mobile": "stacked: photo on top, text below",
+      "design_rules": ["host photo + bio + credentials", "warm, approachable tone"]
+    },
+    {
+      "id": "S14",
+      "name": "Testimonials",
+      "component": "testimonial_cards",
+      "slots": ["testimonials"],
+      "mobile": "stacked cards, one per row",
+      "design_rules": ["3-5 cards", "each card: name + photo + result"]
+    },
+    {
+      "id": "S15",
+      "name": "Value Stack",
+      "component": "value_stack",
+      "slots": ["bonuses", "total_value"],
+      "mobile": "full width, each bonus as a row",
+      "design_rules": ["each bonus shows name + individual value", "final line shows total value with emphasis"]
+    },
+    {
+      "id": "S16",
+      "name": "Final CTA Block",
+      "component": "final_cta",
+      "anchor": "#form",
+      "slots": ["cta_text", "webinar_date"],
+      "mobile": "full width form + timer",
+      "design_rules": ["registration form repeated", "countdown timer repeated", "last chance messaging"]
+    },
+    {
+      "id": "S17",
+      "name": "Footer",
+      "component": "minimal_footer",
+      "slots": [],
+      "mobile": "centered, terms + privacy links only, no navigation"
+    }
+  ]
+}

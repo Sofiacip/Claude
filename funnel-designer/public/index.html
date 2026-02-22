@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impact OS — Funnel Designer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --border-hover: #3a3a3a;
+      --text: #f0f0f0;
+      --text-muted: #777;
+      --text-dim: #444;
+      --accent: #3b82f6;
+      --accent-dim: rgba(59,130,246,0.12);
+      --green: #22c55e;
+      --green-dim: rgba(34,197,94,0.08);
+      --red: #ef4444;
+      --orange: #f59e0b;
+      --orange-dim: rgba(245,158,11,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* Scanline texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    h1, h2, h3, .syne { font-family: 'Syne', sans-serif; }
+
+    /* Screen management */
+    .screen { display: none; min-height: 100vh; flex-direction: column; opacity: 0; transition: opacity 0.25s ease; position: relative; z-index: 1; }
+    .screen.active { display: flex; opacity: 1; }
+
+    /* Field base */
+    .field {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 4px;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .field:focus { outline: none; border-color: var(--accent); }
+    .field::placeholder { color: var(--text-dim); }
+
+    /* Primary button */
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      padding: 0.7rem 1.5rem;
+      border-radius: 4px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover:not(:disabled) { opacity: 0.88; }
+    .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* Ghost button */
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.05em;
+      padding: 0.55rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--border-hover); color: var(--text); }
+
+    /* Success button */
+    .btn-success {
+      background: var(--green);
+      color: #fff;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      padding: 0.7rem 1.5rem;
+      border-radius: 4px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-success:hover:not(:disabled) { opacity: 0.88; }
+    .btn-success:active:not(:disabled) { transform: scale(0.98); }
+    .btn-success:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* Warning button */
+    .btn-warning {
+      background: transparent;
+      border: 1px solid var(--orange);
+      color: var(--orange);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.05em;
+      padding: 0.55rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-warning:hover { opacity: 0.8; }
+
+    /* Nav */
+    .topnav {
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-shrink: 0;
+    }
+    .nav-logo {
+      width: 22px; height: 22px;
+      background: var(--accent);
+      border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .nav-wordmark { font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.07em; }
+    .nav-divider { color: var(--border); }
+    .nav-subtitle { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+
+    /* Stage pills */
+    .stage-pill {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.875rem;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      transition: border-color 0.3s, color 0.3s, background 0.3s;
+    }
+    .stage-pill.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .stage-pill.done { border-color: rgba(34,197,94,0.5); color: var(--green); background: var(--green-dim); }
+
+    /* Progress log */
+    .log-line {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      padding: 0.18rem 0;
+      animation: fadeUp 0.25s ease;
+      line-height: 1.5;
+    }
+    .log-line.current { color: var(--text); }
+    .log-line.success { color: var(--green); }
+    .log-line.error-line { color: var(--red); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(3px); }
+      to   { opacity: 1; transform: none; }
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+    .cursor {
+      display: inline-block;
+      width: 7px; height: 13px;
+      background: var(--accent);
+      animation: blink 1s infinite;
+      vertical-align: middle;
+      margin-left: 3px;
+    }
+
+    /* Section label */
+    .section-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.45rem;
+      display: block;
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--surface);
+    }
+    .upload-zone:hover { border-color: var(--accent); background: var(--accent-dim); }
+    .upload-zone.active { border-color: var(--accent); background: var(--accent-dim); }
+    .upload-zone.has-file { border-color: var(--green); border-style: solid; }
+
+    /* Page card (for review screen) */
+    .page-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .page-card:hover { border-color: var(--border-hover); }
+    .page-card .card-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .page-card .card-body { padding: 0.75rem 1rem; }
+
+    /* Status badge */
+    .badge {
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border-radius: 2px;
+    }
+    .badge-pending { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+    .badge-building { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+    .badge-qa { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(245,158,11,0.3); }
+    .badge-approved { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+    .badge-changes { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      max-width: 480px;
+      width: 90%;
+    }
+
+    /* Page grid thumbnails */
+    .thumb-pair {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 0.5rem;
+      padding: 0.5rem;
+    }
+    .thumb-pair img {
+      width: 100%;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    /* Deploy URL list */
+    .url-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .url-item:last-child { border-bottom: none; }
+    .url-item a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.78rem;
+      word-break: break-all;
+    }
+    .url-item a:hover { text-decoration: underline; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.72rem;
+      padding: 0.65rem 1rem;
+      border-radius: 4px;
+      z-index: 200;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: none; pointer-events: auto; }
+    .toast.error { border-color: rgba(239,68,68,0.4); }
+  </style>
+</head>
+<body>
+
+<!-- ─── Screen 1: Login ──────────────────────────────────────────────── -->
+<div id="screen-login" class="screen active">
+  <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+    <div style="width:320px;">
+      <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:2.5rem;">
+        <div class="nav-logo">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="4" rx="0.5" fill="#fff"/><rect x="7" y="1" width="4" height="4" rx="0.5" fill="#fff" opacity="0.5"/><rect x="1" y="7" width="4" height="4" rx="0.5" fill="#fff" opacity="0.5"/><rect x="7" y="7" width="4" height="4" rx="0.5" fill="#fff" opacity="0.3"/></svg>
+        </div>
+        <span class="nav-wordmark">Impact OS</span>
+        <span class="nav-divider">/</span>
+        <span class="nav-subtitle">Funnel Designer</span>
+      </div>
+      <label class="section-label">Password</label>
+      <input id="login-pw" type="password" class="field" placeholder="Enter password" style="margin-bottom:1rem;"
+        onkeydown="if(event.key==='Enter') doLogin()">
+      <button class="btn-primary" style="width:100%;" onclick="doLogin()">Enter</button>
+      <p id="login-err" style="color:var(--red); font-size:0.68rem; margin-top:0.6rem; display:none;"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Screen 2: New Funnel ─────────────────────────────────────────── -->
+<div id="screen-input" class="screen">
+  <div class="topnav">
+    <div class="nav-logo">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="4" rx="0.5" fill="#fff"/><rect x="7" y="1" width="4" height="4" rx="0.5" fill="#fff" opacity="0.5"/><rect x="1" y="7" width="4" height="4" rx="0.5" fill="#fff" opacity="0.5"/><rect x="7" y="7" width="4" height="4" rx="0.5" fill="#fff" opacity="0.3"/></svg>
+    </div>
+    <span class="nav-wordmark">Impact OS</span>
+    <span class="nav-divider">/</span>
+    <span class="nav-subtitle">Funnel Designer</span>
+  </div>
+  <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:2rem;">
+    <div style="max-width:520px; width:100%;">
+      <h2 class="syne" style="font-size:1.3rem; font-weight:700; margin-bottom:0.3rem;">New Funnel</h2>
+      <p style="font-size:0.72rem; color:var(--text-muted); margin-bottom:2rem;">Upload a brand package and copy documents to generate a fully branded funnel.</p>
+
+      <!-- Client Name -->
+      <label class="section-label">Client Name</label>
+      <input id="input-client" type="text" class="field" placeholder="e.g. Pattie Ehsaei" style="margin-bottom:1.25rem;">
+
+      <!-- Funnel Type -->
+      <label class="section-label">Funnel Type</label>
+      <select id="input-funnel-type" class="field" style="margin-bottom:1.25rem; cursor:pointer;">
+        <option value="webinar">Webinar Funnel (6 pages)</option>
+      </select>
+
+      <!-- Brand Package Upload -->
+      <label class="section-label">Brand Package (.zip)</label>
+      <div id="zone-brand" class="upload-zone" style="margin-bottom:1.25rem;" onclick="document.getElementById('file-brand').click()">
+        <input id="file-brand" type="file" accept=".zip" style="display:none;" onchange="onBrandFile(this)">
+        <div id="brand-label" style="font-size:0.72rem; color:var(--text-dim);">
+          <span style="color:var(--accent);">Click to upload</span> or drag & drop<br>
+          <span style="font-size:0.62rem; color:var(--text-dim); margin-top:0.3rem; display:inline-block;">ZIP file from Brand Module</span>
+        </div>
+      </div>
+
+      <!-- Copy Documents Upload -->
+      <label class="section-label">Copy Documents (.docx)</label>
+      <div id="zone-copies" class="upload-zone" style="margin-bottom:1.75rem;" onclick="document.getElementById('file-copies').click()">
+        <input id="file-copies" type="file" accept=".docx" multiple style="display:none;" onchange="onCopyFiles(this)">
+        <div id="copies-label" style="font-size:0.72rem; color:var(--text-dim);">
+          <span style="color:var(--accent);">Click to upload</span> or drag & drop<br>
+          <span style="font-size:0.62rem; color:var(--text-dim); margin-top:0.3rem; display:inline-block;">One .docx per page (landing.docx, upgrade.docx, etc.)</span>
+        </div>
+      </div>
+
+      <button id="btn-build" class="btn-primary" style="width:100%;" onclick="startBuild()" disabled>
+        Build Funnel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Screen 3: Progress ───────────────────────────────────────────── -->
+<div id="screen-progress" class="screen">
+  <div class="topnav">
+    <div class="nav-logo">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="4" rx="0.5" fill="#fff"/><rect x="7" y="1" width="4" height="4" rx="0.5" fill="#fff" opacity="0.5"/><rect x="1" y="7" width="4" height="4" rx="0.5" fill="#fff" opacity="0.5"/><rect x="7" y="7" width="4" height="4" rx="0.5" fill="#fff" opacity="0.3"/></svg>
+    </div>
+    <span class="nav-wordmark">Impact OS</span>
+    <span class="nav-divider">/</span>
+    <span class="nav-subtitle">Funnel Designer</span>
+  </div>
+
+  <div style="padding:1.5rem 2rem;">
+    <!-- Stage pills -->
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+      <div class="stage-pill" data-stage="ingesting">01 Ingest</div>
+      <span style="color:var(--text-dim); font-size:0.6rem; display:flex; align-items:center;">›</span>
+      <div class="stage-pill" data-stage="mapping">02 Map</div>
+      <span style="color:var(--text-dim); font-size:0.6rem; display:flex; align-items:center;">›</span>
+      <div class="stage-pill" data-stage="building">03 Build</div>
+      <span style="color:var(--text-dim); font-size:0.6rem; display:flex; align-items:center;">›</span>
+      <div class="stage-pill" data-stage="qa">04 QA</div>
+      <span style="color:var(--text-dim); font-size:0.6rem; display:flex; align-items:center;">›</span>
+      <div class="stage-pill" data-stage="review">05 Review</div>
+    </div>
+
+    <!-- Per-page status grid -->
+    <div id="page-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:0.75rem; margin-bottom:1.5rem;">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Terminal log -->
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:1rem; max-height:320px; overflow-y:auto;" id="log-container">
+      <div id="log-lines"></div>
+      <div class="log-line current"><span class="cursor"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Screen 4: Review ─────────────────────────────────────────────── -->
+<div id="screen-review" class="screen">
+  <div class="topnav" style="justify-content:space-between;">
+    <div style="display:flex; align-items:center; gap:0.65rem;">
+      <div class="nav-logo">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="4" rx="0.5" fill="#fff"/><rect x="7" y="1" width="4" height="4" rx="0.5" fill="#fff" opacity="0.5"/><rect x="1" y="7" width="4" height="4" rx="0.5" fill="#fff" opacity="0.5"/><rect x="7" y="7" width="4" height="4" rx="0.5" fill="#fff" opacity="0.3"/></svg>
+      </div>
+      <span class="nav-wordmark">Impact OS</span>
+      <span class="nav-divider">/</span>
+      <span class="nav-subtitle">Funnel Designer — Review</span>
+    </div>
+    <button id="btn-deploy-all" class="btn-success" onclick="goToDeploy()" disabled>
+      Deploy All →
+    </button>
+  </div>
+
+  <div style="padding:1.5rem 2rem;">
+    <h2 class="syne" style="font-size:1.1rem; font-weight:700; margin-bottom:0.3rem;">Page Review</h2>
+    <p style="font-size:0.72rem; color:var(--text-muted); margin-bottom:1.5rem;">Approve each page or request changes. All pages must be approved before deploying.</p>
+
+    <div id="review-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1rem;">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ─── Screen 5: Deploy ─────────────────────────────────────────────── -->
+<div id="screen-deploy" class="screen">
+  <div class="topnav">
+    <div class="nav-logo">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="4" rx="0.5" fill="#fff"/><rect x="7" y="1" width="4" height="4" rx="0.5" fill="#fff" opacity="0.5"/><rect x="1" y="7" width="4" height="4" rx="0.5" fill="#fff" opacity="0.5"/><rect x="7" y="7" width="4" height="4" rx="0.5" fill="#fff" opacity="0.3"/></svg>
+    </div>
+    <span class="nav-wordmark">Impact OS</span>
+    <span class="nav-divider">/</span>
+    <span class="nav-subtitle">Funnel Designer — Deploy</span>
+  </div>
+
+  <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:2rem;">
+    <div style="max-width:560px; width:100%;">
+      <div id="deploy-pending">
+        <h2 class="syne" style="font-size:1.3rem; font-weight:700; margin-bottom:0.3rem;">Deploy to Vercel</h2>
+        <p style="font-size:0.72rem; color:var(--text-muted); margin-bottom:1.5rem;">All 6 pages approved. Ready to deploy.</p>
+
+        <div id="deploy-summary" style="background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1rem; margin-bottom:1.5rem;">
+          <!-- Populated by JS -->
+        </div>
+
+        <button id="btn-deploy" class="btn-success" style="width:100%;" onclick="doDeploy()">
+          Deploy All to Vercel
+        </button>
+      </div>
+
+      <div id="deploy-done" style="display:none;">
+        <div style="text-align:center; margin-bottom:1.5rem;">
+          <div style="font-size:2.5rem; margin-bottom:0.5rem;">✓</div>
+          <h2 class="syne" style="font-size:1.3rem; font-weight:700; margin-bottom:0.3rem;">Funnel Deployed</h2>
+          <p style="font-size:0.72rem; color:var(--text-muted);">All pages are live.</p>
+        </div>
+
+        <div id="deploy-urls" style="background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1rem; margin-bottom:1.5rem;">
+          <!-- Populated by JS -->
+        </div>
+
+        <button class="btn-ghost" style="width:100%;" onclick="resetToInput()">
+          Build Another Funnel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Feedback Modal ───────────────────────────────────────────────── -->
+<div id="modal-feedback" class="modal-overlay">
+  <div class="modal-box">
+    <h3 class="syne" style="font-size:0.95rem; font-weight:700; margin-bottom:0.75rem;">Request Changes</h3>
+    <p style="font-size:0.68rem; color:var(--text-muted); margin-bottom:1rem;">
+      Describe what needs to change on the <strong id="modal-page-name"></strong> page.
+    </p>
+    <textarea id="modal-feedback-text" class="field" rows="4" placeholder="Describe the changes needed..." style="resize:vertical; margin-bottom:1rem;"></textarea>
+    <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-warning" onclick="submitFeedback()">Submit Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast ────────────────────────────────────────────────────────── -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+
+const S = {
+  jobId: null,
+  sse: null,
+  currentScreen: 'login',
+  pages: [],
+  feedbackPageIdx: null
+};
+
+const PAGE_LABELS = {
+  landing: 'Landing Page',
+  upgrade: 'Upgrade (OTO1)',
+  upsell: 'Upsell (OTO2)',
+  thank_you: 'Thank You',
+  replay: 'Replay',
+  sales: 'Sales Page'
+};
+
+// ── Navigation ────────────────────────────────────────────────────────────
+
+function show(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`screen-${screenId}`).classList.add('active');
+  S.currentScreen = screenId;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('error', isError);
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Screen 1: Login ───────────────────────────────────────────────────────
+
+async function doLogin() {
+  const pw = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      show('input');
+    } else {
+      errEl.textContent = 'Incorrect password.';
+      errEl.style.display = 'block';
+    }
+  } catch (e) {
+    errEl.textContent = 'Connection error.';
+    errEl.style.display = 'block';
+  }
+}
+
+// ── Screen 2: New Funnel ──────────────────────────────────────────────────
+
+let brandFile = null;
+let copyFiles = [];
+
+function onBrandFile(input) {
+  if (input.files[0]) {
+    brandFile = input.files[0];
+    const zone = document.getElementById('zone-brand');
+    zone.classList.add('has-file');
+    document.getElementById('brand-label').innerHTML =
+      `<span style="color:var(--green);">✓</span> ${brandFile.name}`;
+    checkBuildReady();
+  }
+}
+
+function onCopyFiles(input) {
+  copyFiles = Array.from(input.files);
+  if (copyFiles.length > 0) {
+    const zone = document.getElementById('zone-copies');
+    zone.classList.add('has-file');
+    document.getElementById('copies-label').innerHTML =
+      `<span style="color:var(--green);">✓</span> ${copyFiles.length} file${copyFiles.length > 1 ? 's' : ''}: ` +
+      copyFiles.map(f => f.name).join(', ');
+    checkBuildReady();
+  }
+}
+
+function checkBuildReady() {
+  const clientName = document.getElementById('input-client').value.trim();
+  document.getElementById('btn-build').disabled = !(clientName && brandFile && copyFiles.length > 0);
+}
+
+// Listen for client name input
+document.getElementById('input-client').addEventListener('input', checkBuildReady);
+
+// Drag & drop support
+['zone-brand', 'zone-copies'].forEach(id => {
+  const zone = document.getElementById(id);
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('active'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('active'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('active');
+    if (id === 'zone-brand') {
+      const input = document.getElementById('file-brand');
+      input.files = e.dataTransfer.files;
+      onBrandFile(input);
+    } else {
+      const input = document.getElementById('file-copies');
+      input.files = e.dataTransfer.files;
+      onCopyFiles(input);
+    }
+  });
+});
+
+async function startBuild() {
+  const clientName = document.getElementById('input-client').value.trim();
+  const funnelType = document.getElementById('input-funnel-type').value;
+
+  const formData = new FormData();
+  formData.append('clientName', clientName);
+  formData.append('funnelType', funnelType);
+  formData.append('brand', brandFile);
+  copyFiles.forEach(f => formData.append('copies', f));
+
+  document.getElementById('btn-build').disabled = true;
+  document.getElementById('btn-build').textContent = 'Starting...';
+
+  try {
+    const res = await fetch('/api/funnel', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (data.error) {
+      toast(data.error, true);
+      document.getElementById('btn-build').disabled = false;
+      document.getElementById('btn-build').textContent = 'Build Funnel';
+      return;
+    }
+
+    S.jobId = data.jobId;
+    show('progress');
+    initProgressScreen();
+    startSSE();
+  } catch (e) {
+    toast('Connection error.', true);
+    document.getElementById('btn-build').disabled = false;
+    document.getElementById('btn-build').textContent = 'Build Funnel';
+  }
+}
+
+// ── Screen 3: Progress ────────────────────────────────────────────────────
+
+function initProgressScreen() {
+  // Reset page grid
+  const grid = document.getElementById('page-grid');
+  grid.innerHTML = '';
+  const pageTypes = ['landing', 'upgrade', 'upsell', 'thank_you', 'replay', 'sales'];
+  pageTypes.forEach((pt, i) => {
+    S.pages[i] = { pageType: pt, qaStatus: 'pending' };
+    const card = document.createElement('div');
+    card.className = 'page-card';
+    card.id = `progress-card-${i}`;
+    card.innerHTML = `
+      <div class="card-header">
+        <span style="font-size:0.72rem; font-weight:500;">${PAGE_LABELS[pt]}</span>
+        <span class="badge badge-pending" id="progress-badge-${i}">Queued</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Reset log
+  document.getElementById('log-lines').innerHTML = '';
+
+  // Reset stage pills
+  document.querySelectorAll('.stage-pill').forEach(p => {
+    p.classList.remove('active', 'done');
+  });
+}
+
+function startSSE() {
+  if (S.sse) S.sse.close();
+  S.sse = new EventSource(`/api/jobs/${S.jobId}/stream`);
+
+  S.sse.onmessage = (e) => {
+    const { message } = JSON.parse(e.data);
+    appendLog(message);
+  };
+
+  S.sse.addEventListener('status', (e) => {
+    const { status } = JSON.parse(e.data);
+    updateStagePills(status);
+    if (status === 'review') {
+      setTimeout(() => {
+        fetchJobAndShowReview();
+      }, 500);
+    }
+    if (status === 'error') {
+      const { error } = JSON.parse(e.data);
+      appendLog(`ERROR: ${error}`, 'error-line');
+    }
+  });
+
+  S.sse.addEventListener('page', (e) => {
+    const { pageIndex, status } = JSON.parse(e.data);
+    updatePageBadge(pageIndex, status);
+  });
+
+  S.sse.onerror = () => {
+    // SSE will auto-reconnect
+  };
+}
+
+function appendLog(msg, cls = '') {
+  const container = document.getElementById('log-lines');
+  const line = document.createElement('div');
+  line.className = `log-line ${cls}`;
+  if (msg.includes('✓')) line.classList.add('success');
+  if (msg.startsWith('Error') || msg.startsWith('ERROR')) line.classList.add('error-line');
+  line.textContent = msg;
+  container.appendChild(line);
+  // Auto-scroll
+  const logContainer = document.getElementById('log-container');
+  logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+const STAGE_ORDER = ['ingesting', 'mapping', 'building', 'qa', 'review'];
+
+function updateStagePills(currentStatus) {
+  const pills = document.querySelectorAll('.stage-pill');
+  const currentIdx = STAGE_ORDER.indexOf(currentStatus);
+  pills.forEach(pill => {
+    const stageKey = pill.dataset.stage;
+    const stageIdx = STAGE_ORDER.indexOf(stageKey);
+    pill.classList.remove('active', 'done');
+    if (stageIdx < currentIdx) pill.classList.add('done');
+    else if (stageIdx === currentIdx) pill.classList.add('active');
+  });
+}
+
+const BADGE_MAP = {
+  pending: { cls: 'badge-pending', label: 'Queued' },
+  building: { cls: 'badge-building', label: 'Building' },
+  qa: { cls: 'badge-qa', label: 'QA' },
+  approved: { cls: 'badge-approved', label: 'Passed' },
+  changes_requested: { cls: 'badge-changes', label: 'Needs Review' }
+};
+
+function updatePageBadge(idx, status) {
+  const badge = document.getElementById(`progress-badge-${idx}`);
+  if (!badge) return;
+  const info = BADGE_MAP[status] || BADGE_MAP.pending;
+  badge.className = `badge ${info.cls}`;
+  badge.textContent = info.label;
+
+  // Also update S.pages
+  if (S.pages[idx]) S.pages[idx].qaStatus = status;
+}
+
+// ── Screen 4: Review ──────────────────────────────────────────────────────
+
+async function fetchJobAndShowReview() {
+  try {
+    const res = await fetch(`/api/jobs/${S.jobId}`);
+    const job = await res.json();
+    S.pages = job.pages;
+    renderReviewGrid();
+    show('review');
+  } catch (e) {
+    toast('Failed to load job data.', true);
+  }
+}
+
+function renderReviewGrid() {
+  const grid = document.getElementById('review-grid');
+  grid.innerHTML = '';
+
+  S.pages.forEach((page, i) => {
+    const card = document.createElement('div');
+    card.className = 'page-card';
+    card.id = `review-card-${i}`;
+
+    const badgeInfo = BADGE_MAP[page.qaStatus] || BADGE_MAP.pending;
+
+    card.innerHTML = `
+      <div class="card-header">
+        <span style="font-size:0.78rem; font-weight:500;">${PAGE_LABELS[page.pageType] || page.pageType}</span>
+        <span class="badge ${badgeInfo.cls}" id="review-badge-${i}">${badgeInfo.label}</span>
+      </div>
+      <div class="thumb-pair">
+        <img src="/api/jobs/${S.jobId}/pages/${i}/screenshot/mobile" alt="Mobile"
+          onerror="this.style.display='none'">
+        <img src="/api/jobs/${S.jobId}/pages/${i}/screenshot/desktop" alt="Desktop"
+          onerror="this.style.display='none'">
+      </div>
+      <div class="card-body" style="display:flex; gap:0.5rem;">
+        <button class="btn-success" style="flex:1; padding:0.5rem;" onclick="approvePage(${i})"
+          ${page.qaStatus === 'approved' ? 'disabled' : ''}>
+          ${page.qaStatus === 'approved' ? '✓ Approved' : 'Approve'}
+        </button>
+        <button class="btn-warning" style="flex:1; padding:0.5rem;" onclick="openFeedback(${i})"
+          ${page.qaStatus === 'approved' ? 'disabled' : ''}>
+          Changes
+        </button>
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+
+  checkAllApproved();
+}
+
+async function approvePage(idx) {
+  try {
+    await fetch(`/api/jobs/${S.jobId}/pages/${idx}/approve`, { method: 'POST' });
+    S.pages[idx].qaStatus = 'approved';
+    renderReviewGrid();
+    toast(`${PAGE_LABELS[S.pages[idx].pageType]} approved.`);
+  } catch (e) {
+    toast('Failed to approve page.', true);
+  }
+}
+
+function openFeedback(idx) {
+  S.feedbackPageIdx = idx;
+  document.getElementById('modal-page-name').textContent =
+    PAGE_LABELS[S.pages[idx].pageType] || S.pages[idx].pageType;
+  document.getElementById('modal-feedback-text').value = '';
+  document.getElementById('modal-feedback').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-feedback').classList.remove('open');
+  S.feedbackPageIdx = null;
+}
+
+async function submitFeedback() {
+  const feedback = document.getElementById('modal-feedback-text').value.trim();
+  if (!feedback) return;
+
+  const idx = S.feedbackPageIdx;
+  try {
+    await fetch(`/api/jobs/${S.jobId}/pages/${idx}/request-changes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feedback })
+    });
+    S.pages[idx].qaStatus = 'building';
+    closeModal();
+    renderReviewGrid();
+    toast(`Changes requested for ${PAGE_LABELS[S.pages[idx].pageType]}.`);
+
+    // Poll for rebuild completion
+    pollPageStatus(idx);
+  } catch (e) {
+    toast('Failed to submit feedback.', true);
+  }
+}
+
+function pollPageStatus(idx) {
+  const interval = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/jobs/${S.jobId}`);
+      const job = await res.json();
+      const page = job.pages[idx];
+      S.pages[idx].qaStatus = page.qaStatus;
+      renderReviewGrid();
+      if (page.qaStatus !== 'building' && page.qaStatus !== 'qa') {
+        clearInterval(interval);
+      }
+    } catch (e) {
+      clearInterval(interval);
+    }
+  }, 3000);
+}
+
+function checkAllApproved() {
+  const allApproved = S.pages.every(p => p.qaStatus === 'approved');
+  document.getElementById('btn-deploy-all').disabled = !allApproved;
+}
+
+// ── Screen 5: Deploy ──────────────────────────────────────────────────────
+
+function goToDeploy() {
+  // Build summary
+  const summary = document.getElementById('deploy-summary');
+  summary.innerHTML = S.pages.map(p => `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid var(--border);">
+      <span style="font-size:0.72rem;">${PAGE_LABELS[p.pageType] || p.pageType}</span>
+      <span class="badge badge-approved">Approved</span>
+    </div>
+  `).join('');
+
+  document.getElementById('deploy-pending').style.display = 'block';
+  document.getElementById('deploy-done').style.display = 'none';
+  show('deploy');
+}
+
+async function doDeploy() {
+  const btn = document.getElementById('btn-deploy');
+  btn.disabled = true;
+  btn.textContent = 'Deploying...';
+
+  try {
+    const res = await fetch(`/api/jobs/${S.jobId}/deploy`, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.error) {
+      toast(data.error, true);
+      btn.disabled = false;
+      btn.textContent = 'Deploy All to Vercel';
+      return;
+    }
+
+    // Show URLs
+    document.getElementById('deploy-pending').style.display = 'none';
+    document.getElementById('deploy-done').style.display = 'block';
+
+    const urlsContainer = document.getElementById('deploy-urls');
+    if (data.urls && typeof data.urls === 'object') {
+      urlsContainer.innerHTML = Object.entries(data.urls).map(([pageType, url]) => `
+        <div class="url-item">
+          <span style="font-size:0.68rem; color:var(--text-muted); min-width:90px;">${PAGE_LABELS[pageType] || pageType}</span>
+          <a href="${url}" target="_blank">${url}</a>
+        </div>
+      `).join('');
+    }
+  } catch (e) {
+    toast('Deploy failed.', true);
+    btn.disabled = false;
+    btn.textContent = 'Deploy All to Vercel';
+  }
+}
+
+function resetToInput() {
+  // Reset state
+  S.jobId = null;
+  S.pages = [];
+  brandFile = null;
+  copyFiles = [];
+  if (S.sse) { S.sse.close(); S.sse = null; }
+
+  // Reset input form
+  document.getElementById('input-client').value = '';
+  document.getElementById('file-brand').value = '';
+  document.getElementById('file-copies').value = '';
+  document.getElementById('zone-brand').classList.remove('has-file');
+  document.getElementById('zone-copies').classList.remove('has-file');
+  document.getElementById('brand-label').innerHTML =
+    '<span style="color:var(--accent);">Click to upload</span> or drag & drop<br><span style="font-size:0.62rem; color:var(--text-dim); margin-top:0.3rem; display:inline-block;">ZIP file from Brand Module</span>';
+  document.getElementById('copies-label').innerHTML =
+    '<span style="color:var(--accent);">Click to upload</span> or drag & drop<br><span style="font-size:0.62rem; color:var(--text-dim); margin-top:0.3rem; display:inline-block;">One .docx per page (landing.docx, upgrade.docx, etc.)</span>';
+  document.getElementById('btn-build').disabled = true;
+  document.getElementById('btn-build').textContent = 'Build Funnel';
+
+  show('input');
+}
+</script>
+</body>
+</html>

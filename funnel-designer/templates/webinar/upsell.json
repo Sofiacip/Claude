@@ -1,0 +1,132 @@
+{
+  "page_type": "upsell_page",
+  "funnel": "webinar",
+  "sticky_cta": true,
+  "nav": false,
+  "sections": [
+    {
+      "id": "S1",
+      "name": "Progress Bar",
+      "component": "progress_bar",
+      "slots": [],
+      "steps": ["Registered", "Upgraded", "Bonus Offer"],
+      "active_step": 2,
+      "completed_steps": [0, 1],
+      "mobile": "full width, 3-step horizontal bar",
+      "design_rules": ["Registered and Upgraded steps are checked/completed", "Bonus Offer step is active"]
+    },
+    {
+      "id": "S2",
+      "name": "Transition Hook",
+      "component": "text_block",
+      "slots": [],
+      "mobile": "centered, gentle tone",
+      "design_rules": ["'One more thing before you go...' framing", "gentle and inviting — NOT pushy", "softer tone than OTO1"]
+    },
+    {
+      "id": "S3",
+      "name": "Transformation Headline",
+      "component": "headline",
+      "slots": ["oto2_headline"],
+      "mobile": "full width, aspirational",
+      "design_rules": ["outcome-focused, aspirational headline"]
+    },
+    {
+      "id": "S4",
+      "name": "Offer Framing",
+      "component": "text_block",
+      "slots": ["program_name"],
+      "mobile": "centered paragraph",
+      "design_rules": ["what makes this offer unique / why now"]
+    },
+    {
+      "id": "S5",
+      "name": "Strikethrough Pricing",
+      "component": "pricing_display",
+      "slots": ["oto2_regular_price", "oto2_price"],
+      "mobile": "centered, struck-through original + bold sale price"
+    },
+    {
+      "id": "S6",
+      "name": "Countdown Timer",
+      "component": "countdown_timer",
+      "slots": [],
+      "mobile": "standard countdown display"
+    },
+    {
+      "id": "S7",
+      "name": "CTA",
+      "component": "cta_button",
+      "slots": ["oto2_checkout_url"],
+      "mobile": "full width",
+      "design_rules": ["'Add to My Order' framing — NOT 'Buy'", "reinforces ease and continuity"]
+    },
+    {
+      "id": "S8",
+      "name": "Program Overview",
+      "component": "text_block",
+      "slots": ["program_overview"],
+      "mobile": "centered, 2-3 sentences describing the program"
+    },
+    {
+      "id": "S9",
+      "name": "Numbered Outcomes",
+      "component": "numbered_list",
+      "slots": ["program_outcomes"],
+      "mobile": "full width numbered items"
+    },
+    {
+      "id": "S10",
+      "name": "Image Break",
+      "component": "image_section",
+      "slots": [],
+      "mobile": "full width product/program visual"
+    },
+    {
+      "id": "S11",
+      "name": "What's Inside",
+      "component": "feature_list",
+      "slots": ["program_components"],
+      "mobile": "full width list with icons"
+    },
+    {
+      "id": "S12",
+      "name": "Detailed Learning Outcomes",
+      "component": "detailed_list",
+      "slots": ["learning_outcomes"],
+      "mobile": "full width, deeper breakdown of what they'll learn"
+    },
+    {
+      "id": "S13",
+      "name": "Testimonials",
+      "component": "testimonial_cards",
+      "slots": ["oto2_testimonials"],
+      "mobile": "stacked cards",
+      "design_rules": ["social proof specific to this offer"]
+    },
+    {
+      "id": "S14",
+      "name": "Full Value Stack",
+      "component": "value_stack",
+      "slots": ["oto2_items", "oto2_regular_price"],
+      "mobile": "full width with total value displayed",
+      "design_rules": ["all components + total value", "struck-through original price"]
+    },
+    {
+      "id": "S15",
+      "name": "Enrollment CTA",
+      "component": "cta_with_decline",
+      "slots": ["oto2_checkout_url"],
+      "mobile": "full width button + decline link",
+      "design_rules": ["final button + decline link", "'Add to My Order' framing"]
+    },
+    {
+      "id": "S16",
+      "name": "1-Click Confirmation Note",
+      "component": "legal_note",
+      "slots": [],
+      "mobile": "small text, centered below CTA",
+      "design_rules": ["MANDATORY legal disclosure — never omit", "'By clicking above, you authorize this charge to the payment method on file'"]
+    }
+  ]
+}

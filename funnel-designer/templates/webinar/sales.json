@@ -1,0 +1,188 @@
+{
+  "page_type": "sales_page",
+  "funnel": "webinar",
+  "sticky_cta": true,
+  "nav": false,
+  "sections": [
+    {
+      "id": "S1",
+      "name": "Urgency Banner",
+      "component": "urgency_banner",
+      "slots": ["enrollment_close_date"],
+      "mobile": "fixed top, timer + text",
+      "design_rules": ["timer + 'Enrollment closes [date]'", "persists at top or as sticky element"]
+    },
+    {
+      "id": "S2",
+      "name": "Pre-Headline",
+      "component": "pre_headline",
+      "slots": ["host_credentials"],
+      "mobile": "centered, muted"
+    },
+    {
+      "id": "S3",
+      "name": "Program Headline",
+      "component": "hero_headline",
+      "slots": ["program_headline"],
+      "mobile": "full width, large",
+      "design_rules": ["main benefit headline for the program"]
+    },
+    {
+      "id": "S4",
+      "name": "Hero Subheadline",
+      "component": "hero_subheadline",
+      "slots": ["program_subheadline"],
+      "mobile": "full width"
+    },
+    {
+      "id": "S5",
+      "name": "Primary CTA",
+      "component": "cta_button",
+      "slots": ["checkout_url", "price_full", "price_plan"],
+      "mobile": "full width",
+      "design_rules": ["early CTA for warm traffic who arrived ready to buy — do NOT remove", "show both full price and payment plan option"]
+    },
+    {
+      "id": "S6",
+      "name": "Problem Agitation",
+      "component": "pain_section",
+      "slots": ["problem_observation", "pain_bullets"],
+      "mobile": "full width",
+      "design_rules": ["describes the painful current state", "bullet list of pain points"]
+    },
+    {
+      "id": "S7",
+      "name": "Root Cause Reframe",
+      "component": "reframe_block",
+      "slots": ["root_cause"],
+      "mobile": "centered, emphasized text",
+      "design_rules": ["'The real reason you're stuck is...'", "emotional turning point — MOST IMPORTANT COPY ON THE PAGE", "give this section visual emphasis"]
+    },
+    {
+      "id": "S8",
+      "name": "Conditioning Story",
+      "component": "story_block",
+      "slots": ["conditioning_story"],
+      "mobile": "full width narrative",
+      "design_rules": ["host's personal story / journey"]
+    },
+    {
+      "id": "S9",
+      "name": "Readiness Bridge",
+      "component": "checklist",
+      "slots": [],
+      "mobile": "checklist format",
+      "design_rules": ["'You're ready if...' qualification list", "checkbox/checklist visual style"]
+    },
+    {
+      "id": "S10",
+      "name": "Program Introduction",
+      "component": "text_block",
+      "slots": ["program_name"],
+      "mobile": "centered",
+      "design_rules": ["introduces the solution — transition from problem to program"]
+    },
+    {
+      "id": "S11",
+      "name": "Numbered Pillars",
+      "component": "numbered_list",
+      "slots": ["program_pillars"],
+      "mobile": "full width numbered items",
+      "design_rules": ["core transformation pillars of the program"]
+    },
+    {
+      "id": "S12",
+      "name": "CTA Repeat",
+      "component": "cta_button",
+      "slots": ["checkout_url"],
+      "mobile": "full width"
+    },
+    {
+      "id": "S13",
+      "name": "Meet Your Coach",
+      "component": "host_bio",
+      "slots": ["host_name", "host_bio", "host_credentials"],
+      "mobile": "stacked: photo + bio",
+      "design_rules": ["bio + credentials + photo"]
+    },
+    {
+      "id": "S14",
+      "name": "Testimonials Round 1",
+      "component": "testimonial_cards",
+      "slots": ["testimonials_r1"],
+      "mobile": "stacked cards",
+      "design_rules": ["3-5 result-focused testimonials"]
+    },
+    {
+      "id": "S15",
+      "name": "What's Inside",
+      "component": "feature_list",
+      "slots": ["program_components"],
+      "mobile": "full width with icons",
+      "design_rules": ["program components overview"]
+    },
+    {
+      "id": "S16",
+      "name": "Curriculum Breakdown",
+      "component": "curriculum_grid",
+      "slots": ["curriculum"],
+      "mobile": "accordion or stacked modules",
+      "design_rules": ["module-by-module detail"]
+    },
+    {
+      "id": "S17",
+      "name": "Bonuses",
+      "component": "value_stack",
+      "slots": ["bonuses"],
+      "mobile": "full width bonus rows",
+      "design_rules": ["bonus stack with individual values"]
+    },
+    {
+      "id": "S18",
+      "name": "CTA Repeat",
+      "component": "cta_button",
+      "slots": ["checkout_url"],
+      "mobile": "full width"
+    },
+    {
+      "id": "S19",
+      "name": "Guarantee",
+      "component": "guarantee_block",
+      "slots": ["guarantee_name", "guarantee_days", "guarantee_terms"],
+      "mobile": "card with badge/seal",
+      "design_rules": ["money-back guarantee with name and terms", "trust badge or seal visual"]
+    },
+    {
+      "id": "S20",
+      "name": "Full Value Stack",
+      "component": "value_stack",
+      "slots": ["value_stack_items", "total_value", "price_full", "price_plan"],
+      "mobile": "full width",
+      "design_rules": ["all components + bonuses + total value", "payment plan shown alongside full price — not hidden"]
+    },
+    {
+      "id": "S21",
+      "name": "FAQ",
+      "component": "faq_accordion",
+      "slots": ["faq_items"],
+      "mobile": "full width accordion",
+      "design_rules": ["5-8 objection-handling questions and answers", "placed after pricing — removes final objections at highest intent moment"]
+    },
+    {
+      "id": "S22",
+      "name": "Final Value Stack + CTA",
+      "component": "final_value_cta",
+      "slots": ["checkout_url", "price_full"],
+      "mobile": "condensed value stack + prominent CTA",
+      "design_rules": ["last chance to buy", "condensed summary of value"]
+    },
+    {
+      "id": "S23",
+      "name": "Host Photo + Footer",
+      "component": "closing_footer",
+      "slots": ["host_name"],
+      "mobile": "warm closing image + full footer",
+      "design_rules": ["warm closing image of host", "full footer with all links"]
+    }
+  ]
+}

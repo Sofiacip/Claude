@@ -1,0 +1,13 @@
+{
+  "name": "pagecraft",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "PageCraft — reusable branded landing page pipeline",
+  "scripts": {
+    "serve": "node serve.mjs",
+    "screenshot": "node screenshot.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}

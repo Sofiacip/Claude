@@ -284,6 +284,9 @@
     }
     .thumb-pair img {
       width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      object-position: top;
       border-radius: 3px;
       border: 1px solid var(--border);
       background: var(--surface2);
@@ -763,8 +766,10 @@ function appendLog(msg, cls = '') {
 const STAGE_ORDER = ['ingesting', 'mapping', 'building', 'qa', 'review'];
 
 function updateStagePills(currentStatus) {
+  // 'mapped' means mapping is done — treat as equivalent to 'mapping' complete
+  const status = currentStatus === 'mapped' ? 'building' : currentStatus;
   const pills = document.querySelectorAll('.stage-pill');
-  const currentIdx = STAGE_ORDER.indexOf(currentStatus);
+  const currentIdx = STAGE_ORDER.indexOf(status);
   pills.forEach(pill => {
     const stageKey = pill.dataset.stage;
     const stageIdx = STAGE_ORDER.indexOf(stageKey);

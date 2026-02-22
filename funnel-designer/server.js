@@ -1,15 +1,16 @@
 /**
  * server.js — Impact OS Funnel Designer backend.
- * Express server with SSE progress streaming, job management,
- * and 5-stage pipeline orchestration (Ingest → Map → Build → QA → Deploy).
+ * Express server with SSE progress streaming, job management.
+ * Automated stages: Ingest → Map (heuristic). Then pauses for Claude Code
+ * to take over Build → QA → Deploy.
  */
 
 import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
-import { mkdir, readFile, readdir } from 'fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'fs/promises';
 import { existsSync, createReadStream } from 'fs';
-import { join, extname } from 'path';
+import { join, extname, basename } from 'path';
 import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -18,8 +19,6 @@ import mime from 'mime-types';
 
 import { ingest } from './ingest.js';
 import { mapCopy } from './mapper.js';
-import { buildPage } from './builder.js';
-import { qaPage } from './qa.js';
 import { deployAll } from './deploy.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -138,37 +137,14 @@ async function runPipeline(job) {
     emit('Stage 1/5 — Ingesting brand package + copy documents...');
     await ingest(job, emit);
 
-    // Stage 2 — Map
+    // Stage 2 — Map (heuristic heading→slot matching)
     emitStatus(id, 'mapping');
     emit('Stage 2/5 — Mapping copy to template slots...');
     await mapCopy(job, emit);
 
-    // Stage 3 — Build
-    emitStatus(id, 'building');
-    emit('Stage 3/5 — Building pages...');
-    for (let i = 0; i < job.pages.length; i++) {
-      const page = job.pages[i];
-      emitPageStatus(id, i, 'building');
-      emit(`Building ${page.pageType} page...`);
-      await buildPage(job, i, emit);
-      emit(`${page.pageType} page built. ✓`);
-    }
-
-    // Stage 4 — QA
-    emitStatus(id, 'qa');
-    emit('Stage 4/5 — Running QA checks...');
-    for (let i = 0; i < job.pages.length; i++) {
-      const page = job.pages[i];
-      emitPageStatus(id, i, 'qa');
-      emit(`QA: ${page.pageType} page...`);
-      await qaPage(job, i, emit);
-      emit(`QA: ${page.pageType} — ${page.qaStatus === 'approved' ? 'passed ✓' : 'needs review'}`);
-      emitPageStatus(id, i, page.qaStatus);
-    }
-
-    // Pipeline pauses for user review
-    emitStatus(id, 'review');
-    emit('Stage 4/5 complete. All pages ready for review.');
+    // Pipeline pauses here — Claude Code handles Build → QA → Deploy
+    emitStatus(id, 'mapped');
+    emit('Ingest + Map complete. Ready for Claude Code to build pages.');
 
   } catch (err) {
     console.error(`[job ${id}] Pipeline error:`, err);
@@ -179,36 +155,10 @@ async function runPipeline(job) {
   }
 }
 
-/**
- * Rebuild a single page after change request, then re-QA.
- */
-async function rebuildPage(job, pageIndex) {
-  const { id } = job;
-  const page = job.pages[pageIndex];
-  const emit = msg => emitProgress(id, msg);
-
-  try {
-    emitPageStatus(id, pageIndex, 'building');
-    emit(`Rebuilding ${page.pageType} page...`);
-    await buildPage(job, pageIndex, emit);
-    emit(`${page.pageType} page rebuilt. ✓`);
-
-    emitPageStatus(id, pageIndex, 'qa');
-    emit(`Re-running QA on ${page.pageType}...`);
-    await qaPage(job, pageIndex, emit);
-    emit(`QA: ${page.pageType} — ${page.qaStatus === 'approved' ? 'passed ✓' : 'needs review'}`);
-    emitPageStatus(id, pageIndex, page.qaStatus);
-  } catch (err) {
-    console.error(`[job ${id}] Rebuild error (${page.pageType}):`, err);
-    emit(`Error rebuilding ${page.pageType}: ${err.message}`);
-    emitPageStatus(id, pageIndex, 'changes_requested', { error: err.message });
-  }
-}
-
 // ── Express setup ─────────────────────────────────────────────────────────────
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(join(__dirname, 'public')));
 
 // Multer: store uploads in project uploads/ dir keyed by job id
@@ -346,7 +296,7 @@ app.get('/api/jobs/:id/stream', (req, res) => {
   });
 
   // If terminal state, emit status immediately
-  if (['review', 'complete', 'error'].includes(job.status)) {
+  if (['mapped', 'review', 'complete', 'error'].includes(job.status)) {
     const payload = { status: job.status, ts: Date.now() };
     if (job.error) payload.error = job.error;
     res.write(`event: status\ndata: ${JSON.stringify(payload)}\n\n`);
@@ -432,13 +382,87 @@ app.post('/api/jobs/:id/pages/:idx/request-changes', (req, res) => {
 
   page.qaFeedback.push(feedback);
   page.qaStatus = 'changes_requested';
-
-  // Trigger rebuild in background
-  rebuildPage(job, idx).catch(err =>
-    console.error(`Rebuild error for ${page.pageType}:`, err)
-  );
+  emitPageStatus(job.id, idx, 'changes_requested');
+  emitProgress(job.id, `${page.pageType}: changes requested — "${feedback}"`);
 
   res.json({ ok: true });
+});
+
+/**
+ * GET /api/jobs/:id/full
+ * Returns full job data including raw copy, brand paths, slots — for Claude Code.
+ */
+app.get('/api/jobs/:id/full', (req, res) => {
+  const job = jobs.get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+
+  // Return the full job object (minus SSE internals)
+  const fullJob = {
+    id: job.id,
+    status: job.status,
+    clientName: job.clientName,
+    funnelType: job.funnelType,
+    brand: job.brand,
+    pages: job.pages,
+    tempDir: job.tempDir,
+    progress: job.progress,
+    error: job.error
+  };
+
+  res.json(fullJob);
+});
+
+/**
+ * POST /api/jobs/:id/pages/:idx/html
+ * Upload generated HTML for a page. Body: { html: "..." }
+ */
+app.post('/api/jobs/:id/pages/:idx/html', async (req, res) => {
+  const job = jobs.get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+
+  const idx = parseInt(req.params.idx);
+  const page = job.pages[idx];
+  if (!page) return res.status(404).json({ error: 'Page not found' });
+
+  const { html } = req.body;
+  if (!html) return res.status(400).json({ error: 'html is required' });
+
+  // Save HTML to output dir
+  const outputDir = join(job.tempDir, 'output', page.pageType);
+  await mkdir(outputDir, { recursive: true });
+  const htmlPath = join(outputDir, 'index.html');
+  await writeFile(htmlPath, html, 'utf-8');
+  page.htmlPath = htmlPath;
+  page.qaStatus = 'pending';
+
+  emitProgress(job.id, `${page.pageType} HTML saved. ✓`);
+  emitPageStatus(job.id, idx, 'pending');
+
+  res.json({ ok: true, htmlPath });
+});
+
+/**
+ * POST /api/jobs/:id/pages/:idx/screenshot
+ * Trigger Playwright screenshots for a page. Returns screenshot paths.
+ */
+app.post('/api/jobs/:id/pages/:idx/screenshot', async (req, res) => {
+  const job = jobs.get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+
+  const idx = parseInt(req.params.idx);
+  const page = job.pages[idx];
+  if (!page) return res.status(404).json({ error: 'Page not found' });
+  if (!page.htmlPath) return res.status(400).json({ error: 'No HTML generated yet' });
+
+  try {
+    const { screenshotPage } = await import('./qa.js');
+    const round = (page.qaRounds || 0) + 1;
+    const screenshots = await screenshotPage(job, idx, round);
+    emitProgress(job.id, `${page.pageType} screenshots taken (round ${round}). ✓`);
+    res.json({ ok: true, screenshots });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 /**

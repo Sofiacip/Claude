@@ -159,6 +159,18 @@ async function runPipeline(job) {
 // ── Express setup ─────────────────────────────────────────────────────────────
 
 const app = express();
+
+// CORS — allow cross-origin access from deployed UI (Vercel, etc.)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 app.use(express.json({ limit: '10mb' }));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'funnel-designer-secret',
@@ -204,17 +216,36 @@ app.post('/api/auth', (req, res) => {
  * GET /api/auth/check
  */
 app.get('/api/auth/check', (req, res) => {
-  res.json({ authed: !!req.session?.authed });
+  // Check session or Authorization header
+  let authed = !!req.session?.authed;
+  if (!authed) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ') && authHeader.slice(7) === APP_PASSWORD) {
+      authed = true;
+    }
+  }
+  res.json({ authed });
 });
 
 // Auth guard — protect all /api/* routes below this point
+// Supports session cookies (local) OR Authorization header (remote UI)
 // Exempt page HTML preview and asset endpoints so Playwright can screenshot them
 app.use('/api', (req, res, next) => {
   if (req.path === '/auth' || req.path === '/auth/check') return next();
   if (/^\/jobs\/[^/]+\/pages\/\d+\/html$/.test(req.path) && req.method === 'GET') return next();
   if (/^\/jobs\/[^/]+\/assets\//.test(req.path) && req.method === 'GET') return next();
-  if (!req.session?.authed) return res.status(401).json({ error: 'Not authenticated' });
-  next();
+
+  // Check session auth first
+  if (req.session?.authed) return next();
+
+  // Fallback: Authorization header (Bearer <password>)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    if (token === APP_PASSWORD) return next();
+  }
+
+  return res.status(401).json({ error: 'Not authenticated' });
 });
 
 /**

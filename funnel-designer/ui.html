@@ -413,6 +413,34 @@
           <div class="stage-pill" data-stage="deploying">Deploy</div>
         </div>
       </div>
+
+      <!-- Connection indicator + Settings gear -->
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <span id="conn-indicator" style="display:flex; align-items:center; gap:0.3rem; font-size:0.58rem; color:var(--text-dim);">
+          <span id="conn-dot" style="width:6px; height:6px; border-radius:50%; background:var(--text-dim);"></span>
+          <span id="conn-label">Local</span>
+        </span>
+        <button class="btn-ghost" onclick="toggleSettings()" title="API Settings" style="padding:0.35rem 0.45rem;">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 9a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="1.2"/><path d="M5.7 1.5l-.3 1.2a4.5 4.5 0 00-1.2.7L3 3 1.5 5.3l1 .8a4.5 4.5 0 000 1.4l-1 .8L3 10.6l1.2-.4a4.5 4.5 0 001.2.7l.3 1.2h2.6l.3-1.2a4.5 4.5 0 001.2-.7l1.2.4 1.5-2.3-1-.8a4.5 4.5 0 000-1.4l1-.8L11 3l-1.2.4a4.5 4.5 0 00-1.2-.7L8.3 1.5H5.7z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Settings Panel (hidden by default) -->
+    <div id="settings-panel" style="display:none; padding:0.65rem 1.25rem; border-bottom:1px solid var(--border); background:var(--bg);">
+      <div style="display:flex; align-items:flex-end; gap:0.75rem; flex-wrap:wrap;">
+        <div style="flex:1; min-width:250px;">
+          <label class="section-label">API Server URL</label>
+          <input id="settings-api-url" type="url" class="field" placeholder="http://localhost:3002 (default)" style="font-size:0.72rem;">
+        </div>
+        <div style="min-width:150px;">
+          <label class="section-label">API Password</label>
+          <input id="settings-api-pw" type="password" class="field" placeholder="Password for remote auth" style="font-size:0.72rem;">
+        </div>
+        <button class="btn-primary" onclick="saveSettings()" style="height:34px;">Save</button>
+        <button class="btn-ghost" onclick="testConnection()" style="height:34px;">Test Connection</button>
+        <span id="settings-status" style="font-size:0.62rem; color:var(--text-dim);"></span>
+      </div>
     </div>
 
     <!-- Row 2: Inputs -->
@@ -565,17 +593,116 @@ let state = {
 
 const VIEWPORTS = { desktop: '100%', tablet: '768px', mobile: '375px' };
 
+// ━━━ API Config (localStorage) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function getApiBase() {
+  // Returns '' for same-origin (local), or full URL like 'http://x.ngrok.io' for remote
+  return localStorage.getItem('fd_api_url') || '';
+}
+
+function getApiPassword() {
+  return localStorage.getItem('fd_api_pw') || '';
+}
+
+function isRemote() {
+  return !!getApiBase();
+}
+
+function apiUrl(path) {
+  return getApiBase() + path;
+}
+
+function apiFetchOpts(extra = {}) {
+  // Build fetch options with auth headers for remote, credentials for local
+  const opts = { ...extra };
+  if (isRemote()) {
+    const pw = getApiPassword();
+    if (pw) {
+      opts.headers = { ...opts.headers, 'Authorization': 'Bearer ' + pw };
+    }
+  } else {
+    opts.credentials = 'same-origin';
+  }
+  return opts;
+}
+
+function updateConnIndicator() {
+  const dot = document.getElementById('conn-dot');
+  const label = document.getElementById('conn-label');
+  const base = getApiBase();
+  if (base) {
+    label.textContent = base.replace(/^https?:\/\//, '').substring(0, 30);
+    dot.style.background = 'var(--orange)';
+  } else {
+    label.textContent = 'Local';
+    dot.style.background = 'var(--green)';
+  }
+}
+
+// ━━━ Settings Panel ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function toggleSettings() {
+  const panel = document.getElementById('settings-panel');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    document.getElementById('settings-api-url').value = getApiBase();
+    document.getElementById('settings-api-pw').value = getApiPassword();
+  }
+}
+
+function saveSettings() {
+  const url = document.getElementById('settings-api-url').value.trim().replace(/\/+$/, '');
+  const pw = document.getElementById('settings-api-pw').value;
+  if (url) {
+    localStorage.setItem('fd_api_url', url);
+  } else {
+    localStorage.removeItem('fd_api_url');
+  }
+  if (pw) {
+    localStorage.setItem('fd_api_pw', pw);
+  } else {
+    localStorage.removeItem('fd_api_pw');
+  }
+  updateConnIndicator();
+  document.getElementById('settings-status').textContent = 'Saved';
+  document.getElementById('settings-status').style.color = 'var(--green)';
+  showToast('Settings saved', 'success');
+}
+
+async function testConnection() {
+  const statusEl = document.getElementById('settings-status');
+  statusEl.textContent = 'Testing...';
+  statusEl.style.color = 'var(--text-muted)';
+  try {
+    const r = await fetch(apiUrl('/api/auth/check'), apiFetchOpts());
+    const d = await r.json();
+    if (d.authed) {
+      statusEl.textContent = 'Connected + Authenticated';
+      statusEl.style.color = 'var(--green)';
+    } else {
+      statusEl.textContent = 'Connected (not authenticated — check password)';
+      statusEl.style.color = 'var(--orange)';
+    }
+  } catch (e) {
+    statusEl.textContent = 'Cannot reach server';
+    statusEl.style.color = 'var(--red)';
+  }
+}
+
 // ━━━ Auth ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 async function checkAuth() {
   try {
-    const r = await fetch('/api/auth/check');
+    const r = await fetch(apiUrl('/api/auth/check'), apiFetchOpts());
     const d = await r.json();
     if (d.authed) {
       state.authed = true;
       document.getElementById('login-overlay').classList.add('hidden');
     }
   } catch (e) {
-    // Backend not available
+    // Backend not available — if remote, still hide login and rely on header auth
+    if (isRemote() && getApiPassword()) {
+      state.authed = true;
+      document.getElementById('login-overlay').classList.add('hidden');
+    }
   }
 }
 
@@ -584,12 +711,30 @@ async function doLogin() {
   const errEl = document.getElementById('login-err');
   errEl.style.display = 'none';
 
+  // If remote, store password and use header auth
+  if (isRemote()) {
+    localStorage.setItem('fd_api_pw', pw);
+    try {
+      const r = await fetch(apiUrl('/api/auth/check'), apiFetchOpts());
+      const d = await r.json();
+      if (d.authed) {
+        state.authed = true;
+        document.getElementById('login-overlay').classList.add('hidden');
+        updateConnIndicator();
+        return;
+      }
+    } catch (e) {}
+    errEl.textContent = 'Cannot authenticate with remote server';
+    errEl.style.display = 'block';
+    return;
+  }
+
   try {
-    const r = await fetch('/api/auth', {
+    const r = await fetch(apiUrl('/api/auth'), apiFetchOpts({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: pw })
-    });
+    }));
     const d = await r.json();
     if (d.ok) {
       state.authed = true;
@@ -649,7 +794,7 @@ async function startBuild() {
   for (const f of copyFiles) fd.append('copies', f);
 
   try {
-    const r = await fetch('/api/funnel', { method: 'POST', body: fd });
+    const r = await fetch(apiUrl('/api/funnel'), apiFetchOpts({ method: 'POST', body: fd }));
     const d = await r.json();
     if (d.jobId) {
       state.jobId = d.jobId;
@@ -672,7 +817,13 @@ async function startBuild() {
 function connectSSE(jobId) {
   if (state.sseSource) state.sseSource.close();
 
-  const es = new EventSource('/api/jobs/' + jobId + '/stream');
+  // SSE doesn't support Authorization headers, so only use it for same-origin
+  if (isRemote()) {
+    // Fall back to polling (already handled by pollJob)
+    return;
+  }
+
+  const es = new EventSource(apiUrl('/api/jobs/' + jobId + '/stream'));
   state.sseSource = es;
 
   es.onmessage = (e) => {
@@ -714,7 +865,7 @@ async function pollJob() {
   if (!state.jobId) return;
 
   try {
-    const r = await fetch('/api/jobs/' + state.jobId);
+    const r = await fetch(apiUrl('/api/jobs/' + state.jobId), apiFetchOpts());
     const d = await r.json();
     state.jobData = d;
     renderJobStatus(d);
@@ -828,13 +979,13 @@ function loadPreview(idx) {
   // Always try to show the iframe; if HTML doesn't exist it will show blank
   iframe.style.display = 'block';
   empty.style.display = 'none';
-  iframe.src = '/api/jobs/' + state.jobId + '/pages/' + idx + '/html?t=' + Date.now();
+  iframe.src = apiUrl('/api/jobs/' + state.jobId + '/pages/' + idx + '/html') + '?t=' + Date.now();
 }
 
 function refreshPreview() {
   if (state.activePageIdx >= 0 && state.jobId) {
     const iframe = document.getElementById('preview-iframe');
-    iframe.src = '/api/jobs/' + state.jobId + '/pages/' + state.activePageIdx + '/html?t=' + Date.now();
+    iframe.src = apiUrl('/api/jobs/' + state.jobId + '/pages/' + state.activePageIdx + '/html') + '?t=' + Date.now();
   }
 }
 
@@ -857,7 +1008,7 @@ async function loadSections(idx) {
   applyBar.style.display = 'none';
 
   try {
-    const r = await fetch('/api/jobs/' + state.jobId + '/pages/' + idx + '/html');
+    const r = await fetch(apiUrl('/api/jobs/' + state.jobId + '/pages/' + idx + '/html'), apiFetchOpts());
     if (!r.ok) {
       container.innerHTML = '<div style="padding:2rem; text-align:center;"><span style="font-size:0.68rem; color:var(--text-dim);">No HTML available yet.<br>Waiting for Claude Code to build this page.</span></div>';
       countEl.textContent = '';
@@ -1143,11 +1294,11 @@ async function applyChanges() {
 
   // POST back to API
   try {
-    const r = await fetch('/api/jobs/' + state.jobId + '/pages/' + state.activePageIdx + '/html', {
+    const r = await fetch(apiUrl('/api/jobs/' + state.jobId + '/pages/' + state.activePageIdx + '/html'), apiFetchOpts({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ html: newHtml })
-    });
+    }));
 
     if (r.ok) {
       state.rawHtml = newHtml;
@@ -1216,7 +1367,7 @@ async function loadExistingJob() {
   if (!jobId) { showToast('Enter a job ID', 'error'); return; }
 
   try {
-    const r = await fetch('/api/jobs/' + jobId);
+    const r = await fetch(apiUrl('/api/jobs/' + jobId), apiFetchOpts());
     if (!r.ok) { showToast('Job not found', 'error'); return; }
 
     const d = await r.json();
@@ -1248,6 +1399,7 @@ document.getElementById('input-job-id').addEventListener('keydown', (e) => {
 });
 
 // ━━━ Init ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+updateConnIndicator();
 checkAuth();
 </script>
 </body>

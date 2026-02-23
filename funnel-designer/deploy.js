@@ -74,12 +74,11 @@ export async function deployAll(job, emit) {
     const projectName = `${slug}-funnel`;
 
     const result = execSync(
-      `npx vercel deploy --prod --yes --name="${projectName}"`,
+      `npx vercel deploy --prod --yes`,
       {
         cwd: deployDir,
         encoding: 'utf-8',
         timeout: 120000,
-        env: { ...process.env, VERCEL_ORG_ID: 'team_eiom911BnIXG71MJbar1uC73' }
       }
     );
 

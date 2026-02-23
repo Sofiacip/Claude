@@ -208,8 +208,11 @@ app.get('/api/auth/check', (req, res) => {
 });
 
 // Auth guard — protect all /api/* routes below this point
+// Exempt page HTML preview and asset endpoints so Playwright can screenshot them
 app.use('/api', (req, res, next) => {
   if (req.path === '/auth' || req.path === '/auth/check') return next();
+  if (/^\/jobs\/[^/]+\/pages\/\d+\/html$/.test(req.path) && req.method === 'GET') return next();
+  if (/^\/jobs\/[^/]+\/assets\//.test(req.path) && req.method === 'GET') return next();
   if (!req.session?.authed) return res.status(401).json({ error: 'Not authenticated' });
   next();
 });

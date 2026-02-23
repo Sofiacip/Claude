@@ -12,6 +12,7 @@ const serveDir = dirArgIndex !== -1
   : path.resolve(__dirname);
 
 const PORT = 3000;
+const API_PORT = 3002; // server.js backend
 
 const MIME_TYPES = {
   '.html': 'text/html',
@@ -33,7 +34,34 @@ const MIME_TYPES = {
 
 const server = http.createServer((req, res) => {
   let urlPath = req.url.split('?')[0];
-  if (urlPath === '/') urlPath = '/index.html';
+
+  // ── Reverse proxy: /api/* → localhost:3002 ──────────────────────────────
+  if (req.url.startsWith('/api/') || req.url === '/api') {
+    const proxyOpts = {
+      hostname: 'localhost',
+      port: API_PORT,
+      path: req.url,
+      method: req.method,
+      headers: { ...req.headers, host: `localhost:${API_PORT}` },
+    };
+
+    const proxyReq = http.request(proxyOpts, (proxyRes) => {
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      proxyRes.pipe(res, { end: true });
+    });
+
+    proxyReq.on('error', (err) => {
+      console.error('Proxy error:', err.message);
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Backend unavailable. Is server.js running on port ' + API_PORT + '?' }));
+    });
+
+    req.pipe(proxyReq, { end: true });
+    return;
+  }
+
+  // ── Root → ui.html ─────────────────────────────────────────────────────
+  if (urlPath === '/') urlPath = '/ui.html';
 
   const filePath = path.join(serveDir, urlPath);
 
@@ -74,6 +102,7 @@ server.on('error', (err) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Serving ${serveDir}`);
-  console.log(`http://localhost:${PORT}`);
+  console.log(`Funnel Designer UI → http://localhost:${PORT}`);
+  console.log(`API proxy → localhost:${API_PORT}`);
+  console.log(`Serving static files from ${serveDir}`);
 });

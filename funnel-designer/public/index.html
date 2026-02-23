@@ -821,29 +821,46 @@ function renderReviewGrid() {
     card.className = 'page-card';
     card.id = `review-card-${i}`;
 
-    const badgeInfo = BADGE_MAP[page.qaStatus] || BADGE_MAP.pending;
+    const hasCopy = page.hasCopy !== false;
+    const badgeInfo = hasCopy
+      ? (BADGE_MAP[page.qaStatus] || BADGE_MAP.pending)
+      : { cls: 'badge-pending', label: 'Needs Copy' };
+
+    let bodyHtml;
+    if (!hasCopy) {
+      bodyHtml = `
+        <div class="card-body" style="text-align:center; padding:1.5rem 1rem;">
+          <p style="font-size:0.68rem; color:var(--text-dim);">No copy document uploaded for this page.</p>
+          <p style="font-size:0.62rem; color:var(--text-dim); margin-top:0.3rem;">Upload a .docx and rebuild, or build manually.</p>
+        </div>
+      `;
+    } else {
+      bodyHtml = `
+        <div class="thumb-pair">
+          <img src="/api/jobs/${S.jobId}/pages/${i}/screenshot/mobile" alt="Mobile"
+            onerror="this.style.display='none'">
+          <img src="/api/jobs/${S.jobId}/pages/${i}/screenshot/desktop" alt="Desktop"
+            onerror="this.style.display='none'">
+        </div>
+        <div class="card-body" style="display:flex; gap:0.5rem;">
+          <button class="btn-success" style="flex:1; padding:0.5rem;" onclick="approvePage(${i})"
+            ${page.qaStatus === 'approved' ? 'disabled' : ''}>
+            ${page.qaStatus === 'approved' ? '✓ Approved' : 'Approve'}
+          </button>
+          <button class="btn-warning" style="flex:1; padding:0.5rem;" onclick="openFeedback(${i})"
+            ${page.qaStatus === 'approved' ? 'disabled' : ''}>
+            Changes
+          </button>
+        </div>
+      `;
+    }
 
     card.innerHTML = `
       <div class="card-header">
         <span style="font-size:0.78rem; font-weight:500;">${PAGE_LABELS[page.pageType] || page.pageType}</span>
         <span class="badge ${badgeInfo.cls}" id="review-badge-${i}">${badgeInfo.label}</span>
       </div>
-      <div class="thumb-pair">
-        <img src="/api/jobs/${S.jobId}/pages/${i}/screenshot/mobile" alt="Mobile"
-          onerror="this.style.display='none'">
-        <img src="/api/jobs/${S.jobId}/pages/${i}/screenshot/desktop" alt="Desktop"
-          onerror="this.style.display='none'">
-      </div>
-      <div class="card-body" style="display:flex; gap:0.5rem;">
-        <button class="btn-success" style="flex:1; padding:0.5rem;" onclick="approvePage(${i})"
-          ${page.qaStatus === 'approved' ? 'disabled' : ''}>
-          ${page.qaStatus === 'approved' ? '✓ Approved' : 'Approve'}
-        </button>
-        <button class="btn-warning" style="flex:1; padding:0.5rem;" onclick="openFeedback(${i})"
-          ${page.qaStatus === 'approved' ? 'disabled' : ''}>
-          Changes
-        </button>
-      </div>
+      ${bodyHtml}
     `;
 
     grid.appendChild(card);
@@ -917,8 +934,16 @@ function pollPageStatus(idx) {
 }
 
 function checkAllApproved() {
-  const allApproved = S.pages.every(p => p.qaStatus === 'approved');
-  document.getElementById('btn-deploy-all').disabled = !allApproved;
+  const approvedCount = S.pages.filter(p => p.qaStatus === 'approved').length;
+  const total = S.pages.length;
+  const allApproved = approvedCount === total && total > 0;
+  const btn = document.getElementById('btn-deploy-all');
+  btn.disabled = !allApproved;
+  if (!allApproved && total > 0) {
+    btn.textContent = `${approvedCount}/${total} Approved`;
+  } else {
+    btn.textContent = 'Deploy All →';
+  }
 }
 
 // ── Screen 5: Deploy ──────────────────────────────────────────────────────
@@ -997,6 +1022,30 @@ function resetToInput() {
 
   show('input');
 }
+
+// ── Session restore on page load ─────────────────────────────────────────
+(async function checkSession() {
+  try {
+    const res = await fetch('/api/auth/check');
+    const data = await res.json();
+    if (data.authed) {
+      show('input');
+    }
+  } catch (e) {
+    // Stay on login screen
+  }
+})();
+
+// ── 401 interceptor — redirect to login if session expires ───────────────
+const _origFetch = window.fetch;
+window.fetch = async (...args) => {
+  const res = await _origFetch(...args);
+  const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
+  if (res.status === 401 && !url.includes('/api/auth')) {
+    show('login');
+  }
+  return res;
+};
 </script>
 </body>
 </html>

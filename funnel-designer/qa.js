@@ -6,7 +6,7 @@
  * No external API calls.
  */
 
-import { readFile, mkdir } from 'fs/promises';
+import { mkdir } from 'fs/promises';
 import { join } from 'path';
 import { chromium } from 'playwright';
 
@@ -18,10 +18,10 @@ const VIEWPORTS = [
 
 /**
  * Take screenshots of a page at all 3 viewports.
- * Loads the HTML file directly (no server needed).
+ * Loads the HTML from the server URL so asset references resolve correctly.
  * Returns { mobile: path, tablet: path, desktop: path }
  */
-export async function takeScreenshots(htmlPath, outputDir, round = 1) {
+export async function takeScreenshots(pageUrl, outputDir, round = 1) {
   await mkdir(outputDir, { recursive: true });
   const browser = await chromium.launch({ headless: true });
   const screenshots = {};
@@ -31,9 +31,8 @@ export async function takeScreenshots(htmlPath, outputDir, round = 1) {
       const page = await browser.newPage();
       await page.setViewportSize({ width: vp.width, height: vp.height });
 
-      // Load HTML directly from file
-      const htmlContent = await readFile(htmlPath, 'utf-8');
-      await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
+      // Load from server URL so /api/jobs/.../assets/... URLs resolve
+      await page.goto(pageUrl, { waitUntil: 'domcontentloaded' });
 
       // Wait for fonts and images
       await page.waitForTimeout(2000);
@@ -60,7 +59,9 @@ export async function screenshotPage(job, pageIndex, round = 1) {
   if (!page.htmlPath) throw new Error(`No HTML for ${page.pageType}`);
 
   const screenshotDir = join(job.tempDir, 'screenshots', page.pageType);
-  const screenshots = await takeScreenshots(page.htmlPath, screenshotDir, round);
+  const port = process.env.PORT || 3002;
+  const pageUrl = `http://localhost:${port}/api/jobs/${job.id}/pages/${pageIndex}/html`;
+  const screenshots = await takeScreenshots(pageUrl, screenshotDir, round);
   page.screenshots = screenshots;
   page.qaRounds = round;
   return screenshots;

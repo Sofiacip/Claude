@@ -3,7 +3,7 @@
  * Single project per funnel with path-based routing.
  */
 
-import { mkdir, copyFile, writeFile, readdir, rm } from 'fs/promises';
+import { mkdir, copyFile, readFile, writeFile, readdir, rm } from 'fs/promises';
 import { join, basename } from 'path';
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
@@ -42,7 +42,10 @@ export async function deployAll(job, emit) {
       }
       const pageDir = join(deployDir, page.pageType);
       await mkdir(pageDir, { recursive: true });
-      await copyFile(page.htmlPath, join(pageDir, 'index.html'));
+      // Read HTML, rewrite preview asset URLs to deploy-relative paths
+      let html = await readFile(page.htmlPath, 'utf-8');
+      html = html.replace(/\/api\/jobs\/[^/]+\/assets\/(logos|photos)\//g, '../$1/');
+      await writeFile(join(pageDir, 'index.html'), html, 'utf-8');
       emit(`  Staged ${page.pageType}/index.html`);
     }
 

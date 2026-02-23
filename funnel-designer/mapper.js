@@ -318,6 +318,10 @@ async function mapPageCopy(pageEntry, emit) {
  */
 export async function mapCopy(job, emit) {
   for (const page of job.pages) {
+    if (page.copyRaw === null) {
+      emit(`  ${page.pageType}: No copy document — skipping.`);
+      continue;
+    }
     await mapPageCopy(page, emit);
   }
 

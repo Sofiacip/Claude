@@ -3,8 +3,9 @@
  * Extracts brand assets (colors, fonts, logos, photos) and raw copy text.
  */
 
-import { mkdir, readFile, readdir, copyFile } from 'fs/promises';
+import { mkdir, readFile, readdir, copyFile, stat } from 'fs/promises';
 import { join, basename, extname } from 'path';
+import { existsSync } from 'fs';
 import AdmZip from 'adm-zip';
 import mammoth from 'mammoth';
 
@@ -81,6 +82,49 @@ function parseFonts(text) {
 }
 
 /**
+ * Recursively collect all image files from a directory.
+ */
+async function collectImages(dir, exts) {
+  const results = [];
+  try {
+    const entries = await readdir(dir);
+    for (const entry of entries) {
+      const fullPath = join(dir, entry);
+      const s = await stat(fullPath);
+      if (s.isDirectory()) {
+        results.push(...await collectImages(fullPath, exts));
+      } else if (exts.includes(extname(entry).toLowerCase())) {
+        results.push(fullPath);
+      }
+    }
+  } catch { /* dir doesn't exist */ }
+  return results;
+}
+
+/**
+ * Try multiple paths and return the first that exists.
+ */
+function findDir(brandRoot, candidates) {
+  for (const candidate of candidates) {
+    const p = join(brandRoot, ...candidate.split('/'));
+    if (existsSync(p)) return p;
+  }
+  return null;
+}
+
+/**
+ * Try to read a file from multiple possible paths.
+ */
+async function readBrandFile(brandRoot, candidates) {
+  for (const candidate of candidates) {
+    try {
+      return await readFile(join(brandRoot, ...candidate.split('/')), 'utf-8');
+    } catch { /* try next */ }
+  }
+  return null;
+}
+
+/**
  * Main ingest function.
  * Extracts brand zip, parses copy docs, populates job.brand and job.pages.
  */
@@ -99,7 +143,6 @@ export async function ingest(job, emit) {
   let brandRoot = brandDir;
   const topEntries = await readdir(brandDir);
   if (topEntries.length === 1) {
-    const { stat } = await import('fs/promises');
     const singlePath = join(brandDir, topEntries[0]);
     const s = await stat(singlePath);
     if (s.isDirectory()) brandRoot = singlePath;
@@ -108,58 +151,68 @@ export async function ingest(job, emit) {
   // ── Parse brand files ─────────────────────────────────────────────────
   emit('Parsing brand assets...');
 
-  // Colors
-  try {
-    const colorsText = await readFile(join(brandRoot, 'colors.md'), 'utf-8');
+  // Colors — try multiple locations
+  const colorsText = await readBrandFile(brandRoot, ['colors.md', 'assets/colors.md']);
+  if (colorsText) {
     job.brand.colors = parseColors(colorsText);
     emit(`  Found ${job.brand.colors.length} brand colors.`);
-  } catch { emit('  No colors.md found — will rely on brand_guide.md.'); }
+  } else {
+    emit('  No colors.md found — will rely on brand_guide.md.');
+  }
 
-  // Fonts
-  try {
-    const fontsText = await readFile(join(brandRoot, 'fonts.md'), 'utf-8');
+  // Fonts — try multiple locations
+  const fontsText = await readBrandFile(brandRoot, ['fonts.md', 'assets/fonts.md']);
+  if (fontsText) {
     job.brand.fonts = parseFonts(fontsText);
     emit(`  Found ${job.brand.fonts.length} brand fonts.`);
-  } catch { emit('  No fonts.md found — will rely on brand_guide.md.'); }
+  } else {
+    emit('  No fonts.md found — will rely on brand_guide.md.');
+  }
 
   // Brand guide
-  try {
-    const guide = await readFile(join(brandRoot, 'brand_guide.md'), 'utf-8');
-    job.brand.brandGuide = guide;
+  const guideText = await readBrandFile(brandRoot, ['brand_guide.md', 'assets/brand_guide.md']);
+  if (guideText) {
+    job.brand.brandGuide = guideText;
     emit('  Brand guide loaded.');
-  } catch { emit('  No brand_guide.md found.'); }
+  } else {
+    emit('  No brand_guide.md found.');
+  }
 
-  // Logos
-  const logosDir = join(brandRoot, 'logos');
-  try {
-    const logoFiles = await readdir(logosDir);
-    const imageExts = ['.png', '.jpg', '.jpeg', '.svg', '.webp'];
-    const logos = logoFiles.filter(f => imageExts.includes(extname(f).toLowerCase()));
-    if (logos.length > 0) {
-      job.brand.logoPath = join(logosDir, logos[0]);
-      emit(`  Found ${logos.length} logo file(s). Using: ${logos[0]}`);
+  // Logos — try multiple locations, collect all images
+  const logosDir = findDir(brandRoot, ['logos', 'assets/logos']);
+  const imageExts = ['.png', '.jpg', '.jpeg', '.svg', '.webp'];
+  if (logosDir) {
+    const allLogos = await collectImages(logosDir, imageExts);
+    if (allLogos.length > 0) {
+      job.brand.logoPath = allLogos[0];
+      emit(`  Found ${allLogos.length} logo file(s). Using: ${basename(allLogos[0])}`);
+      // Store all logos for reference
+      job.brand.allLogoPaths = allLogos;
     }
-  } catch { emit('  No logos/ directory found.'); }
+  } else {
+    emit('  No logos/ directory found.');
+  }
 
-  // Photos
-  const photosDir = join(brandRoot, 'photos');
-  try {
-    const photoFiles = await readdir(photosDir);
-    const imageExts = ['.png', '.jpg', '.jpeg', '.webp'];
-    job.brand.photoPaths = photoFiles
-      .filter(f => imageExts.includes(extname(f).toLowerCase()))
-      .map(f => join(photosDir, f));
+  // Photos — try multiple locations, recurse into subdirectories
+  const photosDir = findDir(brandRoot, ['photos', 'assets/photos']);
+  const photoExts = ['.png', '.jpg', '.jpeg', '.webp'];
+  if (photosDir) {
+    job.brand.photoPaths = await collectImages(photosDir, photoExts);
     emit(`  Found ${job.brand.photoPaths.length} photo(s).`);
-  } catch { emit('  No photos/ directory found.'); }
+  } else {
+    emit('  No photos/ directory found.');
+  }
 
   // ── Copy brand assets to output-ready location ────────────────────────
   const outputAssets = join(tempDir, 'output_assets');
   await mkdir(join(outputAssets, 'logos'), { recursive: true });
   await mkdir(join(outputAssets, 'photos'), { recursive: true });
 
-  if (job.brand.logoPath) {
-    const dest = join(outputAssets, 'logos', basename(job.brand.logoPath));
-    await copyFile(job.brand.logoPath, dest);
+  // Copy all logos (not just the primary one)
+  const logosToCopy = job.brand.allLogoPaths || (job.brand.logoPath ? [job.brand.logoPath] : []);
+  for (const logoPath of logosToCopy) {
+    const dest = join(outputAssets, 'logos', basename(logoPath));
+    await copyFile(logoPath, dest);
   }
   for (const photoPath of job.brand.photoPaths) {
     const dest = join(outputAssets, 'photos', basename(photoPath));
@@ -214,12 +267,35 @@ export async function ingest(job, emit) {
     emit(`  Parsed ${docInfo.originalName} → ${pageType} (${rawText.length} chars)`);
   }
 
-  // Check for missing pages
+  // Create placeholder entries for missing pages (so all 6 always exist)
   const foundTypes = job.pages.map(p => p.pageType);
   const missing = expectedPages.filter(ep => !foundTypes.includes(ep));
   if (missing.length > 0) {
-    emit(`  Warning: Missing copy docs for: ${missing.join(', ')}`);
+    emit(`  Creating placeholder entries for: ${missing.join(', ')}`);
+    for (const pageType of missing) {
+      job.pages.push({
+        pageType,
+        templatePath: join(templateDir, `${pageType}.json`),
+        copyRaw: null,   // null = no copy uploaded
+        copySlots: {},
+        missingSlots: [],
+        htmlPath: null,
+        qaRounds: 0,
+        qaStatus: 'pending',
+        qaFeedback: [],
+        screenshots: { mobile: null, tablet: null, desktop: null },
+        deployedUrl: null
+      });
+    }
   }
 
-  emit(`Ingest complete: ${job.brand.colors.length} colors, ${job.brand.fonts.length} fonts, ${job.pages.length} pages.`);
+  // Sort pages into canonical funnel flow order
+  const FUNNEL_ORDER = ['landing', 'upgrade', 'upsell', 'thank_you', 'replay', 'sales'];
+  job.pages.sort((a, b) => {
+    const ai = FUNNEL_ORDER.indexOf(a.pageType);
+    const bi = FUNNEL_ORDER.indexOf(b.pageType);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+
+  emit(`Ingest complete: ${job.brand.colors.length} colors, ${job.brand.fonts.length} fonts, ${job.pages.length} pages (${job.pages.length - missing.length} with copy).`);
 }

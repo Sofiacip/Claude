@@ -37,6 +37,14 @@ funnel-specific rules on top — it overrides nothing.
 - If a logo is present, use it. If a color palette is defined, use those exact values.
 - Brand asset folder structure: logos/, photos/, colors.md, fonts.md, brand_guide.md
 
+## Brand Asset URLs (Pipeline)
+When building funnel pages via the pipeline:
+- Preview/QA: `/api/jobs/{JOB_ID}/assets/logos/{filename}` and `/api/jobs/{JOB_ID}/assets/photos/{filename}`
+- Use these server-relative URLs in HTML so images render during preview and QA screenshots.
+- Deploy: `../logos/{filename}` and `../photos/{filename}` (auto-rewritten by deploy.js)
+- The build context from `prepareBuildContext()` includes `logoUrl` and `photoUrls` with both `preview` and `deploy` paths.
+- NEVER use placehold.co for logos or author photos when real assets exist in the brand package.
+
 ## Anti-Generic Guardrails (inherited — never ovhese)
 - Colors: Never use default Tailwind palette. All colors come from brand package.
 - Shadows: Never flat `shadow-md`. Use layered, color-tinted shadows with low opacity.

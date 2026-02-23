@@ -37,13 +37,26 @@ export async function prepareBuildContext(job, pageIndex) {
   const logoFilename = job.brand.logoPath ? basename(job.brand.logoPath) : null;
   const photoFilenames = job.brand.photoPaths.map(p => basename(p));
 
+  // Build asset URLs for preview (server-served) and deploy (relative paths)
+  const assetBaseUrl = `/api/jobs/${job.id}/assets`;
+  const logoUrl = logoFilename
+    ? { preview: `${assetBaseUrl}/logos/${logoFilename}`, deploy: `../logos/${logoFilename}` }
+    : null;
+  const photoUrls = photoFilenames.map(f => ({
+    filename: f,
+    preview: `${assetBaseUrl}/photos/${f}`,
+    deploy: `../photos/${f}`
+  }));
+
   return {
     template,
     brand: {
       colors: brandColors,
       fonts: brandFonts,
       logoFilename,
+      logoUrl,
       photoFilenames,
+      photoUrls,
       brandGuide: job.brand.brandGuide
     },
     copySlots: page.copySlots,

@@ -16,6 +16,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import multer from 'multer';
 import mime from 'mime-types';
+import session from 'express-session';
 
 import { ingest } from './ingest.js';
 import { mapCopy } from './mapper.js';
@@ -159,6 +160,12 @@ async function runPipeline(job) {
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'funnel-designer-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 }
+}));
 app.use(express.static(join(__dirname, 'public')));
 
 // Multer: store uploads in project uploads/ dir keyed by job id
@@ -186,10 +193,25 @@ const upload = multer({
 app.post('/api/auth', (req, res) => {
   const { password } = req.body;
   if (password === APP_PASSWORD) {
+    req.session.authed = true;
     res.json({ ok: true });
   } else {
     res.status(401).json({ ok: false, error: 'Incorrect password' });
   }
+});
+
+/**
+ * GET /api/auth/check
+ */
+app.get('/api/auth/check', (req, res) => {
+  res.json({ authed: !!req.session?.authed });
+});
+
+// Auth guard — protect all /api/* routes below this point
+app.use('/api', (req, res, next) => {
+  if (req.path === '/auth' || req.path === '/auth/check') return next();
+  if (!req.session?.authed) return res.status(401).json({ error: 'Not authenticated' });
+  next();
 });
 
 /**
@@ -258,7 +280,8 @@ app.get('/api/jobs/:id', (req, res) => {
       qaRounds: p.qaRounds,
       missingSlots: p.missingSlots,
       deployedUrl: p.deployedUrl,
-      hasScreenshots: !!(p.screenshots.mobile || p.screenshots.desktop)
+      hasScreenshots: !!(p.screenshots.mobile || p.screenshots.desktop),
+      hasCopy: p.copyRaw !== null
     })),
     progress: job.progress,
     createdAt: job.createdAt,
@@ -333,6 +356,24 @@ app.get('/api/jobs/:id/pages/:idx/screenshot/:viewport', (req, res) => {
 });
 
 /**
+ * GET /api/jobs/:id/assets/*
+ * Serves brand assets (logos, photos) from the job's output_assets directory.
+ */
+app.get('/api/jobs/:id/assets/*', (req, res) => {
+  const job = jobs.get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+
+  const assetPath = req.params[0];
+  if (assetPath.includes('..')) return res.status(400).json({ error: 'Invalid path' });
+
+  const fullPath = join(job.tempDir, 'output_assets', assetPath);
+  if (!existsSync(fullPath)) return res.status(404).json({ error: 'Asset not found' });
+
+  res.setHeader('Content-Type', mime.lookup(fullPath) || 'application/octet-stream');
+  createReadStream(fullPath).pipe(res);
+});
+
+/**
  * GET /api/jobs/:id/pages/:idx/html
  * Serves the generated HTML for preview.
  */
@@ -396,13 +437,22 @@ app.get('/api/jobs/:id/full', (req, res) => {
   const job = jobs.get(req.params.id);
   if (!job) return res.status(404).json({ error: 'Job not found' });
 
-  // Return the full job object (minus SSE internals)
+  // Return the full job object (minus SSE internals) with asset URLs
+  const assetBaseUrl = `/api/jobs/${job.id}/assets`;
   const fullJob = {
     id: job.id,
     status: job.status,
     clientName: job.clientName,
     funnelType: job.funnelType,
-    brand: job.brand,
+    brand: {
+      ...job.brand,
+      assetBaseUrl,
+      logoUrl: job.brand.logoPath ? `${assetBaseUrl}/logos/${basename(job.brand.logoPath)}` : null,
+      photoUrls: (job.brand.photoPaths || []).map(p => ({
+        filename: basename(p),
+        url: `${assetBaseUrl}/photos/${basename(p)}`
+      }))
+    },
     pages: job.pages,
     tempDir: job.tempDir,
     progress: job.progress,

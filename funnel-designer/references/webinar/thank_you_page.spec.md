@@ -255,7 +255,7 @@ charcoal: #2C2C2C
 - **Title (H2):** "Make Sure You Don't Miss Our Emails"
   - Same classes as Card 1 title
 - **Body text:** Add contact email instruction — `font-body text-sm text-charcoal/55 mb-4`
-  - Email emphasized: `font-semibold text-charcoal`
+  - Email: `hello@pattieehsaei.com` — emphasized with `font-semibold text-charcoal`
 - **Confirmation email prompt:** `font-body text-sm text-charcoal/55 mb-3`
   - Email subject quoted in: `font-display italic text-charcoal/65`
 - **Gmail instructions intro:** `font-body text-xs text-charcoal/45 mb-2`

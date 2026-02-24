@@ -1,15 +1,15 @@
 /**
  * server.js — Impact OS Funnel Designer backend.
  * Express server with SSE progress streaming, job management.
- * Automated stages: Ingest → Map (heuristic). Then pauses for Claude Code
- * to take over Build → QA → Deploy.
+ * Automated stages: Ingest → Map (parse copy blocks). Then pauses for Claude Code
+ * to take over Build → QA → Deploy using reference-based design.
  */
 
 import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import { mkdir, readFile, readdir, writeFile } from 'fs/promises';
-import { existsSync, createReadStream } from 'fs';
+import { existsSync, createReadStream, readFileSync } from 'fs';
 import { join, extname, basename } from 'path';
 import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
@@ -70,10 +70,9 @@ function createJob(id, clientName, funnelType) {
 function createPageEntry(pageType) {
   return {
     pageType,
-    templatePath: null,
+    referencePath: null,
     copyRaw: '',
-    copySlots: {},
-    missingSlots: [],
+    copyBlocks: [],
     htmlPath: null,
     qaRounds: 0,
     qaStatus: 'pending', // pending | building | qa | approved | changes_requested
@@ -138,9 +137,9 @@ async function runPipeline(job) {
     emit('Stage 1/5 — Ingesting brand package + copy documents...');
     await ingest(job, emit);
 
-    // Stage 2 — Map (heuristic heading→slot matching)
+    // Stage 2 — Map (parse copy into content blocks)
     emitStatus(id, 'mapping');
-    emit('Stage 2/5 — Mapping copy to template slots...');
+    emit('Stage 2/5 — Parsing copy into content blocks...');
     await mapCopy(job, emit);
 
     // Pipeline pauses here — Claude Code handles Build → QA → Deploy
@@ -290,6 +289,35 @@ app.post('/api/funnel', (req, res, next) => {
 });
 
 /**
+ * GET /api/funnel-config — reference URLs and metadata per funnel type.
+ */
+app.get('/api/funnel-config', (req, res) => {
+  try {
+    const config = JSON.parse(readFileSync(join(__dirname, 'funnel-config.json'), 'utf-8'));
+    res.json(config);
+  } catch (e) {
+    res.status(500).json({ error: 'Could not load funnel-config.json' });
+  }
+});
+
+/**
+ * GET /api/jobs — list all jobs (summary only), newest first.
+ */
+app.get('/api/jobs', (req, res) => {
+  const list = Array.from(jobs.values())
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .map(j => ({
+      id: j.id,
+      clientName: j.clientName,
+      funnelType: j.funnelType,
+      status: j.status,
+      pageCount: j.pages?.length || 0,
+      createdAt: j.createdAt
+    }));
+  res.json(list);
+});
+
+/**
  * GET /api/jobs/:id
  */
 app.get('/api/jobs/:id', (req, res) => {
@@ -312,7 +340,8 @@ app.get('/api/jobs/:id', (req, res) => {
       pageType: p.pageType,
       qaStatus: p.qaStatus,
       qaRounds: p.qaRounds,
-      missingSlots: p.missingSlots,
+      referencePath: p.referencePath,
+      copyBlockCount: p.copyBlocks?.length || 0,
       deployedUrl: p.deployedUrl,
       hasScreenshots: !!(p.screenshots.mobile || p.screenshots.desktop),
       hasCopy: p.copyRaw !== null

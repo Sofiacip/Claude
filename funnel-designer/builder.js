@@ -21,9 +21,8 @@ import { join, basename } from 'path';
 export async function prepareBuildContext(job, pageIndex) {
   const page = job.pages[pageIndex];
 
-  // Load template
-  const templateJson = await readFile(page.templatePath, 'utf-8');
-  const template = JSON.parse(templateJson);
+  // Load reference HTML
+  const referenceHtml = await readFile(page.referencePath, 'utf-8');
 
   // Brand info
   const brandColors = job.brand.colors.map(c =>
@@ -49,7 +48,7 @@ export async function prepareBuildContext(job, pageIndex) {
   }));
 
   return {
-    template,
+    referenceHtml,
     brand: {
       colors: brandColors,
       fonts: brandFonts,
@@ -59,8 +58,8 @@ export async function prepareBuildContext(job, pageIndex) {
       photoUrls,
       brandGuide: job.brand.brandGuide
     },
-    copySlots: page.copySlots,
-    missingSlots: page.missingSlots,
+    copyRaw: page.copyRaw,
+    copyBlocks: page.copyBlocks,
     qaFeedback: page.qaFeedback
   };
 }

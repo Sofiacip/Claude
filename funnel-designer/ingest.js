@@ -222,18 +222,18 @@ export async function ingest(job, emit) {
   // ── Parse copy documents ──────────────────────────────────────────────
   emit('Parsing copy documents...');
 
-  // Load template config to know expected pages
-  const templateDir = join(process.cwd(), 'templates', funnelType);
+  // Load reference config to know expected pages
+  const referenceDir = join(process.cwd(), 'references', funnelType);
   const expectedPages = [];
   try {
-    const templateFiles = await readdir(templateDir);
-    for (const tf of templateFiles) {
-      if (tf.endsWith('.json')) {
-        expectedPages.push(tf.replace('.json', ''));
+    const referenceFiles = await readdir(referenceDir);
+    for (const rf of referenceFiles) {
+      if (rf.endsWith('.html')) {
+        expectedPages.push(rf.replace('_page.html', ''));
       }
     }
   } catch (err) {
-    throw new Error(`Template directory not found: templates/${funnelType}/`);
+    throw new Error(`Reference directory not found: references/${funnelType}/`);
   }
 
   for (const docInfo of copyDocPaths) {
@@ -251,10 +251,9 @@ export async function ingest(job, emit) {
     // Create page entry
     const pageEntry = {
       pageType,
-      templatePath: join(templateDir, `${pageType}.json`),
+      referencePath: join(referenceDir, `${pageType}_page.html`),
       copyRaw: rawText,
-      copySlots: {},
-      missingSlots: [],
+      copyBlocks: [],
       htmlPath: null,
       qaRounds: 0,
       qaStatus: 'pending',
@@ -275,10 +274,9 @@ export async function ingest(job, emit) {
     for (const pageType of missing) {
       job.pages.push({
         pageType,
-        templatePath: join(templateDir, `${pageType}.json`),
+        referencePath: join(referenceDir, `${pageType}_page.html`),
         copyRaw: null,   // null = no copy uploaded
-        copySlots: {},
-        missingSlots: [],
+        copyBlocks: [],
         htmlPath: null,
         qaRounds: 0,
         qaStatus: 'pending',

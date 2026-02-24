@@ -3,6 +3,7 @@
 ## Always Do First
 - Invoke the `frontend-design` skill before writing any frontend code, every session, no exceptions.
 - Read this entire CLAUDE.md before starting any page build.
+- Complete the Photo Audit (see Photo Placement Rules) before writing any HTML for a page build.
 
 ## Core Architecture: Reference-Based Design
 This tool builds funnel pages by **matching reference designs**. Every page type has a reference HTML file in `references/{funnel_type}/{page_type}.html`. Your job:
@@ -70,6 +71,51 @@ When building funnel pages via the pipeline:
 - Deploy: `../logos/{filename}` and `../photos/{filename}` (auto-rewritten by deploy.js)
 - The build context from `prepareBuildContext()` includes `logoUrl` and `photoUrls` with both `preview` and `deploy` paths.
 - NEVER use placehold.co for logos or author photos when real assets exist in the brand package.
+
+## Photo Placement Rules (MANDATORY)
+
+Before building ANY page, you MUST complete this photo audit:
+
+### Step 1: Inventory All Brand Photos
+List every file in the brand package's photos/ directory.
+For each photo, note:
+- Filename
+- Dimensions (read the actual file)
+- Content description (what/who is in the photo)
+- Orientation (portrait, landscape, square)
+- Best use (headshot, hero background, lifestyle, product, logo)
+
+### Step 2: Read the Page Spec's Photo Placement Map
+Open the .spec.md file for the page type you are building.
+Find the '## Photo Placement Map' section.
+This lists every photo slot with required dimensions and style.
+
+### Step 3: Assign Photos to Slots
+Match brand photos to page slots. Rules:
+- Author/guide headshots go in Hero and About/Bio sections
+- Lifestyle/action photos go as section backgrounds with overlay
+- Testimonial headshots go in testimonial sections
+- Brand logos go in social proof / 'As Seen In' sections
+- If multiple author photos exist, use different ones in different
+  sections — do not repeat the same photo
+
+### Step 4: Log Assignments Before Building
+Write out your assignments like this:
+  S1 Hero → author-speaking.jpg (landscape, 1200x800, gradient overlay)
+  S5 Bio → author-headshot.jpg (portrait, 600x800, rounded frame)
+  S7 Testimonials → no headshots in brand package, use initials
+
+### Hard Rules
+- NEVER build a page without completing the photo audit first
+- NEVER use a placeholder image when a real brand photo exists
+  that fits the slot
+- NEVER skip a photo slot — if the spec says a section has a
+  photo, it MUST have a photo (real or placeholder)
+- ALWAYS use gradient overlays on background photos
+  (bg-gradient-to-t from-black/60 or brand-color variant)
+- ALWAYS use the author's real photo in the hero or bio section — it is the single most impactful visual element
+- Photos must use object-cover and proper aspect ratios
+- Apply mix-blend-multiply for photos on colored backgrounds
 
 ## Anti-Generic Guardrails
 - Colors: Never use default Tailwind palette. All colors come from brand package or derived from it.

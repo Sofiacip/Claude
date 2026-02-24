@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upgrade Your Experience</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        cream: '#FBF6EA',
+        blush: '#FAD7D8',
+        burgundy: '#8B1A3A',
+        'burgundy-dark': '#37171D',
+        gold: '#E0AF27',
+        'warm-ivory': '#FAF5EE',
+        'deep-rose': '#C4546A',
+        'soft-pink': '#FDF0F0',
+      },
+      fontFamily: {
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        body: ['Jost', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
+<style>
+  * { -webkit-font-smoothing: antialiased; }
+  .grain-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+  }
+  .timer-digit {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 2rem;
+    line-height: 1;
+    color: #37171D;
+  }
+  .timer-label {
+    font-family: 'Jost', sans-serif;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #8B1A3A;
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body class="bg-cream font-body text-burgundy-dark">
+
+<!-- ── Sticky CTA Bar (top) ─────────────────────────────────────────── -->
+<div id="sticky-cta" class="fixed top-0 left-0 right-0 z-50 bg-burgundy/95 backdrop-blur-sm py-3 px-4 transition-transform" style="transform: translateY(0)">
+  <div class="max-w-4xl mx-auto flex items-center justify-between">
+    <p class="font-body text-xs md:text-sm text-cream/80 hidden md:block">Special one-time offer — upgrade for just $27</p>
+    <a href="#checkout" class="w-full md:w-auto text-center px-8 py-2.5 bg-gold text-burgundy-dark font-body font-700 text-xs uppercase tracking-[0.15em] rounded-sm hover:bg-gold/90 active:scale-[0.98] transition-transform">
+      Yes, I Want to Upgrade for $27
+    </a>
+  </div>
+</div>
+
+<!-- ── Progress Bar ─────────────────────────────────────────────────── -->
+<div class="pt-14 bg-white border-b border-burgundy/10">
+  <div class="max-w-2xl mx-auto px-4 py-4">
+    <div class="flex items-center justify-center gap-2 md:gap-4 text-xs md:text-sm">
+      <div class="flex items-center gap-1.5">
+        <div class="w-5 h-5 rounded-full bg-burgundy flex items-center justify-center">
+          <svg class="w-3 h-3 text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <span class="font-body text-burgundy-dark/60">Registered</span>
+      </div>
+      <div class="w-8 md:w-16 h-px bg-burgundy/30"></div>
+      <div class="flex items-center gap-1.5">
+        <div class="w-5 h-5 rounded-full bg-deep-rose flex items-center justify-center">
+          <span class="text-cream text-[10px] font-700">2</span>
+        </div>
+        <span class="font-body font-600 text-burgundy-dark">Upgrade the Offer</span>
+      </div>
+      <div class="w-8 md:w-16 h-px bg-burgundy/15"></div>
+      <div class="flex items-center gap-1.5">
+        <div class="w-5 h-5 rounded-full bg-burgundy/15 flex items-center justify-center">
+          <span class="text-burgundy-dark/40 text-[10px] font-700">3</span>
+        </div>
+        <span class="font-body text-burgundy-dark/40">Enjoy Your Experience</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Congrats + Headline ──────────────────────────────────────────── -->
+<section class="bg-cream py-10 md:py-14">
+  <div class="max-w-3xl mx-auto px-4 text-center">
+    <p class="font-body text-sm text-deep-rose font-600 mb-2">Congrats! You&rsquo;re registered.</p>
+    <p class="font-body text-sm text-burgundy-dark/60 mb-8">Before you go, I have a special invitation for you:</p>
+
+    <h1 class="font-display font-900 text-3xl md:text-5xl lg:text-[3.5rem] leading-[1.05] text-burgundy-dark tracking-tight mb-6">
+      Master the Money Basics Most Women Were Never Taught Before the Webinar Starts
+    </h1>
+    <p class="font-body text-base md:text-lg text-burgundy-dark/65 max-w-2xl mx-auto leading-relaxed mb-10">
+      Fast-track your confidence with two of my bestselling mini-courses, &ldquo;Mutual Funds, Finally Explained&rdquo; and &ldquo;Retire Like a Queen&rdquo; for just $27.
+    </p>
+  </div>
+</section>
+
+<!-- ── Video + Value Proposition ─────────────────────────────────────── -->
+<section class="bg-soft-pink py-12 md:py-16">
+  <div class="max-w-3xl mx-auto px-4">
+    <!-- Video Embed Placeholder -->
+    <div class="aspect-video bg-burgundy-dark/10 rounded-lg mb-8 flex items-center justify-center overflow-hidden relative">
+      <div class="w-16 h-16 rounded-full bg-burgundy/80 flex items-center justify-center cursor-pointer hover:bg-burgundy transition-colors">
+        <svg class="w-6 h-6 text-cream ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <p class="absolute bottom-4 left-4 text-xs text-burgundy-dark/40 font-body">Play the video above</p>
+    </div>
+
+    <div class="text-center">
+      <p class="font-display font-700 text-lg md:text-xl text-burgundy-dark/80 mb-4 max-w-xl mx-auto leading-relaxed">
+        Walk into the webinar already clear, grounded, and thinking differently about money and power.
+      </p>
+      <p class="font-body text-sm text-burgundy-dark/55 max-w-lg mx-auto leading-relaxed mb-8">
+        You invest first. Then you buy the bag with dividends. Get instant lifetime access to two of my best-selling mini courses so you can walk into the webinar already thinking differently about money.
+      </p>
+
+      <!-- Pricing -->
+      <div class="mb-6">
+        <p class="font-body text-xs uppercase tracking-[0.2em] text-burgundy/50 mb-1">Total value:</p>
+        <p class="font-display font-700 text-3xl text-burgundy-dark line-through decoration-deep-rose/50 mb-2">$168</p>
+        <p class="font-body text-sm text-burgundy-dark/70">Your price today: <span class="font-display font-900 text-2xl text-deep-rose">$27</span></p>
+      </div>
+
+      <!-- Countdown Timer -->
+      <div class="mb-8 py-4 border-t border-b border-burgundy/10">
+        <p class="font-body text-xs uppercase tracking-[0.2em] text-deep-rose font-500 mb-3">This offer expires when you leave this page</p>
+        <div class="flex justify-center gap-6">
+          <div class="text-center">
+            <div class="timer-digit" id="minutes">10</div>
+            <div class="timer-label">Minutes</div>
+          </div>
+          <div class="text-center">
+            <div class="timer-digit" id="seconds">00</div>
+            <div class="timer-label">Seconds</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div id="checkout">
+        <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 active:scale-[0.98] transition-transform">
+          Yes, I Want to Upgrade for $27
+        </a>
+        <p class="mt-4 text-xs text-burgundy-dark/40 cursor-pointer hover:text-burgundy-dark/60 transition-colors">
+          <a href="#">No thanks, I&rsquo;ll attend the webinar without the VIP bundle</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Get Instant Access ───────────────────────────────────────────── -->
+<section class="bg-cream py-16 md:py-24 border-t border-burgundy/8">
+  <div class="max-w-3xl mx-auto px-4 text-center">
+    <h2 class="font-display font-900 text-3xl md:text-5xl lg:text-[3.2rem] leading-[1.08] text-burgundy-dark tracking-tight mb-4">
+      Get Instant Access to My Bundle<br>and Start Building Financial Power Before the Webinar Even Begins
+    </h2>
+    <p class="font-body text-sm text-burgundy-dark/55 mb-10">Look at what you get when you upgrade now&hellip;</p>
+
+    <a href="#" class="inline-block px-10 py-4 bg-deep-rose text-cream font-body font-600 text-xs uppercase tracking-[0.15em] rounded-sm mb-4 hover:bg-burgundy focus-visible:ring-2 focus-visible:ring-gold active:scale-[0.98] transition-transform">
+      Upgrade Now for Just $27
+    </a>
+    <p class="font-body text-xs text-burgundy-dark/40 mb-12">This isn&rsquo;t motivation. It&rsquo;s education, clarity, and protection.<br>This bundle gives you what most women were never taught.</p>
+
+    <!-- Product Cards -->
+    <div class="space-y-8 text-left max-w-2xl mx-auto">
+      <!-- Product 1 -->
+      <div class="bg-white border border-burgundy/8 rounded-lg p-6 md:p-8 relative">
+        <div class="absolute top-4 right-4 bg-blush text-burgundy font-display font-700 text-sm px-3 py-1 rounded-sm">$79 Value</div>
+        <h3 class="font-display font-700 text-xl md:text-2xl text-burgundy-dark mb-4">Mutual Funds, Finally Explained</h3>
+        <p class="font-body text-sm text-burgundy-dark/60 mb-4">Most people own mutual funds. Very few understand them. In this training, I break down:</p>
+        <ol class="space-y-2 mb-4">
+          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
+            <span class="font-display font-700 text-deep-rose flex-shrink-0">1.</span>What mutual funds really are
+          </li>
+          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
+            <span class="font-display font-700 text-deep-rose flex-shrink-0">2.</span>How fees quietly eat away at your future
+          </li>
+          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
+            <span class="font-display font-700 text-deep-rose flex-shrink-0">3.</span>What actually matters when choosing funds
+          </li>
+          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
+            <span class="font-display font-700 text-deep-rose flex-shrink-0">4.</span>How to avoid costly mistakes you don&rsquo;t even know you&rsquo;re making
+          </li>
+        </ol>
+        <p class="font-display italic text-sm text-burgundy-dark/50">This is clarity. And clarity is protection.</p>
+      </div>
+
+      <!-- Product 2 -->
+      <div class="bg-white border border-burgundy/8 rounded-lg p-6 md:p-8 relative">
+        <div class="absolute top-4 right-4 bg-blush text-burgundy font-display font-700 text-sm px-3 py-1 rounded-sm">$89 Value</div>
+        <h3 class="font-display font-700 text-xl md:text-2xl text-burgundy-dark mb-4">Retire Like a Queen</h3>
+        <p class="font-body text-sm text-burgundy-dark/60 mb-4">Retirement doesn&rsquo;t have to be confusing or overwhelming. In this course, you&rsquo;ll learn:</p>
+        <ol class="space-y-2 mb-4">
+          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
+            <span class="font-display font-700 text-deep-rose flex-shrink-0">1.</span>How retirement accounts actually work
+          </li>
+          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
+            <span class="font-display font-700 text-deep-rose flex-shrink-0">2.</span>How to plan long-term without fear or jargon
+          </li>
+          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
+            <span class="font-display font-700 text-deep-rose flex-shrink-0">3.</span>How to stop avoiding the future and start securing it
+          </li>
+          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
+            <span class="font-display font-700 text-deep-rose flex-shrink-0">4.</span>How to make sure future-you is never trapped or dependent
+          </li>
+        </ol>
+        <p class="font-display italic text-sm text-burgundy-dark/50">This is about freedom, not fantasy.</p>
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <a href="#" class="inline-block px-10 py-4 bg-deep-rose text-cream font-body font-600 text-xs uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy focus-visible:ring-2 focus-visible:ring-gold active:scale-[0.98] transition-transform">
+        Upgrade Now for Just $27
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Value Stack Summary ──────────────────────────────────────────── -->
+<section class="bg-soft-pink py-14 md:py-20">
+  <div class="max-w-2xl mx-auto px-4 text-center">
+    <h2 class="font-display font-900 text-2xl md:text-3xl lg:text-4xl leading-[1.1] text-burgundy-dark tracking-tight mb-8">
+      Here&rsquo;s What You Get Today Only on This Page:
+    </h2>
+
+    <div class="space-y-4 text-left mb-8">
+      <div class="bg-white/60 border border-burgundy/6 rounded-md p-5">
+        <p class="font-display font-700 text-base text-burgundy-dark mb-1">Mutual Funds, Finally Explained <span class="text-deep-rose">(Value: $79)</span></p>
+        <p class="font-body text-sm text-burgundy-dark/55">A clear, elegant guide to understanding mutual funds, avoiding hidden fees, and safeguarding your financial future.</p>
+      </div>
+      <div class="bg-white/60 border border-burgundy/6 rounded-md p-5">
+        <p class="font-display font-700 text-base text-burgundy-dark mb-1">Retire Like a Queen <span class="text-deep-rose">(Value: $89)</span></p>
+        <p class="font-body text-sm text-burgundy-dark/55">A calm, empowering guide to understanding retirement, planning with confidence, and securing a future built on freedom rather than fear.</p>
+      </div>
+    </div>
+
+    <div class="py-6 border-t border-b border-burgundy/10 mb-8">
+      <p class="font-body text-xs uppercase tracking-[0.2em] text-burgundy/50 mb-1">That&rsquo;s not the value. That&rsquo;s the entry point.</p>
+      <p class="font-display font-700 text-2xl text-burgundy-dark">
+        Total Value: <span class="line-through decoration-deep-rose/50">$168</span> &rarr; Yours today for just <span class="text-deep-rose">$27</span>
+      </p>
+      <p class="font-body text-xs text-burgundy-dark/50 mt-2">Save 85% and get lifetime access before the price jumps!</p>
+    </div>
+
+    <p class="font-body text-xs text-deep-rose font-500 uppercase tracking-[0.15em] mb-6">You won&rsquo;t see this offer again once you leave this page.</p>
+
+    <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 active:scale-[0.98] transition-transform mb-4">
+      Yes! I Want the Bundle for $27
+    </a>
+    <p class="text-xs text-burgundy-dark/40 cursor-pointer hover:text-burgundy-dark/60 transition-colors">
+      <a href="#">No thanks, I&rsquo;ll skip the upgrade</a>
+    </p>
+  </div>
+</section>
+
+<!-- ── Why This Matters ─────────────────────────────────────────────── -->
+<section class="bg-cream py-16 md:py-24 border-t border-burgundy/8">
+  <div class="max-w-2xl mx-auto px-4 text-center">
+    <h2 class="font-display font-900 text-3xl md:text-4xl lg:text-5xl leading-[1.1] text-burgundy-dark tracking-tight mb-8">
+      Why This Matters
+    </h2>
+    <p class="font-display italic text-base md:text-lg text-burgundy-dark/60 mb-8 max-w-lg mx-auto leading-relaxed">
+      I created this offer for women who are done guessing, hoping, and second-guessing themselves around money.
+    </p>
+
+    <div class="text-left max-w-md mx-auto mb-10">
+      <p class="font-body text-sm text-burgundy-dark/65 mb-4 font-500">This bundle helps you:</p>
+      <ul class="space-y-3">
+        <li class="flex items-start gap-3">
+          <div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div>
+          <span class="font-body text-sm text-burgundy-dark/70">Walk into the webinar already empowered</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div>
+          <span class="font-body text-sm text-burgundy-dark/70">Spot red flags faster</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div>
+          <span class="font-body text-sm text-burgundy-dark/70">Ask better questions</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div>
+          <span class="font-body text-sm text-burgundy-dark/70">Make decisions from strength, not fear</span>
+        </li>
+      </ul>
+    </div>
+
+    <p class="font-display font-700 text-sm uppercase tracking-[0.15em] text-burgundy/50 mb-8">
+      If you&rsquo;re serious about becoming AccompliSHE, this is how you start.
+    </p>
+
+    <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 active:scale-[0.98] transition-transform">
+      Upgrade for Just $27
+    </a>
+  </div>
+</section>
+
+<!-- Countdown Timer Script -->
+<script>
+(function() {
+  let total = 10 * 60; // 10 minutes
+  function update() {
+    if (total <= 0) return;
+    total--;
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    document.getElementById('minutes').textContent = String(m).padStart(2, '0');
+    document.getElementById('seconds').textContent = String(s).padStart(2, '0');
+  }
+  setInterval(update, 1000);
+
+  // Sticky CTA: hide when user is near a CTA button
+  const stickyCta = document.getElementById('sticky-cta');
+  const checkout = document.getElementById('checkout');
+  if (stickyCta && checkout) {
+    const observer = new IntersectionObserver(([entry]) => {
+      stickyCta.style.transform = entry.isIntersecting ? 'translateY(-100%)' : 'translateY(0)';
+    }, { threshold: 0.1 });
+    observer.observe(checkout);
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Path to Financial Power — Enroll Now</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        cream: '#FBF6EA',
+        blush: '#FAD7D8',
+        burgundy: '#8B1A3A',
+        'burgundy-dark': '#37171D',
+        gold: '#E0AF27',
+        'warm-ivory': '#FAF5EE',
+        'deep-rose': '#C4546A',
+        'soft-pink': '#FDF0F0',
+      },
+      fontFamily: {
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        body: ['Jost', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
+<style>
+  * { -webkit-font-smoothing: antialiased; }
+  .grain::before { content:''; position:absolute; inset:0; opacity:0.03; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events:none; z-index:1; }
+  .di { width:28px; height:28px; background:#FAD7D8; transform:rotate(45deg); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .di-inner { width:12px; height:12px; background:#37171D; }
+  .di-gold { width:28px; height:28px; background:#E0AF27; transform:rotate(45deg); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .di-gold .di-inner { background:#37171D; }
+  details summary { cursor:pointer; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details[open] summary .faq-arrow { transform: rotate(180deg); }
+</style>
+</head>
+<body class="bg-cream font-body text-burgundy-dark">
+
+<!-- ── Sticky CTA ───────────────────────────────────────────────────── -->
+<div id="sticky-cta" class="fixed top-0 left-0 right-0 z-50 bg-burgundy/95 backdrop-blur-sm py-3 px-4 transition-transform">
+  <div class="max-w-4xl mx-auto flex items-center justify-between">
+    <p class="font-body text-xs text-cream/70 hidden md:block">Your special offer ends soon</p>
+    <a href="#pricing" class="w-full md:w-auto text-center px-8 py-2.5 bg-gold text-burgundy-dark font-body font-700 text-xs uppercase tracking-[0.15em] rounded-sm hover:bg-gold/90 active:scale-[0.98] transition-transform">
+      Join Now
+    </a>
+  </div>
+</div>
+
+<!-- ── Countdown Timer ──────────────────────────────────────────────── -->
+<div class="pt-14 bg-cream border-b border-burgundy/10 py-4">
+  <div class="max-w-lg mx-auto text-center px-4">
+    <p class="font-body text-xs uppercase tracking-[0.25em] text-deep-rose font-500 mb-3">Your Special Offer Ends In</p>
+    <div class="flex justify-center gap-4 md:gap-6">
+      <div class="text-center"><p class="font-display font-700 text-2xl text-burgundy-dark" id="cd-d">00</p><p class="font-body text-[10px] uppercase tracking-widest text-burgundy/50">Days</p></div>
+      <div class="text-center"><p class="font-display font-700 text-2xl text-burgundy-dark" id="cd-h">00</p><p class="font-body text-[10px] uppercase tracking-widest text-burgundy/50">Hours</p></div>
+      <div class="text-center"><p class="font-display font-700 text-2xl text-burgundy-dark" id="cd-m">00</p><p class="font-body text-[10px] uppercase tracking-widest text-burgundy/50">Minutes</p></div>
+      <div class="text-center"><p class="font-display font-700 text-2xl text-burgundy-dark" id="cd-s">00</p><p class="font-body text-[10px] uppercase tracking-widest text-burgundy/50">Seconds</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Hero ──────────────────────────────────────────────────────────── -->
+<section class="bg-cream py-14 md:py-20">
+  <div class="max-w-3xl mx-auto px-4 text-center">
+    <p class="font-body text-xs md:text-sm text-burgundy-dark/50 mb-4">Introducing the Flagship Program from Keynote Speaker,<br>Bestselling Author, and Financial Educator:</p>
+    <h1 class="font-display font-900 text-3xl md:text-5xl lg:text-[3.5rem] leading-[1.05] text-burgundy-dark tracking-tight mb-6">
+      The Path to Financial Power, Personal Authority, and Self-Made Security
+    </h1>
+    <p class="font-body text-base md:text-lg text-burgundy-dark/60 max-w-2xl mx-auto leading-relaxed mb-8">
+      Learn how to stop being dependent and start building a life where no one has financial control over you but you.
+    </p>
+    <a href="#pricing" class="inline-block px-12 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark focus-visible:ring-2 focus-visible:ring-gold active:scale-[0.98] transition-transform">
+      Join Now
+    </a>
+  </div>
+</section>
+
+<!-- ── Pain Points ──────────────────────────────────────────────────── -->
+<section class="bg-burgundy-dark relative grain py-16 md:py-24">
+  <div class="relative z-10 max-w-4xl mx-auto px-4">
+    <p class="font-body text-xs uppercase tracking-[0.3em] text-blush/40 text-center mb-4">Have you ever noticed&hellip;</p>
+    <h2 class="font-display font-900 text-2xl md:text-4xl lg:text-[2.8rem] leading-[1.1] text-center text-cream mb-6 tracking-tight">
+      You&rsquo;re Capable, Hardworking, and Smart&mdash;So Why Do You Still Feel Financially Unsure?
+    </h2>
+    <p class="font-body text-sm text-blush/60 text-center max-w-2xl mx-auto mb-12 leading-relaxed">
+      You work hard. You&rsquo;re responsible. You&rsquo;ve tried to do the &ldquo;right things.&rdquo; And yet, money still feels stressful.
+    </p>
+    <p class="font-body text-xs uppercase tracking-[0.25em] text-deep-rose text-center mb-8 font-500">Tell me if any of this feels familiar:</p>
+    <div class="space-y-6 max-w-2xl mx-auto">
+      <div class="flex gap-5 items-start"><div class="di mt-1"><div class="di-inner"></div></div><div><p class="font-display font-700 text-base text-cream mb-1">You earn money,</p><p class="font-body text-sm text-blush/55">but you don&rsquo;t feel fully in control of it.</p></div></div>
+      <div class="flex gap-5 items-start"><div class="di mt-1"><div class="di-inner"></div></div><div><p class="font-display font-700 text-base text-cream mb-1">You second-guess financial decisions,</p><p class="font-body text-sm text-blush/55">even small ones.</p></div></div>
+      <div class="flex gap-5 items-start"><div class="di mt-1"><div class="di-inner"></div></div><div><p class="font-display font-700 text-base text-cream mb-1">You stay longer than you should</p><p class="font-body text-sm text-blush/55">in jobs or relationships because stability feels safer than risk.</p></div></div>
+      <div class="flex gap-5 items-start"><div class="di mt-1"><div class="di-inner"></div></div><div><p class="font-display font-700 text-base text-cream mb-1">You&rsquo;ve been told you&rsquo;re &ldquo;good with people&rdquo;</p><p class="font-body text-sm text-blush/55">or &ldquo;supportive,&rdquo; or &ldquo;responsible&rdquo;&mdash;but not powerful.</p></div></div>
+      <div class="flex gap-5 items-start"><div class="di mt-1"><div class="di-inner"></div></div><div><p class="font-display font-700 text-base text-cream mb-1">You fear ending up alone, broke,</p><p class="font-body text-sm text-blush/55">or starting over too late.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Root Cause / Conditioning ─────────────────────────────────────── -->
+<section class="bg-warm-ivory py-16 md:py-24">
+  <div class="max-w-2xl mx-auto px-4 text-center">
+    <p class="font-body text-sm text-burgundy-dark/55 mb-4 leading-relaxed">This isn&rsquo;t because you&rsquo;re bad with money. And it&rsquo;s not because you lack discipline.</p>
+    <p class="font-display font-700 text-lg text-burgundy-dark mb-8">You were just never taught how financial power actually works for women.</p>
+    <h2 class="font-display font-900 text-xl md:text-2xl text-burgundy-dark/50 uppercase tracking-wide mb-8">And Staying in That Place Costs More Than You Think.</h2>
+    <p class="font-body text-sm text-burgundy-dark/55 leading-relaxed mb-8">
+      The real reason women struggle with money isn&rsquo;t spending or self-control &mdash; it&rsquo;s conditioning. Most women were raised inside stories that trained them to wait, adapt, and depend.
+    </p>
+
+    <div class="space-y-4 text-left max-w-md mx-auto mb-10">
+      <div class="flex items-start gap-4"><div class="di-gold mt-1"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">You over-give at work and take on non-promotable tasks.</span></div>
+      <div class="flex items-start gap-4"><div class="di-gold mt-1"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">You hesitate to apply for higher roles unless you feel &ldquo;perfectly ready.&rdquo;</span></div>
+      <div class="flex items-start gap-4"><div class="di-gold mt-1"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">You stay financially entangled longer than you should.</span></div>
+      <div class="flex items-start gap-4"><div class="di-gold mt-1"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">You tolerate red flags because independence feels risky.</span></div>
+      <div class="flex items-start gap-4"><div class="di-gold mt-1"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">And you make choices from fear instead of authority.</span></div>
+    </div>
+
+    <p class="font-display font-700 text-lg text-burgundy-dark mb-4">But here&rsquo;s the truth: You don&rsquo;t need to be fixed.</p>
+    <p class="font-display italic text-base text-burgundy-dark/60">You just need a new operating system.</p>
+  </div>
+</section>
+
+<!-- ── Program Introduction ─────────────────────────────────────────── -->
+<section class="bg-cream py-16 md:py-24 border-t border-burgundy/8">
+  <div class="max-w-3xl mx-auto px-4 text-center">
+    <p class="font-body text-xs uppercase tracking-[0.3em] text-burgundy/40 mb-4">Introducing</p>
+    <h2 class="font-display font-900 text-3xl md:text-5xl lg:text-[3.2rem] leading-[1.08] text-burgundy-dark tracking-tight mb-6">
+      The Path to Financial Power,<br>Personal Authority, and Self-Made Security
+    </h2>
+    <p class="font-body text-sm text-burgundy-dark/55 max-w-xl mx-auto leading-relaxed mb-10">
+      A step-by-step program that teaches women how to become their own provider, protector, and decision-maker. This is not about hustle or deprivation. It&rsquo;s about competence, clarity, and choice.
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-10 text-left">
+      <div class="flex gap-4 items-start"><span class="font-display font-900 text-3xl text-blush leading-none flex-shrink-0">01</span><p class="font-body text-sm text-burgundy-dark/65">Understand money without intimidation</p></div>
+      <div class="flex gap-4 items-start"><span class="font-display font-900 text-3xl text-blush leading-none flex-shrink-0">02</span><p class="font-body text-sm text-burgundy-dark/65">Build financial safety on your own terms</p></div>
+      <div class="flex gap-4 items-start"><span class="font-display font-900 text-3xl text-blush leading-none flex-shrink-0">03</span><p class="font-body text-sm text-burgundy-dark/65">Increase earning power and career authority</p></div>
+      <div class="flex gap-4 items-start"><span class="font-display font-900 text-3xl text-blush leading-none flex-shrink-0">04</span><p class="font-body text-sm text-burgundy-dark/65">Choose relationships from strength, not survival</p></div>
+    </div>
+
+    <a href="#pricing" class="inline-block px-12 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark active:scale-[0.98] transition-transform">Join Now</a>
+  </div>
+</section>
+
+<!-- ── Meet Your Coach ──────────────────────────────────────────────── -->
+<section class="bg-blush/30 py-16 md:py-24">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
+      <div class="flex justify-center">
+        <div class="w-72 md:w-96 aspect-[3/4] rounded-lg overflow-hidden shadow-2xl shadow-burgundy/15">
+          <img src="https://placehold.co/500x660/FAD7D8/8B1A3A?text=Coach+Photo" alt="Coach Photo" class="w-full h-full object-cover">
+        </div>
+      </div>
+      <div>
+        <p class="font-body text-xs uppercase tracking-[0.25em] text-burgundy/50 mb-2">Meet Your Coach</p>
+        <p class="font-display italic text-base text-burgundy-dark/70 mb-6">Lawyer :: Senior Leader in Finance :: Women&rsquo;s Financial Advocate</p>
+        <p class="font-body text-sm text-burgundy-dark/60 leading-relaxed mb-4">A lawyer licensed in two states and a senior leader at a major financial institution who built her own financial independence after experiencing debt, instability, and loss.</p>
+        <p class="font-body text-sm text-burgundy-dark/60 leading-relaxed mb-4">Her work is driven by one mission: No woman should ever stay stuck because she cannot make or keep her own money.</p>
+        <p class="font-body text-sm text-burgundy-dark/60 leading-relaxed">Through her bestselling book, her podcast, and a global platform educating millions, she has become a leading voice in women&rsquo;s financial autonomy. She doesn&rsquo;t sell fantasy. She teaches reality, with compassion and clarity.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Testimonials ─────────────────────────────────────────────────── -->
+<section class="bg-burgundy-dark relative grain py-16 md:py-24">
+  <div class="relative z-10 max-w-4xl mx-auto px-4">
+    <p class="font-body text-xs uppercase tracking-[0.25em] text-blush/40 text-center mb-4">What people are saying&hellip;</p>
+    <h2 class="font-display font-900 text-3xl md:text-5xl leading-[1.1] text-center text-cream mb-14 tracking-tight">The Real Deal and<br>She&rsquo;s Got Receipts.</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white/5 border border-blush/10 rounded-md p-6"><p class="font-body text-sm text-blush/70 italic mb-4">&ldquo;Thank you for standing so strong for those of us who feel weakened. You Matter! And you make me feel like I matter!&rdquo;</p><p class="font-body text-xs text-blush/40">&mdash; anonymous DM</p></div>
+      <div class="bg-white/5 border border-blush/10 rounded-md p-6"><p class="font-body text-sm text-blush/70 italic mb-4">&ldquo;She was a breath of fresh air at our Women&rsquo;s Conference! She inspired our audience to embrace and confront fear, and conquer it!&rdquo;</p><p class="font-body text-xs text-blush/40">&mdash; Beth Azor, Azor Advisory Services</p></div>
+      <div class="bg-white/5 border border-blush/10 rounded-md p-6"><p class="font-body text-sm text-blush/70 italic mb-4">&ldquo;This is the essential guide to achieving true financial independence and winning at life as a woman!&rdquo;</p><p class="font-body text-xs text-blush/40">&mdash; Nadya Okamoto, Co-Founder of August</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Curriculum / What's Inside ────────────────────────────────────── -->
+<section class="bg-cream py-16 md:py-24 border-t border-burgundy/8">
+  <div class="max-w-3xl mx-auto px-4">
+    <h2 class="font-display font-900 text-2xl md:text-4xl leading-[1.1] text-center text-burgundy-dark tracking-tight mb-4">What&rsquo;s Inside the Program</h2>
+    <p class="font-body text-sm text-center text-burgundy-dark/55 max-w-xl mx-auto mb-14">Practical financial education, career strategy, and relationship intelligence with a clear internal framework.</p>
+
+    <div class="space-y-8">
+      <div class="border border-burgundy/8 rounded-lg p-6 md:p-8 bg-white">
+        <h3 class="font-display font-700 text-lg text-burgundy-dark mb-3">The AccompliSHE Framework (Core Methodology)</h3>
+        <p class="font-body text-sm text-burgundy-dark/50 mb-4">A guided, multi-week experience that rewires dependency conditioning and replaces it with competence, clarity, and self-trust.</p>
+        <div class="space-y-3"><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Identity-first education that exposes conditioning</span></div><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">A shift from being chosen to choosing yourself</span></div><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Decision-making rooted in authority, not survival</span></div></div>
+      </div>
+      <div class="border border-burgundy/8 rounded-lg p-6 md:p-8 bg-white">
+        <h3 class="font-display font-700 text-lg text-burgundy-dark mb-3">Foundational Financial Education</h3>
+        <p class="font-body text-sm text-burgundy-dark/50 mb-4">Clear, grounded money education designed for real life.</p>
+        <div class="space-y-3"><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Budgeting and cash flow without shame</span></div><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Account structures that create clarity and calm</span></div><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Emergency funds, saving, and beginner investing explained plainly</span></div></div>
+      </div>
+      <div class="border border-burgundy/8 rounded-lg p-6 md:p-8 bg-white">
+        <h3 class="font-display font-700 text-lg text-burgundy-dark mb-3">Career Power and Earning Authority</h3>
+        <p class="font-body text-sm text-burgundy-dark/50 mb-4">Tools to increase income, visibility, and professional leverage.</p>
+        <div class="space-y-3"><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Why women get stuck in non-promotable work</span></div><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">How to advocate for raises and promotions</span></div><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Career strategy that supports independence</span></div></div>
+      </div>
+      <div class="border border-burgundy/8 rounded-lg p-6 md:p-8 bg-white">
+        <h3 class="font-display font-700 text-lg text-burgundy-dark mb-3">Relationship and Boundary Intelligence</h3>
+        <p class="font-body text-sm text-burgundy-dark/50 mb-4">Education that protects your money, energy, and future.</p>
+        <div class="space-y-3"><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Identify financially draining partners early</span></div><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">How finances should be structured in healthy relationships</span></div><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Boundary setting that protects your peace</span></div></div>
+      </div>
+      <div class="border border-burgundy/8 rounded-lg p-6 md:p-8 bg-white">
+        <h3 class="font-display font-700 text-lg text-burgundy-dark mb-3">Tools, Templates, and Planning Resources</h3>
+        <p class="font-body text-sm text-burgundy-dark/50 mb-4">With these in your toolkit, you&rsquo;re never left guessing.</p>
+        <div class="space-y-3"><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Budget templates and calculators</span></div><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">Belief audits and identity reset exercises</span></div><div class="flex gap-4 items-start"><div class="di mt-0.5"><div class="di-inner"></div></div><span class="font-body text-sm text-burgundy-dark/65">One-year and three-year planning frameworks</span></div></div>
+      </div>
+    </div>
+    <div class="text-center mt-10"><a href="#pricing" class="inline-block px-12 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark active:scale-[0.98] transition-transform">Join Now</a></div>
+  </div>
+</section>
+
+<!-- ── Week-by-Week Curriculum ───────────────────────────────────────── -->
+<section class="bg-soft-pink py-16 md:py-24">
+  <div class="max-w-3xl mx-auto px-4">
+    <h2 class="font-display font-900 text-2xl md:text-3xl text-center text-burgundy-dark tracking-tight mb-12">Explore the Curriculum</h2>
+    <div class="space-y-6">
+      <div class="bg-white border border-burgundy/8 rounded-lg p-6"><div class="flex items-center gap-3 mb-3"><div class="w-5 h-5 bg-gold rotate-45"></div><p class="font-display font-700 text-base text-burgundy-dark">Week 1: Identity Shift and Conditioning Reset</p></div><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">You start by dismantling the stories you were taught about gender, money, and power. This week creates relief and clarity. Nothing was wrong with you. You were taught the wrong role.</p></div>
+      <div class="bg-white border border-burgundy/8 rounded-lg p-6"><div class="flex items-center gap-3 mb-3"><div class="w-5 h-5 bg-cream border-2 border-burgundy-dark rotate-45"></div><p class="font-display font-700 text-base text-burgundy-dark">Week 2: Building Your Personal Financial System</p></div><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">You create a simple, repeatable system for money that removes anxiety. Track expenses without shame, structure accounts for clarity, and automate decisions.</p></div>
+      <div class="bg-white border border-burgundy/8 rounded-lg p-6"><div class="flex items-center gap-3 mb-3"><div class="w-5 h-5 bg-blush rotate-45"></div><p class="font-display font-700 text-base text-burgundy-dark">Week 3: Safety, Stability, and Wealth Planning</p></div><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">This phase focuses on protection. Build emergency funds, understand emotional spending, and learn the basics of long-term planning and investing.</p></div>
+      <div class="bg-white border border-burgundy/8 rounded-lg p-6"><div class="flex items-center gap-3 mb-3"><div class="w-5 h-5 bg-gold rotate-45"></div><p class="font-display font-700 text-base text-burgundy-dark">Week 4: Career Power and Earning Strategy</p></div><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">Learn why women get stuck doing work that does not lead to promotion and how to reposition yourself for growth. Tools to increase income and advocate for yourself.</p></div>
+      <div class="bg-white border border-burgundy/8 rounded-lg p-6"><div class="flex items-center gap-3 mb-3"><div class="w-5 h-5 bg-cream border-2 border-burgundy-dark rotate-45"></div><p class="font-display font-700 text-base text-burgundy-dark">Week 5: Becoming Your Own Provider</p></div><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">Everything comes together. Structure finances inside relationships, set boundaries, identify draining partners, and create a one-year and three-year plan for independence.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Bonuses ───────────────────────────────────────────────────────── -->
+<section class="bg-cream py-16 md:py-24 border-t border-burgundy/8">
+  <div class="max-w-2xl mx-auto px-4">
+    <h2 class="font-display font-900 text-2xl md:text-3xl text-center text-burgundy-dark tracking-tight mb-10">Bonuses Included When You Join Today</h2>
+    <div class="space-y-4">
+      <div class="border border-burgundy/8 rounded-lg p-5 bg-white"><p class="font-display font-700 text-base text-burgundy-dark mb-1">BONUS #1: Investment Portfolio Walkthrough <span class="text-deep-rose">(Value: $1,500)</span></p><p class="font-body text-xs text-burgundy-dark/50">A guided walkthrough of how investing, allocation, and long-term strategy work so you can understand without guessing.</p></div>
+      <div class="border border-burgundy/8 rounded-lg p-5 bg-white"><p class="font-display font-700 text-base text-burgundy-dark mb-1">BONUS #2: Downloadable Financial Checklists <span class="text-deep-rose">(Value: $79)</span></p><p class="font-body text-xs text-burgundy-dark/50">Clear, practical checklists for budgeting, accounts, savings, and financial setup.</p></div>
+      <div class="border border-burgundy/8 rounded-lg p-5 bg-white"><p class="font-display font-700 text-base text-burgundy-dark mb-1">BONUS #3: Pre-Dating &amp; Pre-Marriage Financial Checklist <span class="text-deep-rose">(Value: $39)</span></p><p class="font-body text-xs text-burgundy-dark/50">Assess financial compatibility, spot red flags early, and protect yourself before commitment.</p></div>
+    </div>
+    <div class="text-center mt-8"><a href="#pricing" class="inline-block px-10 py-4 bg-deep-rose text-cream font-body font-600 text-xs uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy active:scale-[0.98] transition-transform">Join Now</a></div>
+  </div>
+</section>
+
+<!-- ── Guarantee ─────────────────────────────────────────────────────── -->
+<section class="bg-warm-ivory py-14 md:py-20">
+  <div class="max-w-2xl mx-auto px-4 text-center">
+    <h2 class="font-display font-900 text-2xl md:text-3xl text-burgundy-dark tracking-tight mb-6">Feel Safe with Our 14-Day Guarantee</h2>
+    <p class="font-body text-sm text-burgundy-dark/55 leading-relaxed mb-8 max-w-lg mx-auto">
+      This program was built to create understanding, not pressure. Your enrollment is protected by our Clarity Guarantee.
+    </p>
+    <div class="text-left max-w-md mx-auto space-y-4 mb-8">
+      <div class="flex gap-3 items-start"><span class="font-display font-700 text-deep-rose">1.</span><span class="font-body text-sm text-burgundy-dark/65">Enroll and receive full access to the program, curriculum, and bonuses.</span></div>
+      <div class="flex gap-3 items-start"><span class="font-display font-700 text-deep-rose">2.</span><span class="font-body text-sm text-burgundy-dark/65">Go through the opening modules and begin applying the tools.</span></div>
+      <div class="flex gap-3 items-start"><span class="font-display font-700 text-deep-rose">3.</span><span class="font-body text-sm text-burgundy-dark/65">If within 14 days you don&rsquo;t feel clearer and more grounded, request a full refund.</span></div>
+    </div>
+    <p class="font-display italic text-sm text-burgundy-dark/50">No proving. No convincing. No shame.</p>
+  </div>
+</section>
+
+<!-- ── Pricing / Value Stack ─────────────────────────────────────────── -->
+<section id="pricing" class="bg-burgundy relative grain py-16 md:py-24">
+  <div class="relative z-10 max-w-2xl mx-auto px-4 text-center">
+    <h2 class="font-display font-900 text-2xl md:text-3xl text-cream tracking-tight mb-8">What You Get When You Join Today</h2>
+    <div class="space-y-3 text-left mb-8">
+      <div class="flex justify-between items-center border-b border-cream/10 pb-3"><span class="font-body text-sm text-cream/80">The Path to Financial Power Program</span><span class="font-body text-sm text-cream/50">(Value: $4,500)</span></div>
+      <div class="flex justify-between items-center border-b border-cream/10 pb-3"><span class="font-body text-sm text-cream/80">BONUS #1: Investment Portfolio Walkthrough</span><span class="font-body text-sm text-cream/50">(Value: $1,500)</span></div>
+      <div class="flex justify-between items-center border-b border-cream/10 pb-3"><span class="font-body text-sm text-cream/80">BONUS #2: Financial Checklists</span><span class="font-body text-sm text-cream/50">(Value: $79)</span></div>
+      <div class="flex justify-between items-center border-b border-cream/10 pb-3"><span class="font-body text-sm text-cream/80">BONUS #3: Pre-Marriage Financial Checklist</span><span class="font-body text-sm text-cream/50">(Value: $39)</span></div>
+      <div class="flex justify-between items-center pb-3"><span class="font-body text-sm text-cream/80">14-Day Money-Back Guarantee</span><span class="font-body text-sm text-gold">Included</span></div>
+    </div>
+    <div class="mb-8">
+      <p class="font-body text-xs text-cream/40 mb-1">Total Value: <span class="line-through">$6,118</span></p>
+      <p class="font-body text-sm text-cream/60 mb-2">Join today for only</p>
+      <p class="font-display font-900 text-5xl text-cream">$447</p>
+      <p class="font-body text-sm text-cream/50 mt-1">or <span class="text-gold font-600">$117 &times; 4</span></p>
+    </div>
+    <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-gold text-burgundy-dark font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-gold/90 focus-visible:ring-2 focus-visible:ring-cream active:scale-[0.98] transition-transform">
+      Join Now for $447
+    </a>
+  </div>
+</section>
+
+<!-- ── FAQ ───────────────────────────────────────────────────────────── -->
+<section class="bg-cream py-16 md:py-24">
+  <div class="max-w-2xl mx-auto px-4">
+    <h2 class="font-display font-900 text-2xl md:text-3xl text-center text-burgundy-dark tracking-tight mb-10">Frequently Asked Questions</h2>
+    <div class="space-y-3">
+      <details class="border border-burgundy/10 rounded-lg bg-white"><summary class="flex justify-between items-center p-5 font-display font-700 text-sm text-burgundy-dark">Who is the program for?<span class="faq-arrow text-burgundy/40 transition-transform">&#9660;</span></summary><div class="px-5 pb-5"><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">This program is for women who want financial independence, professional authority, and the ability to choose relationships from strength instead of fear.</p></div></details>
+      <details class="border border-burgundy/10 rounded-lg bg-white"><summary class="flex justify-between items-center p-5 font-display font-700 text-sm text-burgundy-dark">Do I need to be good with money already?<span class="faq-arrow text-burgundy/40 transition-transform">&#9660;</span></summary><div class="px-5 pb-5"><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">No. Everything is explained in plain language, without jargon or judgment. You start with foundations and build from there.</p></div></details>
+      <details class="border border-burgundy/10 rounded-lg bg-white"><summary class="flex justify-between items-center p-5 font-display font-700 text-sm text-burgundy-dark">Is this just about dating and relationships?<span class="faq-arrow text-burgundy/40 transition-transform">&#9660;</span></summary><div class="px-5 pb-5"><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">No. The core focus is independence. The program covers money, career power, decision-making, boundaries, and long-term safety.</p></div></details>
+      <details class="border border-burgundy/10 rounded-lg bg-white"><summary class="flex justify-between items-center p-5 font-display font-700 text-sm text-burgundy-dark">How is the program delivered?<span class="faq-arrow text-burgundy/40 transition-transform">&#9660;</span></summary><div class="px-5 pb-5"><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">Structured lessons and supporting tools you can access online, at a steady pace so concepts can be applied in real life.</p></div></details>
+      <details class="border border-burgundy/10 rounded-lg bg-white"><summary class="flex justify-between items-center p-5 font-display font-700 text-sm text-burgundy-dark">How much time do I need each week?<span class="faq-arrow text-burgundy/40 transition-transform">&#9660;</span></summary><div class="px-5 pb-5"><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">Most participants spend a few hours per week. You can move at a pace that fits your life.</p></div></details>
+      <details class="border border-burgundy/10 rounded-lg bg-white"><summary class="flex justify-between items-center p-5 font-display font-700 text-sm text-burgundy-dark">What if I&rsquo;m in a relationship already?<span class="faq-arrow text-burgundy/40 transition-transform">&#9660;</span></summary><div class="px-5 pb-5"><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">This program helps you understand financial dynamics, boundaries, and power so you can make informed choices. Many women use it to strengthen clarity within existing partnerships.</p></div></details>
+      <details class="border border-burgundy/10 rounded-lg bg-white"><summary class="flex justify-between items-center p-5 font-display font-700 text-sm text-burgundy-dark">Is my investment protected?<span class="faq-arrow text-burgundy/40 transition-transform">&#9660;</span></summary><div class="px-5 pb-5"><p class="font-body text-sm text-burgundy-dark/55 leading-relaxed">Yes. Your enrollment is covered by the 14-Day Clarity Guarantee. You can review the material and decide without pressure.</p></div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ── Final CTA ─────────────────────────────────────────────────────── -->
+<section class="bg-burgundy-dark relative grain py-14 md:py-20">
+  <div class="relative z-10 max-w-2xl mx-auto px-4 text-center">
+    <h2 class="font-display font-900 text-2xl md:text-3xl text-cream tracking-tight mb-6">What You Get When You Join Today</h2>
+    <div class="mb-6">
+      <p class="font-body text-xs text-cream/40 mb-1">Total Value: <span class="line-through">$6,118</span></p>
+      <p class="font-display font-900 text-4xl text-cream">$447</p>
+      <p class="font-body text-sm text-cream/50 mt-1">or <span class="text-gold font-600">$117 &times; 4</span></p>
+    </div>
+    <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-gold text-burgundy-dark font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-gold/90 active:scale-[0.98] transition-transform">
+      Join Now for $447
+    </a>
+  </div>
+</section>
+
+<script>
+(function() {
+  const target = Date.now() + 3 * 86400000;
+  function u() {
+    const d = Math.max(0, target - Date.now());
+    document.getElementById('cd-d').textContent = String(Math.floor(d/86400000)).padStart(2,'0');
+    document.getElementById('cd-h').textContent = String(Math.floor((d%86400000)/3600000)).padStart(2,'0');
+    document.getElementById('cd-m').textContent = String(Math.floor((d%3600000)/60000)).padStart(2,'0');
+    document.getElementById('cd-s').textContent = String(Math.floor((d%60000)/1000)).padStart(2,'0');
+  }
+  u(); setInterval(u, 1000);
+  const s = document.getElementById('sticky-cta');
+  const p = document.getElementById('pricing');
+  if (s && p) { new IntersectionObserver(([e]) => { s.style.transform = e.isIntersecting ? 'translateY(-100%)' : 'translateY(0)'; }, {threshold:0.1}).observe(p); }
+})();
+</script>
+</body>
+</html>

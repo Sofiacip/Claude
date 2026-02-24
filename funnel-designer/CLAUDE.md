@@ -167,6 +167,30 @@ After matching the reference design, also verify:
 - [ ] No placeholder copy remaining — no [brackets] in live page
 - [ ] All brand assets loaded (no broken images, no placehold.co where real assets exist)
 
+## QA Comparison Rules (MANDATORY)
+
+During QA, you must compare the built page against the reference
+side by side. For each QA round:
+
+1. Look at the reference screenshot and the built screenshot
+   at the same viewport width
+2. Compare section by section. For each section, check:
+   - Does the layout match? (columns, alignment, spacing)
+   - Does the visual weight match? (photo size, heading size)
+   - Are photos present where the reference has them?
+   - Are shadows, gradients, and depth consistent?
+   - Is the typography hierarchy the same?
+3. Write specific feedback: 'Section 3 in built page is missing
+   the author photo that appears in the reference' — not vague
+   feedback like 'looks different'.
+4. Fix all identified differences before the next QA round.
+5. Minimum 3 comparison rounds per page. Do not approve until
+   the built page visually matches the reference at all 3 widths.
+
+The reference screenshot is the source of truth for layout.
+The .spec.md file is the source of truth for design values.
+The brand package is the source of truth for colors and fonts.
+
 ## Hard Rules
 - Match the reference layout — do not simplify or flatten it
 - Do not stop after one screenshot pass — minimum 3 rounds per page

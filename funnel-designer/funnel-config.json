@@ -1,0 +1,25 @@
+{
+  "webinar": {
+    "label": "Webinar Funnel",
+    "pages": {
+      "landing": {
+        "referenceUrl": "https://pattieehsaei.com/webinar"
+      },
+      "upgrade": {
+        "referenceUrl": "https://pattieehsaei.com/upgrade/"
+      },
+      "upsell": {
+        "referenceUrl": "https://amandahanson.com/self-love-webinar-special/"
+      },
+      "thank_you": {
+        "referenceUrl": "https://pattieehsaei.com/thank-you/"
+      },
+      "replay": {
+        "referenceUrl": "http://pattieehsaei.com/webinar/replay"
+      },
+      "sales": {
+        "referenceUrl": "https://pattieehsaei.com/live-course/"
+      }
+    }
+  }
+}

@@ -1,422 +1,563 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Special Offer — One-Time Upgrade</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        cream: '#FBF6EA',
-        blush: '#FAD7D8',
-        burgundy: '#8B1A3A',
-        'burgundy-dark': '#37171D',
-        gold: '#E0AF27',
-        'warm-ivory': '#FAF5EE',
-        'deep-rose': '#C4546A',
-        'soft-pink': '#FDF0F0',
-      },
-      fontFamily: {
-        display: ['"Playfair Display"', 'Georgia', 'serif'],
-        body: ['Jost', 'sans-serif'],
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Special Offer — One-Time Upgrade</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            burgundy: { DEFAULT: '#8B1A3A', dark: '#5C1128', darker: '#34161B', light: '#A82050' },
+            gold: { DEFAULT: '#C9963A', light: '#D4AB5E', faint: 'rgba(201,150,58,0.15)' },
+            champagne: '#F5E6D0',
+            blush: { DEFAULT: '#E8C4B0', light: '#F5D8D0', lighter: '#F8E8E0' },
+            ivory: '#FAF5EE',
+            charcoal: '#2C2C2C',
+          },
+          fontFamily: {
+            display: ['"Cormorant Garamond"', 'serif'],
+            body: ['Montserrat', 'sans-serif'],
+          },
+          letterSpacing: { label: '0.12em', button: '0.1em' },
+          lineHeight: { body: '1.7', tight: '0.9', snug: '1.1' }
+        }
       }
     }
-  }
-}
-</script>
-<style>
-  * { -webkit-font-smoothing: antialiased; }
-  .grain-overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    opacity: 0.03;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 1;
-  }
-  .timer-digit { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 2rem; line-height: 1; color: #37171D; }
-  .timer-label { font-family: 'Jost', sans-serif; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.15em; color: #8B1A3A; opacity: 0.6; }
-</style>
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Montserrat', sans-serif; color: #2C2C2C; background: #FAF5EE; -webkit-font-smoothing: antialiased; }
+
+    .noise-overlay::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 128px 128px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.08s; }
+    .reveal-delay-2 { transition-delay: 0.16s; }
+    .reveal-delay-3 { transition-delay: 0.24s; }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+    .cta-primary {
+      background: #8B1A3A; color: #fff;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, opacity 0.3s ease;
+      box-shadow: 0 4px 15px rgba(139,26,58,0.25), 0 2px 6px rgba(139,26,58,0.15);
+    }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(139,26,58,0.35), 0 4px 10px rgba(139,26,58,0.2); }
+    .cta-primary:focus-visible { outline: 2px solid #C9963A; outline-offset: 3px; }
+    .cta-primary:active { transform: translateY(0); opacity: 0.9; }
+
+    .cta-gold {
+      background: #C9963A; color: #34161B;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, opacity 0.3s ease;
+      box-shadow: 0 4px 15px rgba(201,150,58,0.3), 0 2px 6px rgba(201,150,58,0.15);
+    }
+    .cta-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(201,150,58,0.4), 0 4px 10px rgba(201,150,58,0.2); }
+    .cta-gold:focus-visible { outline: 2px solid #F5E6D0; outline-offset: 3px; }
+    .cta-gold:active { transform: translateY(0); opacity: 0.9; }
+
+    .diamond-deco { position: absolute; width: 200px; height: 200px; opacity: 0.08; pointer-events: none; }
+    .countdown-num { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 2.5rem; line-height: 1; }
+    .countdown-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
+
+    .sticky-top-cta {
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+    }
+
+    .sticky-cta {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 49;
+      padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom));
+      background: rgba(250,245,238,0.92);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(232,196,176,0.4);
+      box-shadow: 0 -4px 20px rgba(44,44,44,0.08);
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .sticky-cta.show { transform: translateY(0); }
+    @media (min-width: 768px) { .sticky-cta { display: none; } }
+
+    .component-card {
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+    }
+    .component-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(139,26,58,0.08), 0 4px 15px rgba(139,26,58,0.04);
+    }
+
+    .decline-link { transition: color 0.3s ease, opacity 0.3s ease; }
+    .decline-link:hover { opacity: 0.8; }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #FAF5EE; }
+    ::-webkit-scrollbar-thumb { background: #E8C4B0; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #C9963A; }
+
+    @media (max-width: 767px) { .countdown-num { font-size: 2rem; } }
+  </style>
 </head>
-<body class="bg-cream font-body text-burgundy-dark">
+<body class="bg-ivory">
 
-<!-- ── Sticky CTA Bar ───────────────────────────────────────────────── -->
-<div id="sticky-cta" class="fixed top-0 left-0 right-0 z-50 bg-burgundy/95 backdrop-blur-sm py-3 px-4 transition-transform">
-  <div class="max-w-4xl mx-auto flex items-center justify-between">
-    <p class="font-body text-xs md:text-sm text-cream/80 hidden md:block">One-time exclusive offer &mdash; your saved payment method will be charged</p>
-    <a href="#checkout" class="w-full md:w-auto text-center px-8 py-2.5 bg-gold text-burgundy-dark font-body font-700 text-xs uppercase tracking-[0.15em] rounded-sm hover:bg-gold/90 active:scale-[0.98] transition-transform">
-      Add to Order
-    </a>
-  </div>
-</div>
-
-<!-- ── Progress Bar ─────────────────────────────────────────────────── -->
-<div class="pt-14 bg-white border-b border-burgundy/10">
-  <div class="max-w-2xl mx-auto px-4 py-4">
-    <div class="flex items-center justify-center gap-2 md:gap-4 text-xs md:text-sm">
-      <div class="flex items-center gap-1.5">
-        <div class="w-5 h-5 rounded-full bg-burgundy/30 flex items-center justify-center">
-          <svg class="w-3 h-3 text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-        </div>
-        <span class="font-body text-burgundy-dark/40">Registered</span>
-      </div>
-      <div class="w-8 md:w-16 h-px bg-burgundy/30"></div>
-      <div class="flex items-center gap-1.5">
-        <div class="w-5 h-5 rounded-full bg-burgundy/30 flex items-center justify-center">
-          <svg class="w-3 h-3 text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-        </div>
-        <span class="font-body text-burgundy-dark/40">Upgrade</span>
-      </div>
-      <div class="w-8 md:w-16 h-px bg-burgundy/15"></div>
-      <div class="flex items-center gap-1.5">
-        <div class="w-5 h-5 rounded-full bg-deep-rose flex items-center justify-center">
-          <span class="text-cream text-[10px] font-700">3</span>
-        </div>
-        <span class="font-body font-600 text-burgundy-dark">Enjoy Your Experience</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── Hero / Offer Section ─────────────────────────────────────────── -->
-<section class="bg-cream py-10 md:py-16">
-  <div class="max-w-3xl mx-auto px-4 text-center">
-    <p class="font-body text-sm text-burgundy-dark/50 mb-4">Before you go, there&rsquo;s one more gentle invitation&hellip;</p>
-
-    <h1 class="font-display font-900 text-3xl md:text-5xl lg:text-[3.5rem] leading-[1.05] text-burgundy-dark tracking-tight mb-6">
-      Rebuild Self-Love as a Skill You Embody, Not Just an Idea You Think About.
-    </h1>
-
-    <p class="font-body text-base md:text-lg text-burgundy-dark/65 max-w-2xl mx-auto leading-relaxed mb-4">
-      Stop letting hidden patterns dictate your worth, relationships, and choices&hellip;and start changing them from the inside out.
-    </p>
-    <p class="font-body text-sm text-burgundy-dark/55 max-w-xl mx-auto leading-relaxed mb-8">
-      Get lifetime access to the signature program at a special price. A foundational journey that guides you back to a grounded, embodied sense of worth and transforms how you live, love, and lead.
-    </p>
-
-    <!-- Pricing -->
-    <div class="mb-6">
-      <p class="font-body text-xs uppercase tracking-[0.2em] text-burgundy/50 mb-1">Regular Price:</p>
-      <p class="font-display font-700 text-3xl text-burgundy-dark/40 line-through decoration-deep-rose/40 mb-2">$488</p>
-      <p class="font-body text-sm text-burgundy-dark/70 mb-1">Exclusive Today:</p>
-      <p class="font-display font-900 text-4xl text-deep-rose">$288</p>
-    </div>
-
-    <!-- Countdown -->
-    <div class="mb-8 py-4 border-t border-b border-burgundy/10">
-      <p class="font-body text-xs uppercase tracking-[0.2em] text-deep-rose font-500 mb-3">This offer expires in:</p>
-      <div class="flex justify-center gap-6">
-        <div class="text-center">
-          <div class="timer-digit" id="minutes">14</div>
-          <div class="timer-label">Minutes</div>
-        </div>
-        <div class="text-center">
-          <div class="timer-digit" id="seconds">50</div>
-          <div class="timer-label">Seconds</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CTA -->
-    <div id="checkout">
-      <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 active:scale-[0.98] transition-transform">
+  <!-- ============================================ -->
+  <!-- STICKY CTA BAR (TOP) -->
+  <!-- ============================================ -->
+  <div id="sticky-top" class="sticky-top-cta fixed top-0 left-0 right-0 z-50 bg-burgundy-darker/95 py-3 px-4 border-b border-burgundy/30" style="box-shadow: 0 4px 20px rgba(52,22,27,0.15);">
+    <div class="max-w-4xl mx-auto flex items-center justify-between gap-4">
+      <p class="font-body text-xs md:text-sm text-champagne/70 hidden md:block">One-time exclusive offer &mdash; your saved payment method will be charged</p>
+      <a href="#checkout" class="cta-gold font-body font-bold text-xs uppercase tracking-button w-full md:w-auto text-center px-8 py-2.5 rounded">
         Add to Order
       </a>
-      <p class="mt-2 text-[10px] text-burgundy-dark/35">By clicking this button, your saved payment method will be charged $288 instantly.</p>
     </div>
   </div>
-</section>
 
-<!-- ── Program Showcase ─────────────────────────────────────────────── -->
-<section class="bg-soft-pink py-14 md:py-20 border-t border-burgundy/8">
-  <div class="max-w-4xl mx-auto px-4">
-    <h2 class="font-display font-900 text-2xl md:text-4xl lg:text-[2.8rem] leading-[1.1] text-center text-burgundy-dark tracking-tight mb-4">
-      Get Lifetime Access to the<br>Signature Program
-    </h2>
-    <p class="font-body text-sm md:text-base text-center text-burgundy-dark/55 max-w-xl mx-auto mb-10">
-      A grounded path back to trust, worth, and emotional safety within yourself.
-    </p>
-
-    <!-- Program Image -->
-    <div class="max-w-2xl mx-auto mb-10">
-      <div class="aspect-video bg-burgundy-dark/10 rounded-lg flex items-center justify-center">
-        <img src="https://placehold.co/800x450/37171D/FAD7D8?text=Program+Image" alt="Program Preview" class="w-full h-full object-cover rounded-lg">
+  <!-- ============================================ -->
+  <!-- PROGRESS BAR -->
+  <!-- ============================================ -->
+  <div class="pt-14 bg-ivory border-b border-blush/30">
+    <div class="max-w-2xl mx-auto px-4 py-5">
+      <div class="flex items-center justify-center gap-2 md:gap-4 text-xs md:text-sm">
+        <div class="flex items-center gap-1.5">
+          <div class="w-6 h-6 rounded-full bg-burgundy/30 flex items-center justify-center">
+            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <span class="font-body text-charcoal/40">Registered</span>
+        </div>
+        <div class="w-8 md:w-16 h-px bg-burgundy/30"></div>
+        <div class="flex items-center gap-1.5">
+          <div class="w-6 h-6 rounded-full bg-burgundy/30 flex items-center justify-center">
+            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <span class="font-body text-charcoal/40">Upgraded</span>
+        </div>
+        <div class="w-8 md:w-16 h-px bg-blush/50"></div>
+        <div class="flex items-center gap-1.5">
+          <div class="w-6 h-6 rounded-full bg-burgundy-light flex items-center justify-center" style="box-shadow: 0 2px 8px rgba(168,32,80,0.2);">
+            <span class="text-white text-[10px] font-bold">3</span>
+          </div>
+          <span class="font-body font-semibold text-charcoal">Special Offer</span>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="max-w-2xl mx-auto text-center">
-      <p class="font-body text-sm text-burgundy-dark/60 leading-relaxed mb-6">
-        This is a self-paced transformational journey designed to help women rebuild a steady foundation of self-love and emotional well-being. Through in-depth video lessons, a guided workbook, and powerful meditations, this program teaches you how to internalize self-love as a lived skill &mdash; <em class="font-display">not</em> a fleeting feeling.
+  <!-- ============================================ -->
+  <!-- SECTION 1: HERO / OFFER -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-12 md:py-16 overflow-hidden">
+    <svg class="diamond-deco right-[10%] top-[10%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#E8C4B0" stroke-width="0.3"/></svg>
+
+    <div class="max-w-3xl mx-auto px-6 text-center relative z-10">
+      <p class="font-body text-sm text-charcoal/50 mb-5 reveal">Before you go, there&rsquo;s one more gentle invitation&hellip;</p>
+
+      <h1 class="font-display text-3xl md:text-5xl lg:text-[3.5rem] font-semibold text-charcoal leading-tight mb-6 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        Rebuild Self-Love as a Skill You Embody, Not Just an Idea You Think About.
+      </h1>
+
+      <div class="w-16 h-[2px] bg-gold mx-auto mb-6 reveal reveal-delay-2"></div>
+
+      <p class="font-body text-base md:text-lg text-charcoal/65 max-w-2xl mx-auto leading-relaxed mb-3 reveal reveal-delay-2">
+        Stop letting hidden patterns dictate your worth, relationships, and choices &mdash; and start changing them from the inside out.
+      </p>
+      <p class="font-body text-sm text-charcoal/50 max-w-xl mx-auto leading-relaxed mb-10 reveal reveal-delay-2">
+        Get lifetime access to the signature program at a special price. A foundational journey that guides you back to a grounded, embodied sense of worth.
       </p>
 
-      <!-- Learning Outcomes -->
-      <p class="font-display font-700 text-lg text-burgundy-dark mb-6">Inside the program, you&rsquo;ll learn how to:</p>
-      <div class="text-left max-w-md mx-auto space-y-4 mb-8">
-        <div class="flex gap-4 items-start">
-          <span class="font-display font-900 text-2xl text-blush leading-none flex-shrink-0 w-8 text-right">1.</span>
-          <p class="font-body text-sm text-burgundy-dark/70">Heal generational patterns that shaped shame, fear, and self-doubt</p>
-        </div>
-        <div class="flex gap-4 items-start">
-          <span class="font-display font-900 text-2xl text-blush leading-none flex-shrink-0 w-8 text-right">2.</span>
-          <p class="font-body text-sm text-burgundy-dark/70">Build deep self-trust and a reliable inner compass</p>
-        </div>
-        <div class="flex gap-4 items-start">
-          <span class="font-display font-900 text-2xl text-blush leading-none flex-shrink-0 w-8 text-right">3.</span>
-          <p class="font-body text-sm text-burgundy-dark/70">Redefine boundaries that protect your energy and emotional health</p>
-        </div>
-        <div class="flex gap-4 items-start">
-          <span class="font-display font-900 text-2xl text-blush leading-none flex-shrink-0 w-8 text-right">4.</span>
-          <p class="font-body text-sm text-burgundy-dark/70">Reconnect with your body, emotions, and inner wisdom</p>
+      <!-- Pricing Card -->
+      <div class="inline-block bg-white/60 rounded-2xl px-8 py-6 border border-blush/30 mb-8 reveal reveal-delay-3" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+        <p class="font-body text-[10px] font-bold uppercase tracking-label text-charcoal/40 mb-2">Regular Price:</p>
+        <p class="font-display text-2xl font-bold text-charcoal/35 line-through decoration-burgundy-light/40 mb-1">$488</p>
+        <p class="font-body text-sm text-charcoal/60 mb-1">Exclusive Today:</p>
+        <p class="font-display text-4xl md:text-5xl font-bold text-burgundy" style="letter-spacing: -0.02em;">$288</p>
+      </div>
+
+      <!-- Countdown -->
+      <div class="mb-8 reveal reveal-delay-3">
+        <div class="inline-flex flex-col items-center bg-burgundy-darker/90 backdrop-blur-sm rounded-full px-8 py-4 border border-champagne/10">
+          <p class="font-body text-[10px] font-bold uppercase tracking-label text-champagne/60 mb-2">This offer expires in:</p>
+          <div class="flex gap-6 text-champagne">
+            <div class="text-center">
+              <div class="countdown-num" id="minutes">14</div>
+              <div class="countdown-label">Min</div>
+            </div>
+            <div class="countdown-num text-champagne/30">:</div>
+            <div class="text-center">
+              <div class="countdown-num" id="seconds">50</div>
+              <div class="countdown-label">Sec</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <a href="#checkout" class="inline-block px-10 py-4 bg-deep-rose text-cream font-body font-600 text-xs uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy focus-visible:ring-2 focus-visible:ring-gold active:scale-[0.98] transition-transform">
-        Begin Your Journey
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ── What's Inside (3 Components) ─────────────────────────────────── -->
-<section class="bg-cream py-16 md:py-24 border-t border-burgundy/8">
-  <div class="max-w-4xl mx-auto px-4">
-    <h2 class="font-display font-900 text-2xl md:text-4xl leading-[1.1] text-center text-burgundy-dark tracking-tight mb-4">
-      What&rsquo;s Inside the Program
-    </h2>
-    <p class="font-body text-sm text-center text-burgundy-dark/55 max-w-xl mx-auto mb-14">
-      A self-paced, psychology-informed journey designed to help women build self-love as a lived, reliable foundation. It works at the root, supporting real integration instead of performance.
-    </p>
-
-    <div class="space-y-12">
-      <!-- Component 1 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-        <div class="aspect-[4/3] bg-burgundy-dark rounded-lg overflow-hidden">
-          <img src="https://placehold.co/600x450/37171D/FAD7D8?text=Video+Lessons" alt="Video Lessons" class="w-full h-full object-cover opacity-80">
-        </div>
-        <div>
-          <h3 class="font-display font-700 text-xl md:text-2xl text-burgundy-dark mb-4">25 Guided Video Lessons</h3>
-          <p class="font-body text-sm text-burgundy-dark/55 mb-4">Short, grounded teachings designed to meet you where you are and gently guide lasting change.</p>
-          <ul class="space-y-2">
-            <li class="flex items-start gap-2"><div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div><span class="font-body text-sm text-burgundy-dark/65">Understand how self-love actually works in the nervous system, emotions, and body</span></li>
-            <li class="flex items-start gap-2"><div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div><span class="font-body text-sm text-burgundy-dark/65">Unlearn patterns of self-abandonment and internalized criticism</span></li>
-            <li class="flex items-start gap-2"><div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div><span class="font-body text-sm text-burgundy-dark/65">Build a steady inner foundation you can return to in daily life</span></li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Component 2 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-        <div class="order-2 md:order-1">
-          <h3 class="font-display font-700 text-xl md:text-2xl text-burgundy-dark mb-4">The Workbook</h3>
-          <p class="font-body text-sm text-burgundy-dark/55 mb-4">A companion designed to help you integrate what you&rsquo;re learning in a way that&rsquo;s personal and embodied.</p>
-          <ul class="space-y-2">
-            <li class="flex items-start gap-2"><div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div><span class="font-body text-sm text-burgundy-dark/65">Reflect, process, and reconnect with yourself at your own pace</span></li>
-            <li class="flex items-start gap-2"><div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div><span class="font-body text-sm text-burgundy-dark/65">Explore emotional and generational patterns with clarity and safety</span></li>
-            <li class="flex items-start gap-2"><div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div><span class="font-body text-sm text-burgundy-dark/65">Turn insight into lived understanding, not just awareness</span></li>
-          </ul>
-        </div>
-        <div class="order-1 md:order-2 aspect-[4/3] bg-burgundy-dark rounded-lg overflow-hidden">
-          <img src="https://placehold.co/600x450/37171D/FAD7D8?text=Workbook" alt="Workbook" class="w-full h-full object-cover opacity-80">
-        </div>
-      </div>
-
-      <!-- Component 3 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-        <div class="aspect-[4/3] bg-burgundy-dark rounded-lg overflow-hidden">
-          <img src="https://placehold.co/600x450/37171D/FAD7D8?text=Meditations" alt="Meditations" class="w-full h-full object-cover opacity-80">
-        </div>
-        <div>
-          <h3 class="font-display font-700 text-xl md:text-2xl text-burgundy-dark mb-4">Embodied Meditations</h3>
-          <p class="font-body text-sm text-burgundy-dark/55 mb-4">Guided practices that help your body and nervous system experience safety, not just understand it.</p>
-          <ul class="space-y-2">
-            <li class="flex items-start gap-2"><div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div><span class="font-body text-sm text-burgundy-dark/65">Release stored emotional tension and self-protective patterns</span></li>
-            <li class="flex items-start gap-2"><div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div><span class="font-body text-sm text-burgundy-dark/65">Reconnect with your body as an ally, not something to manage</span></li>
-            <li class="flex items-start gap-2"><div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div><span class="font-body text-sm text-burgundy-dark/65">Support emotional regulation, presence, and inner steadiness</span></li>
-          </ul>
-        </div>
+      <!-- CTA -->
+      <div id="checkout" class="reveal reveal-delay-3">
+        <a href="#" class="cta-primary font-body font-bold text-sm uppercase tracking-button inline-block w-full max-w-md px-10 py-4 rounded-lg">
+          Add to Order
+        </a>
+        <p class="mt-2 font-body text-[10px] text-charcoal/30">By clicking this button, your saved payment method will be charged $288 instantly.</p>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── Detailed Outcomes (8 items) ──────────────────────────────────── -->
-<section class="bg-soft-pink py-16 md:py-24">
-  <div class="max-w-3xl mx-auto px-4">
-    <h2 class="font-display font-900 text-2xl md:text-4xl leading-[1.1] text-center text-burgundy-dark tracking-tight mb-4">
-      What You&rsquo;ll Learn Inside the Program
-    </h2>
-    <p class="font-body text-sm text-center text-burgundy-dark/55 max-w-xl mx-auto mb-12">
-      A clear inner progression: understanding, release, and embodiment. Rather than asking you to force change, this work teaches how self-love is built through consistent, compassionate action.
-    </p>
+  <!-- ============================================ -->
+  <!-- SECTION 2: PROGRAM SHOWCASE -->
+  <!-- ============================================ -->
+  <section class="relative bg-champagne/50 py-16 md:py-24 overflow-hidden noise-overlay">
+    <div class="max-w-4xl mx-auto px-6 relative z-10">
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 text-center reveal">The Program</p>
+      <h2 class="font-display text-2xl md:text-4xl lg:text-5xl font-semibold text-charcoal text-center leading-tight mb-4 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        Get Lifetime Access to the<br>Signature Program
+      </h2>
+      <p class="font-body text-sm text-charcoal/55 text-center max-w-xl mx-auto mb-10 reveal reveal-delay-2">
+        A grounded path back to trust, worth, and emotional safety within yourself.
+      </p>
 
-    <p class="font-body text-xs uppercase tracking-[0.2em] text-burgundy/50 text-center mb-8 font-500">You will learn how to:</p>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-10">
-      <div class="flex gap-4 items-start bg-white/50 rounded-md p-4">
-        <span class="font-display font-900 text-xl text-blush leading-none flex-shrink-0">1</span>
-        <p class="font-body text-sm text-burgundy-dark/70">Set clear, confident boundaries and create healthier, more reciprocal relationships</p>
+      <!-- Program Image -->
+      <div class="max-w-2xl mx-auto mb-10 reveal reveal-delay-2">
+        <div class="relative aspect-video rounded-2xl overflow-hidden" style="box-shadow: 0 20px 60px rgba(139,26,58,0.08), 0 8px 25px rgba(139,26,58,0.04);">
+          <img src="https://placehold.co/800x450/34161B/F5E6D0?text=Program+Image" alt="Program Preview" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-t from-burgundy-darker/20 to-transparent"></div>
+        </div>
       </div>
-      <div class="flex gap-4 items-start bg-white/50 rounded-md p-4">
-        <span class="font-display font-900 text-xl text-blush leading-none flex-shrink-0">2</span>
-        <p class="font-body text-sm text-burgundy-dark/70">Craft a self-care practice that is personal, sustainable, and rooted in self-respect</p>
-      </div>
-      <div class="flex gap-4 items-start bg-white/50 rounded-md p-4">
-        <span class="font-display font-900 text-xl text-blush leading-none flex-shrink-0">3</span>
-        <p class="font-body text-sm text-burgundy-dark/70">Become a true partner with your body instead of being at war with it</p>
-      </div>
-      <div class="flex gap-4 items-start bg-white/50 rounded-md p-4">
-        <span class="font-display font-900 text-xl text-blush leading-none flex-shrink-0">4</span>
-        <p class="font-body text-sm text-burgundy-dark/70">Process emotions fully without numbing, avoiding, or abandoning yourself</p>
-      </div>
-      <div class="flex gap-4 items-start bg-white/50 rounded-md p-4">
-        <span class="font-display font-900 text-xl text-blush leading-none flex-shrink-0">5</span>
-        <p class="font-body text-sm text-burgundy-dark/70">Let go of coping patterns that keep you disconnected from your inner life</p>
-      </div>
-      <div class="flex gap-4 items-start bg-white/50 rounded-md p-4">
-        <span class="font-display font-900 text-xl text-blush leading-none flex-shrink-0">6</span>
-        <p class="font-body text-sm text-burgundy-dark/70">Heal generational trauma and interrupt inherited patterns of shame and self-doubt</p>
-      </div>
-      <div class="flex gap-4 items-start bg-white/50 rounded-md p-4">
-        <span class="font-display font-900 text-xl text-blush leading-none flex-shrink-0">7</span>
-        <p class="font-body text-sm text-burgundy-dark/70">Understand shame at its root and gently dissolve its influence</p>
-      </div>
-      <div class="flex gap-4 items-start bg-white/50 rounded-md p-4">
-        <span class="font-display font-900 text-xl text-blush leading-none flex-shrink-0">8</span>
-        <p class="font-body text-sm text-burgundy-dark/70">Step into the magnetic version of yourself that emerges from self-trust and embodiment</p>
-      </div>
-    </div>
 
-    <div class="text-center">
-      <a href="#checkout" class="inline-block px-10 py-4 bg-deep-rose text-cream font-body font-600 text-xs uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy focus-visible:ring-2 focus-visible:ring-gold active:scale-[0.98] transition-transform">
-        Begin Your Journey
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ── Testimonials ─────────────────────────────────────────────────── -->
-<section class="bg-burgundy-dark relative grain-overlay py-16 md:py-24">
-  <div class="relative z-10 max-w-4xl mx-auto px-4">
-    <h2 class="font-display font-900 text-2xl md:text-4xl leading-[1.1] text-center text-cream tracking-tight mb-14">
-      What Women Are Saying About<br>the Program
-    </h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white/5 border border-blush/10 rounded-md p-6 backdrop-blur-sm">
-        <div class="text-3xl text-blush/30 font-display mb-3">&ldquo;</div>
-        <p class="font-body text-sm text-blush/70 leading-relaxed italic mb-4">
-          I&rsquo;ve gone through the workbook for the second time, and it had even more impact. This has truly changed my life. I feel like a new version of myself, full of self-love, receiving, celebrating, and being the light.
+      <div class="max-w-2xl mx-auto text-center">
+        <p class="font-body text-sm text-charcoal/60 leading-relaxed mb-8 reveal">
+          This is a self-paced transformational journey designed to help women rebuild a steady foundation of self-love and emotional well-being. Through in-depth video lessons, a guided workbook, and powerful meditations, this program teaches you how to internalize self-love as a lived skill &mdash; <em class="font-display italic">not</em> a fleeting feeling.
         </p>
-        <p class="font-body text-xs text-blush/40">&mdash; Maria D.</p>
-      </div>
-      <div class="bg-white/5 border border-blush/10 rounded-md p-6 backdrop-blur-sm">
-        <div class="text-3xl text-blush/30 font-display mb-3">&ldquo;</div>
-        <p class="font-body text-sm text-blush/70 leading-relaxed italic mb-4">
-          I love your videos so much. Thank you for the value you&rsquo;re sharing with us. This program gave me the clarity and grounding I didn&rsquo;t know I needed.
-        </p>
-        <p class="font-body text-xs text-blush/40">&mdash; Fana C.</p>
-      </div>
-      <div class="bg-white/5 border border-blush/10 rounded-md p-6 backdrop-blur-sm">
-        <div class="text-3xl text-blush/30 font-display mb-3">&ldquo;</div>
-        <p class="font-body text-sm text-blush/70 leading-relaxed italic mb-4">
-          During a very difficult time in my life, I discovered this program. It helped me immensely in accepting my situation and reconnecting with my body after treatment.
-        </p>
-        <p class="font-body text-xs text-blush/40">&mdash; Agata</p>
+
+        <!-- Learning Outcomes -->
+        <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-6 reveal">Inside the program, you&rsquo;ll learn how to:</p>
+        <div class="text-left max-w-md mx-auto space-y-4 mb-10">
+          <div class="flex gap-4 items-start reveal">
+            <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0">
+              <span class="font-display text-sm font-bold text-burgundy">1</span>
+            </div>
+            <p class="font-body text-sm text-charcoal/70 pt-1">Heal generational patterns that shaped shame, fear, and self-doubt</p>
+          </div>
+          <div class="flex gap-4 items-start reveal reveal-delay-1">
+            <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0">
+              <span class="font-display text-sm font-bold text-burgundy">2</span>
+            </div>
+            <p class="font-body text-sm text-charcoal/70 pt-1">Build deep self-trust and a reliable inner compass</p>
+          </div>
+          <div class="flex gap-4 items-start reveal reveal-delay-2">
+            <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0">
+              <span class="font-display text-sm font-bold text-burgundy">3</span>
+            </div>
+            <p class="font-body text-sm text-charcoal/70 pt-1">Redefine boundaries that protect your energy and emotional health</p>
+          </div>
+          <div class="flex gap-4 items-start reveal reveal-delay-3">
+            <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0">
+              <span class="font-display text-sm font-bold text-burgundy">4</span>
+            </div>
+            <p class="font-body text-sm text-charcoal/70 pt-1">Reconnect with your body, emotions, and inner wisdom</p>
+          </div>
+        </div>
+
+        <a href="#checkout" class="cta-primary font-body font-bold text-sm uppercase tracking-button inline-block px-10 py-4 rounded-lg reveal">
+          Begin Your Journey
+        </a>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── Final Value Stack + 1-Click CTA ──────────────────────────────── -->
-<section class="bg-soft-pink py-14 md:py-20">
-  <div class="max-w-2xl mx-auto px-4 text-center">
-    <h2 class="font-display font-900 text-2xl md:text-3xl leading-[1.1] text-burgundy-dark tracking-tight mb-3">
-      Exclusive Access When You Enroll
-    </h2>
-    <div class="mb-8">
-      <p class="font-body text-xs uppercase tracking-[0.2em] text-burgundy/50 mb-1">Total Value:</p>
-      <p class="font-display font-700 text-2xl text-burgundy-dark line-through decoration-deep-rose/40 mb-1">$532</p>
-      <p class="font-body text-sm text-burgundy-dark/70">Yours today at the special price of <span class="font-display font-900 text-2xl text-deep-rose">$288</span></p>
+  <!-- ============================================ -->
+  <!-- SECTION 3: WHAT'S INSIDE (3 COMPONENTS) -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-20 md:py-28 lg:py-36 overflow-hidden">
+    <svg class="diamond-deco left-[-2%] top-[20%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#E8C4B0" stroke-width="0.3"/></svg>
+
+    <div class="max-w-4xl mx-auto px-6 relative z-10">
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 text-center reveal">What&rsquo;s Included</p>
+      <h2 class="font-display text-2xl md:text-4xl lg:text-5xl font-semibold text-charcoal text-center leading-tight mb-4 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        What&rsquo;s Inside the Program
+      </h2>
+      <p class="font-body text-sm text-charcoal/55 text-center max-w-xl mx-auto mb-14 reveal reveal-delay-2">
+        A self-paced, psychology-informed journey designed to help women build self-love as a lived, reliable foundation.
+      </p>
+
+      <div class="space-y-10">
+        <!-- Component 1: Video Lessons -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center reveal">
+          <div class="relative aspect-[4/3] rounded-2xl overflow-hidden" style="box-shadow: 0 20px 60px rgba(139,26,58,0.08), 0 8px 24px rgba(139,26,58,0.04);">
+            <img src="https://placehold.co/600x450/34161B/F5E6D0?text=Video+Lessons" alt="Video Lessons" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-burgundy-darker/20 to-transparent"></div>
+          </div>
+          <div>
+            <h3 class="font-display text-xl md:text-2xl font-semibold text-charcoal mb-4">25 Guided Video Lessons</h3>
+            <p class="font-body text-sm text-charcoal/55 mb-5">Short, grounded teachings designed to meet you where you are and gently guide lasting change.</p>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div><span class="font-body text-sm text-charcoal/65">Understand how self-love actually works in the nervous system, emotions, and body</span></li>
+              <li class="flex items-start gap-3"><div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div><span class="font-body text-sm text-charcoal/65">Unlearn patterns of self-abandonment and internalized criticism</span></li>
+              <li class="flex items-start gap-3"><div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div><span class="font-body text-sm text-charcoal/65">Build a steady inner foundation you can return to in daily life</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Component 2: Workbook -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center reveal">
+          <div class="order-2 md:order-1">
+            <h3 class="font-display text-xl md:text-2xl font-semibold text-charcoal mb-4">The Workbook</h3>
+            <p class="font-body text-sm text-charcoal/55 mb-5">A companion designed to help you integrate what you&rsquo;re learning in a way that&rsquo;s personal and embodied.</p>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div><span class="font-body text-sm text-charcoal/65">Reflect, process, and reconnect with yourself at your own pace</span></li>
+              <li class="flex items-start gap-3"><div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div><span class="font-body text-sm text-charcoal/65">Explore emotional and generational patterns with clarity and safety</span></li>
+              <li class="flex items-start gap-3"><div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div><span class="font-body text-sm text-charcoal/65">Turn insight into lived understanding, not just awareness</span></li>
+            </ul>
+          </div>
+          <div class="order-1 md:order-2 relative aspect-[4/3] rounded-2xl overflow-hidden" style="box-shadow: 0 20px 60px rgba(139,26,58,0.08), 0 8px 24px rgba(139,26,58,0.04);">
+            <img src="https://placehold.co/600x450/34161B/F5E6D0?text=Workbook" alt="Workbook" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-burgundy-darker/20 to-transparent"></div>
+          </div>
+        </div>
+
+        <!-- Component 3: Meditations -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center reveal">
+          <div class="relative aspect-[4/3] rounded-2xl overflow-hidden" style="box-shadow: 0 20px 60px rgba(139,26,58,0.08), 0 8px 24px rgba(139,26,58,0.04);">
+            <img src="https://placehold.co/600x450/34161B/F5E6D0?text=Meditations" alt="Meditations" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-burgundy-darker/20 to-transparent"></div>
+          </div>
+          <div>
+            <h3 class="font-display text-xl md:text-2xl font-semibold text-charcoal mb-4">Embodied Meditations</h3>
+            <p class="font-body text-sm text-charcoal/55 mb-5">Guided practices that help your body and nervous system experience safety, not just understand it.</p>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div><span class="font-body text-sm text-charcoal/65">Release stored emotional tension and self-protective patterns</span></li>
+              <li class="flex items-start gap-3"><div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div><span class="font-body text-sm text-charcoal/65">Reconnect with your body as an ally, not something to manage</span></li>
+              <li class="flex items-start gap-3"><div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div><span class="font-body text-sm text-charcoal/65">Support emotional regulation, presence, and inner steadiness</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 active:scale-[0.98] transition-transform mb-8">
-      Enroll Now
+  <!-- ============================================ -->
+  <!-- SECTION 4: DETAILED OUTCOMES (8 ITEMS) -->
+  <!-- ============================================ -->
+  <section class="relative bg-champagne py-20 md:py-28 lg:py-36 overflow-hidden noise-overlay">
+    <svg class="diamond-deco right-[8%] top-[5%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#C9963A" stroke-width="0.3"/></svg>
+
+    <div class="max-w-4xl mx-auto px-6 relative z-10">
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 text-center reveal">The Transformation</p>
+      <h2 class="font-display text-2xl md:text-4xl lg:text-5xl font-semibold text-charcoal text-center leading-tight mb-4 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        What You&rsquo;ll Learn Inside
+      </h2>
+      <p class="font-body text-sm text-charcoal/55 text-center max-w-xl mx-auto mb-12 reveal reveal-delay-2">
+        A clear inner progression: understanding, release, and embodiment.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto mb-10 reveal reveal-delay-2">
+        <div class="bg-ivory/80 rounded-2xl p-5 border border-blush/30 flex gap-4 items-start" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0"><span class="font-display text-sm font-bold text-burgundy">1</span></div>
+          <p class="font-body text-sm text-charcoal/70">Set clear, confident boundaries and create healthier, more reciprocal relationships</p>
+        </div>
+        <div class="bg-ivory/80 rounded-2xl p-5 border border-blush/30 flex gap-4 items-start" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0"><span class="font-display text-sm font-bold text-burgundy">2</span></div>
+          <p class="font-body text-sm text-charcoal/70">Craft a self-care practice that is personal, sustainable, and rooted in self-respect</p>
+        </div>
+        <div class="bg-ivory/80 rounded-2xl p-5 border border-blush/30 flex gap-4 items-start" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0"><span class="font-display text-sm font-bold text-burgundy">3</span></div>
+          <p class="font-body text-sm text-charcoal/70">Become a true partner with your body instead of being at war with it</p>
+        </div>
+        <div class="bg-ivory/80 rounded-2xl p-5 border border-blush/30 flex gap-4 items-start" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0"><span class="font-display text-sm font-bold text-burgundy">4</span></div>
+          <p class="font-body text-sm text-charcoal/70">Process emotions fully without numbing, avoiding, or abandoning yourself</p>
+        </div>
+        <div class="bg-ivory/80 rounded-2xl p-5 border border-blush/30 flex gap-4 items-start" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0"><span class="font-display text-sm font-bold text-burgundy">5</span></div>
+          <p class="font-body text-sm text-charcoal/70">Let go of coping patterns that keep you disconnected from your inner life</p>
+        </div>
+        <div class="bg-ivory/80 rounded-2xl p-5 border border-blush/30 flex gap-4 items-start" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0"><span class="font-display text-sm font-bold text-burgundy">6</span></div>
+          <p class="font-body text-sm text-charcoal/70">Heal generational trauma and interrupt inherited patterns of shame and self-doubt</p>
+        </div>
+        <div class="bg-ivory/80 rounded-2xl p-5 border border-blush/30 flex gap-4 items-start" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0"><span class="font-display text-sm font-bold text-burgundy">7</span></div>
+          <p class="font-body text-sm text-charcoal/70">Understand shame at its root and gently dissolve its influence</p>
+        </div>
+        <div class="bg-ivory/80 rounded-2xl p-5 border border-blush/30 flex gap-4 items-start" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center flex-shrink-0"><span class="font-display text-sm font-bold text-burgundy">8</span></div>
+          <p class="font-body text-sm text-charcoal/70">Step into the magnetic version of yourself that emerges from self-trust and embodiment</p>
+        </div>
+      </div>
+
+      <div class="text-center reveal">
+        <a href="#checkout" class="cta-primary font-body font-bold text-sm uppercase tracking-button inline-block px-10 py-4 rounded-lg">
+          Begin Your Journey
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 5: TESTIMONIALS (DARK) -->
+  <!-- ============================================ -->
+  <section class="relative py-20 md:py-28 lg:py-36 overflow-hidden noise-overlay" style="background: linear-gradient(180deg, #34161B 0%, #3D1A22 100%);">
+    <svg class="diamond-deco left-[5%] bottom-[10%] opacity-[0.04]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#F5E6D0" stroke-width="0.5"/></svg>
+
+    <div class="max-w-4xl mx-auto px-6 relative z-10">
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 text-center reveal">Real Stories</p>
+      <h2 class="font-display text-2xl md:text-4xl lg:text-5xl font-semibold text-white text-center leading-tight mb-14 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        What Women Are Saying<br class="hidden md:block"> About the Program
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white/5 border border-champagne/10 rounded-2xl p-6 backdrop-blur-sm reveal" style="box-shadow: 0 8px 30px rgba(0,0,0,0.1);">
+          <div class="flex gap-1 mb-4"><span class="text-gold text-sm">&#9733;&#9733;&#9733;&#9733;&#9733;</span></div>
+          <blockquote class="font-body text-sm text-champagne/80 leading-relaxed italic mb-4">
+            &ldquo;I&rsquo;ve gone through the workbook for the second time, and it had even more impact. This has truly changed my life. I feel like a new version of myself, full of self-love, receiving, celebrating, and being the light.&rdquo;
+          </blockquote>
+          <cite class="font-body text-xs text-champagne/40 not-italic">&mdash; Maria D.</cite>
+        </div>
+        <div class="bg-white/5 border border-champagne/10 rounded-2xl p-6 backdrop-blur-sm reveal reveal-delay-1" style="box-shadow: 0 8px 30px rgba(0,0,0,0.1);">
+          <div class="flex gap-1 mb-4"><span class="text-gold text-sm">&#9733;&#9733;&#9733;&#9733;&#9733;</span></div>
+          <blockquote class="font-body text-sm text-champagne/80 leading-relaxed italic mb-4">
+            &ldquo;I love your videos so much. Thank you for the value you&rsquo;re sharing with us. This program gave me the clarity and grounding I didn&rsquo;t know I needed.&rdquo;
+          </blockquote>
+          <cite class="font-body text-xs text-champagne/40 not-italic">&mdash; Fana C.</cite>
+        </div>
+        <div class="bg-white/5 border border-champagne/10 rounded-2xl p-6 backdrop-blur-sm reveal reveal-delay-2" style="box-shadow: 0 8px 30px rgba(0,0,0,0.1);">
+          <div class="flex gap-1 mb-4"><span class="text-gold text-sm">&#9733;&#9733;&#9733;&#9733;&#9733;</span></div>
+          <blockquote class="font-body text-sm text-champagne/80 leading-relaxed italic mb-4">
+            &ldquo;During a very difficult time in my life, I discovered this program. It helped me immensely in accepting my situation and reconnecting with my body after treatment.&rdquo;
+          </blockquote>
+          <cite class="font-body text-xs text-champagne/40 not-italic">&mdash; Agata</cite>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 6: FINAL VALUE STACK + 1-CLICK CTA -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-20 md:py-28 lg:py-36 overflow-hidden">
+    <svg class="diamond-deco right-[8%] top-[5%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#E8C4B0" stroke-width="0.3"/></svg>
+
+    <div class="max-w-2xl mx-auto px-6 text-center relative z-10">
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">Your Investment</p>
+      <h2 class="font-display text-2xl md:text-3xl lg:text-4xl font-semibold text-charcoal leading-tight mb-8 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        Exclusive Access When You Enroll
+      </h2>
+
+      <!-- Value stack items -->
+      <div class="space-y-4 text-left mb-8 reveal reveal-delay-2">
+        <div class="bg-champagne/40 rounded-2xl p-5 border border-blush/30" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <p class="font-body text-base font-semibold text-charcoal mb-1">Lifetime Access to the Signature Program <span class="text-burgundy font-normal">($488)</span></p>
+          <p class="font-body text-xs text-charcoal/50">Immediate lifetime access to all video lessons, plus the workbook and guided meditations.</p>
+        </div>
+        <div class="bg-champagne/40 rounded-2xl p-5 border border-blush/30" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <p class="font-body text-base font-semibold text-charcoal mb-1">FREE 1-Month Access to the Community <span class="text-burgundy font-normal">($44)</span></p>
+          <p class="font-body text-xs text-charcoal/50">Step inside the private community: a sacred space for women devoted to self-trust, embodiment, and growth.</p>
+        </div>
+      </div>
+
+      <!-- Detailed breakdown -->
+      <div class="bg-white rounded-2xl p-6 md:p-8 border border-blush/30 mb-8 reveal" style="box-shadow: 0 20px 60px rgba(139,26,58,0.06), 0 8px 25px rgba(139,26,58,0.03);">
+        <p class="font-display text-lg font-semibold text-charcoal mb-6">What You Get When You Join Today</p>
+        <div class="space-y-3 text-left mb-6">
+          <div class="flex justify-between items-center border-b border-blush/30 pb-3">
+            <span class="font-body text-sm text-charcoal/70">Lifetime Access to the Program</span>
+            <span class="font-body text-sm text-charcoal/45">(Value: $488)</span>
+          </div>
+          <div class="flex justify-between items-center border-b border-blush/30 pb-3">
+            <span class="font-body text-sm text-charcoal/70"><span class="text-burgundy font-semibold">BONUS #1:</span> The Workbook</span>
+            <span class="font-body text-sm text-charcoal/45">Included</span>
+          </div>
+          <div class="flex justify-between items-center border-b border-blush/30 pb-3">
+            <span class="font-body text-sm text-charcoal/70"><span class="text-burgundy font-semibold">BONUS #2:</span> Embodied Meditations</span>
+            <span class="font-body text-sm text-charcoal/45">Included</span>
+          </div>
+          <div class="flex justify-between items-center pb-3">
+            <span class="font-body text-sm text-charcoal/70"><span class="text-burgundy font-semibold">BONUS #3:</span> 1 Month Community Access</span>
+            <span class="font-body text-sm text-charcoal/45">(Value: $44)</span>
+          </div>
+        </div>
+        <div class="pt-4 border-t border-blush/30">
+          <p class="font-body text-xs text-charcoal/45 mb-1">Total Value: <span class="line-through">$532</span></p>
+          <p class="font-display text-2xl font-bold text-charcoal">Yours Today for only <span class="text-burgundy">$288</span></p>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <a href="#" class="cta-primary font-body font-bold text-sm uppercase tracking-button inline-block w-full max-w-md px-10 py-4 rounded-lg">
+          Add to Order
+        </a>
+        <p class="mt-2 font-body text-[10px] text-charcoal/30">By clicking this button, your saved payment method will be charged $288 instantly.</p>
+        <p class="mt-4">
+          <a href="#" class="decline-link font-body text-xs text-charcoal/40 hover:text-charcoal/60">
+            No thanks, I&rsquo;ll skip this offer
+          </a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- STICKY MOBILE CTA -->
+  <!-- ============================================ -->
+  <div class="sticky-cta" id="stickyCta">
+    <a href="#checkout" class="cta-primary font-body font-bold text-sm uppercase tracking-button py-3.5 rounded-lg block text-center w-full">
+      Add to Order — $288
     </a>
-
-    <!-- Value stack items -->
-    <div class="space-y-4 text-left mb-8">
-      <div class="bg-white/60 border border-burgundy/6 rounded-md p-5">
-        <p class="font-display font-700 text-base text-burgundy-dark mb-1">Lifetime Access to the Signature Program <span class="text-deep-rose">($488)</span></p>
-        <p class="font-body text-xs text-burgundy-dark/50">Immediate lifetime access to all video lessons, plus the workbook and guided meditations. Return to the teachings whenever you need grounding, clarity, or renewal.</p>
-      </div>
-      <div class="bg-white/60 border border-burgundy/6 rounded-md p-5">
-        <p class="font-display font-700 text-base text-burgundy-dark mb-1">FREE 1-Month Access to the Community <span class="text-deep-rose">($44)</span></p>
-        <p class="font-body text-xs text-burgundy-dark/50">Step inside the private community: a sacred space for women devoted to self-trust, embodiment, and growth. Guided practices, live sessions, and ongoing sisterhood.</p>
-      </div>
-    </div>
-
-    <!-- Final summary -->
-    <div class="bg-white border border-burgundy/8 rounded-lg p-6 md:p-8 mb-8">
-      <p class="font-display font-700 text-lg text-burgundy-dark mb-4">What You Get When You Join Today</p>
-      <div class="space-y-3 text-left mb-6">
-        <div class="flex justify-between items-center border-b border-burgundy/6 pb-2">
-          <span class="font-body text-sm text-burgundy-dark/70">Lifetime Access to the Program</span>
-          <span class="font-body text-sm text-burgundy-dark/50">(Value: $488)</span>
-        </div>
-        <div class="flex justify-between items-center border-b border-burgundy/6 pb-2">
-          <span class="font-body text-sm text-burgundy-dark/70"><span class="text-deep-rose font-500">BONUS #1:</span> The Workbook</span>
-          <span class="font-body text-sm text-burgundy-dark/50">Included</span>
-        </div>
-        <div class="flex justify-between items-center border-b border-burgundy/6 pb-2">
-          <span class="font-body text-sm text-burgundy-dark/70"><span class="text-deep-rose font-500">BONUS #2:</span> Embodied Meditations</span>
-          <span class="font-body text-sm text-burgundy-dark/50">Included</span>
-        </div>
-        <div class="flex justify-between items-center pb-2">
-          <span class="font-body text-sm text-burgundy-dark/70"><span class="text-deep-rose font-500">BONUS #3:</span> 1 Month Community Access</span>
-          <span class="font-body text-sm text-burgundy-dark/50">(Value: $44)</span>
-        </div>
-      </div>
-      <div class="pt-4 border-t border-burgundy/10">
-        <p class="font-body text-xs text-burgundy-dark/50 mb-1">Total Value: <span class="line-through">$532</span></p>
-        <p class="font-display font-900 text-xl text-burgundy-dark">Yours Today for only <span class="text-deep-rose">$288</span></p>
-      </div>
-    </div>
-
-    <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 active:scale-[0.98] transition-transform">
-      Add to Order
-    </a>
-    <p class="mt-2 text-[10px] text-burgundy-dark/35">By clicking this button, your saved payment method will be charged $288 instantly.</p>
-    <p class="mt-4 text-xs text-burgundy-dark/40 cursor-pointer hover:text-burgundy-dark/60 transition-colors">
-      <a href="#">No thanks, I&rsquo;ll skip this offer</a>
-    </p>
   </div>
-</section>
 
-<!-- Timer Script -->
-<script>
-(function() {
-  let total = 15 * 60;
-  function update() {
-    if (total <= 0) return;
-    total--;
-    document.getElementById('minutes').textContent = String(Math.floor(total / 60)).padStart(2, '0');
-    document.getElementById('seconds').textContent = String(total % 60).padStart(2, '0');
-  }
-  setInterval(update, 1000);
-  const stickyCta = document.getElementById('sticky-cta');
-  const checkout = document.getElementById('checkout');
-  if (stickyCta && checkout) {
-    const observer = new IntersectionObserver(([entry]) => {
-      stickyCta.style.transform = entry.isIntersecting ? 'translateY(-100%)' : 'translateY(0)';
-    }, { threshold: 0.1 });
-    observer.observe(checkout);
-  }
-})();
-</script>
+  <!-- ============================================ -->
+  <!-- SCRIPTS -->
+  <!-- ============================================ -->
+  <script>
+    (function() {
+      let total = 15 * 60;
+      function update() {
+        if (total <= 0) return;
+        total--;
+        document.getElementById('minutes').textContent = String(Math.floor(total / 60)).padStart(2, '0');
+        document.getElementById('seconds').textContent = String(total % 60).padStart(2, '0');
+      }
+      setInterval(update, 1000);
+    })();
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px 80px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    setTimeout(() => { document.querySelectorAll('.reveal:not(.visible)').forEach(el => el.classList.add('visible')); }, 1500);
+
+    const stickyTop = document.getElementById('sticky-top');
+    const checkoutEl = document.getElementById('checkout');
+    if (stickyTop && checkoutEl) {
+      const obs = new IntersectionObserver(([entry]) => {
+        stickyTop.style.transform = entry.isIntersecting ? 'translateY(-100%)' : 'translateY(0)';
+      }, { threshold: 0.1 });
+      obs.observe(checkoutEl);
+    }
+
+    const stickyCta = document.getElementById('stickyCta');
+    function updateStickyCta() {
+      const scrollY = window.scrollY;
+      const checkoutRect = checkoutEl.getBoundingClientRect();
+      const checkoutVisible = checkoutRect.top < window.innerHeight && checkoutRect.bottom > 0;
+      if (scrollY > 200 && !checkoutVisible) { stickyCta.classList.add('show'); } else { stickyCta.classList.remove('show'); }
+    }
+    window.addEventListener('scroll', updateStickyCta, { passive: true });
+    updateStickyCta();
+  </script>
+
 </body>
 </html>

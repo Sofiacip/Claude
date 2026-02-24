@@ -477,12 +477,6 @@
         </div>
       </div>
 
-      <!-- Reference URL -->
-      <div style="min-width:160px; flex:1;">
-        <label class="section-label">Reference URL</label>
-        <input id="input-ref-url" type="url" class="field" placeholder="https://example.com" style="font-size:0.72rem;">
-      </div>
-
       <!-- Build Button -->
       <button id="btn-build" class="btn-primary" onclick="startBuild()" disabled style="height:34px;">
         Build Funnel
@@ -552,6 +546,12 @@
         <span id="section-count" style="font-size:0.58rem; color:var(--text-dim); letter-spacing:0.06em;"></span>
       </div>
 
+      <!-- Reference URL for active page -->
+      <div id="ref-url-bar" style="display:none; padding:0.45rem 0.85rem; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0;">
+        <span class="section-label">Reference</span>
+        <a id="ref-url-link" href="#" target="_blank" style="font-size:0.65rem; color:var(--accent); text-decoration:none; word-break:break-all; transition:opacity 0.15s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'"></a>
+      </div>
+
       <div id="section-list" style="flex:1; overflow-y:auto; padding:0.65rem 0.85rem;">
         <div id="empty-sections" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:0.5rem;">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" opacity="0.15">
@@ -589,6 +589,7 @@ let state = {
   parsedSections: [],   // extracted sections with editable fields
   modifiedFields: new Set(),
   pollTimer: null,
+  funnelConfig: null,   // loaded from /api/funnel-config
 };
 
 const VIEWPORTS = { desktop: '100%', tablet: '768px', mobile: '375px' };
@@ -696,12 +697,14 @@ async function checkAuth() {
     if (d.authed) {
       state.authed = true;
       document.getElementById('login-overlay').classList.add('hidden');
+      autoLoadLastJob();
     }
   } catch (e) {
     // Backend not available — if remote, still hide login and rely on header auth
     if (isRemote() && getApiPassword()) {
       state.authed = true;
       document.getElementById('login-overlay').classList.add('hidden');
+      autoLoadLastJob();
     }
   }
 }
@@ -721,6 +724,7 @@ async function doLogin() {
         state.authed = true;
         document.getElementById('login-overlay').classList.add('hidden');
         updateConnIndicator();
+        autoLoadLastJob();
         return;
       }
     } catch (e) {}
@@ -739,6 +743,7 @@ async function doLogin() {
     if (d.ok) {
       state.authed = true;
       document.getElementById('login-overlay').classList.add('hidden');
+      autoLoadLastJob();
     } else {
       errEl.textContent = d.error || 'Incorrect password';
       errEl.style.display = 'block';
@@ -798,6 +803,7 @@ async function startBuild() {
     const d = await r.json();
     if (d.jobId) {
       state.jobId = d.jobId;
+      localStorage.setItem('fd_last_job', d.jobId);
       showToast('Job created: ' + d.jobId, 'success');
       connectSSE(d.jobId);
       pollJob();
@@ -955,6 +961,9 @@ async function selectPage(idx) {
   document.querySelectorAll('.page-tab').forEach((t, i) => {
     t.classList.toggle('active', i === idx);
   });
+
+  // Show reference URL for this page
+  updateRefUrlBar();
 
   // Load preview
   loadPreview(idx);
@@ -1376,6 +1385,7 @@ async function loadExistingJob() {
 
     // Fill in client name
     document.getElementById('input-client').value = d.clientName || '';
+    localStorage.setItem('fd_last_job', jobId);
 
     showToast('Loaded job: ' + d.clientName, 'success');
     renderJobStatus(d);
@@ -1398,8 +1408,64 @@ document.getElementById('input-job-id').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') loadExistingJob();
 });
 
+// ━━━ Load Funnel Config ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function loadFunnelConfig() {
+  try {
+    const r = await fetch(apiUrl('/api/funnel-config'), apiFetchOpts());
+    if (r.ok) state.funnelConfig = await r.json();
+  } catch (_) {}
+}
+
+function getRefUrl(pageType) {
+  if (!state.funnelConfig) return null;
+  const funnelType = state.jobData?.funnelType || document.getElementById('input-funnel-type').value;
+  return state.funnelConfig[funnelType]?.pages?.[pageType]?.referenceUrl || null;
+}
+
+function updateRefUrlBar() {
+  const bar = document.getElementById('ref-url-bar');
+  const link = document.getElementById('ref-url-link');
+  const page = state.jobData?.pages?.[state.activePageIdx];
+  const url = page ? getRefUrl(page.pageType) : null;
+
+  if (url) {
+    bar.style.display = 'block';
+    link.href = url;
+    link.textContent = url;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+// ━━━ Auto-load last job ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function autoLoadLastJob() {
+  try {
+    // Try the list endpoint first (works if server hasn't restarted)
+    const r = await fetch(apiUrl('/api/jobs'), apiFetchOpts());
+    if (r.ok) {
+      const list = await r.json();
+      if (list.length) {
+        document.getElementById('input-job-id').value = list[0].id;
+        localStorage.setItem('fd_last_job', list[0].id);
+        await loadExistingJob();
+        return;
+      }
+    }
+  } catch (_) {}
+
+  // Fallback: try last known job ID from localStorage
+  const lastId = localStorage.getItem('fd_last_job');
+  if (lastId) {
+    try {
+      document.getElementById('input-job-id').value = lastId;
+      await loadExistingJob();
+    } catch (_) {}
+  }
+}
+
 // ━━━ Init ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 updateConnIndicator();
+loadFunnelConfig();
 checkAuth();
 </script>
 </body>

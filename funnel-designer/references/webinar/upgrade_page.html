@@ -1,343 +1,501 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Upgrade Your Experience</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        cream: '#FBF6EA',
-        blush: '#FAD7D8',
-        burgundy: '#8B1A3A',
-        'burgundy-dark': '#37171D',
-        gold: '#E0AF27',
-        'warm-ivory': '#FAF5EE',
-        'deep-rose': '#C4546A',
-        'soft-pink': '#FDF0F0',
-      },
-      fontFamily: {
-        display: ['"Playfair Display"', 'Georgia', 'serif'],
-        body: ['Jost', 'sans-serif'],
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upgrade Your Experience</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            burgundy: { DEFAULT: '#8B1A3A', dark: '#5C1128', darker: '#34161B', light: '#A82050' },
+            gold: { DEFAULT: '#C9963A', light: '#D4AB5E', faint: 'rgba(201,150,58,0.15)' },
+            champagne: '#F5E6D0',
+            blush: { DEFAULT: '#E8C4B0', light: '#F5D8D0', lighter: '#F8E8E0' },
+            ivory: '#FAF5EE',
+            charcoal: '#2C2C2C',
+          },
+          fontFamily: {
+            display: ['"Cormorant Garamond"', 'serif'],
+            body: ['Montserrat', 'sans-serif'],
+          },
+          letterSpacing: {
+            label: '0.12em',
+            button: '0.1em',
+          },
+          lineHeight: {
+            body: '1.7',
+            tight: '0.9',
+            snug: '1.1',
+          }
+        }
       }
     }
-  }
-}
-</script>
-<style>
-  * { -webkit-font-smoothing: antialiased; }
-  .grain-overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    opacity: 0.03;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 1;
-  }
-  .timer-digit {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    font-size: 2rem;
-    line-height: 1;
-    color: #37171D;
-  }
-  .timer-label {
-    font-family: 'Jost', sans-serif;
-    font-size: 0.6rem;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: #8B1A3A;
-    opacity: 0.6;
-  }
-</style>
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Montserrat', sans-serif; color: #2C2C2C; background: #FAF5EE; -webkit-font-smoothing: antialiased; }
+
+    .noise-overlay::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 128px 128px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.08s; }
+    .reveal-delay-2 { transition-delay: 0.16s; }
+    .reveal-delay-3 { transition-delay: 0.24s; }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+
+    .cta-primary {
+      background: #8B1A3A; color: #fff;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, opacity 0.3s ease;
+      box-shadow: 0 4px 15px rgba(139,26,58,0.25), 0 2px 6px rgba(139,26,58,0.15);
+    }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(139,26,58,0.35), 0 4px 10px rgba(139,26,58,0.2); }
+    .cta-primary:focus-visible { outline: 2px solid #C9963A; outline-offset: 3px; }
+    .cta-primary:active { transform: translateY(0); opacity: 0.9; }
+
+    .cta-gold {
+      background: #C9963A; color: #34161B;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, opacity 0.3s ease;
+      box-shadow: 0 4px 15px rgba(201,150,58,0.3), 0 2px 6px rgba(201,150,58,0.15);
+    }
+    .cta-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(201,150,58,0.4), 0 4px 10px rgba(201,150,58,0.2); }
+    .cta-gold:focus-visible { outline: 2px solid #F5E6D0; outline-offset: 3px; }
+    .cta-gold:active { transform: translateY(0); opacity: 0.9; }
+
+    .diamond-deco {
+      position: absolute;
+      width: 200px; height: 200px;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+
+    .countdown-num { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 2.5rem; line-height: 1; }
+    .countdown-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
+
+    /* Sticky top CTA */
+    .sticky-top-cta {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+    }
+
+    /* Sticky mobile CTA */
+    .sticky-cta {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 49;
+      padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom));
+      background: rgba(250,245,238,0.92);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(232,196,176,0.4);
+      box-shadow: 0 -4px 20px rgba(44,44,44,0.08);
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .sticky-cta.show { transform: translateY(0); }
+    @media (min-width: 768px) { .sticky-cta { display: none; } }
+
+    /* Product card hover */
+    .product-card {
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(139,26,58,0.08), 0 4px 15px rgba(139,26,58,0.04);
+    }
+
+    .decline-link {
+      transition: color 0.3s ease, opacity 0.3s ease;
+    }
+    .decline-link:hover { opacity: 0.8; }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #FAF5EE; }
+    ::-webkit-scrollbar-thumb { background: #E8C4B0; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #C9963A; }
+
+    @media (max-width: 767px) {
+      .countdown-num { font-size: 2rem; }
+    }
+  </style>
 </head>
-<body class="bg-cream font-body text-burgundy-dark">
+<body class="bg-ivory">
 
-<!-- ── Sticky CTA Bar (top) ─────────────────────────────────────────── -->
-<div id="sticky-cta" class="fixed top-0 left-0 right-0 z-50 bg-burgundy/95 backdrop-blur-sm py-3 px-4 transition-transform" style="transform: translateY(0)">
-  <div class="max-w-4xl mx-auto flex items-center justify-between">
-    <p class="font-body text-xs md:text-sm text-cream/80 hidden md:block">Special one-time offer — upgrade for just $27</p>
-    <a href="#checkout" class="w-full md:w-auto text-center px-8 py-2.5 bg-gold text-burgundy-dark font-body font-700 text-xs uppercase tracking-[0.15em] rounded-sm hover:bg-gold/90 active:scale-[0.98] transition-transform">
-      Yes, I Want to Upgrade for $27
-    </a>
-  </div>
-</div>
-
-<!-- ── Progress Bar ─────────────────────────────────────────────────── -->
-<div class="pt-14 bg-white border-b border-burgundy/10">
-  <div class="max-w-2xl mx-auto px-4 py-4">
-    <div class="flex items-center justify-center gap-2 md:gap-4 text-xs md:text-sm">
-      <div class="flex items-center gap-1.5">
-        <div class="w-5 h-5 rounded-full bg-burgundy flex items-center justify-center">
-          <svg class="w-3 h-3 text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-        </div>
-        <span class="font-body text-burgundy-dark/60">Registered</span>
-      </div>
-      <div class="w-8 md:w-16 h-px bg-burgundy/30"></div>
-      <div class="flex items-center gap-1.5">
-        <div class="w-5 h-5 rounded-full bg-deep-rose flex items-center justify-center">
-          <span class="text-cream text-[10px] font-700">2</span>
-        </div>
-        <span class="font-body font-600 text-burgundy-dark">Upgrade the Offer</span>
-      </div>
-      <div class="w-8 md:w-16 h-px bg-burgundy/15"></div>
-      <div class="flex items-center gap-1.5">
-        <div class="w-5 h-5 rounded-full bg-burgundy/15 flex items-center justify-center">
-          <span class="text-burgundy-dark/40 text-[10px] font-700">3</span>
-        </div>
-        <span class="font-body text-burgundy-dark/40">Enjoy Your Experience</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── Congrats + Headline ──────────────────────────────────────────── -->
-<section class="bg-cream py-10 md:py-14">
-  <div class="max-w-3xl mx-auto px-4 text-center">
-    <p class="font-body text-sm text-deep-rose font-600 mb-2">Congrats! You&rsquo;re registered.</p>
-    <p class="font-body text-sm text-burgundy-dark/60 mb-8">Before you go, I have a special invitation for you:</p>
-
-    <h1 class="font-display font-900 text-3xl md:text-5xl lg:text-[3.5rem] leading-[1.05] text-burgundy-dark tracking-tight mb-6">
-      Master the Money Basics Most Women Were Never Taught Before the Webinar Starts
-    </h1>
-    <p class="font-body text-base md:text-lg text-burgundy-dark/65 max-w-2xl mx-auto leading-relaxed mb-10">
-      Fast-track your confidence with two of my bestselling mini-courses, &ldquo;Mutual Funds, Finally Explained&rdquo; and &ldquo;Retire Like a Queen&rdquo; for just $27.
-    </p>
-  </div>
-</section>
-
-<!-- ── Video + Value Proposition ─────────────────────────────────────── -->
-<section class="bg-soft-pink py-12 md:py-16">
-  <div class="max-w-3xl mx-auto px-4">
-    <!-- Video Embed Placeholder -->
-    <div class="aspect-video bg-burgundy-dark/10 rounded-lg mb-8 flex items-center justify-center overflow-hidden relative">
-      <div class="w-16 h-16 rounded-full bg-burgundy/80 flex items-center justify-center cursor-pointer hover:bg-burgundy transition-colors">
-        <svg class="w-6 h-6 text-cream ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-      </div>
-      <p class="absolute bottom-4 left-4 text-xs text-burgundy-dark/40 font-body">Play the video above</p>
-    </div>
-
-    <div class="text-center">
-      <p class="font-display font-700 text-lg md:text-xl text-burgundy-dark/80 mb-4 max-w-xl mx-auto leading-relaxed">
-        Walk into the webinar already clear, grounded, and thinking differently about money and power.
-      </p>
-      <p class="font-body text-sm text-burgundy-dark/55 max-w-lg mx-auto leading-relaxed mb-8">
-        You invest first. Then you buy the bag with dividends. Get instant lifetime access to two of my best-selling mini courses so you can walk into the webinar already thinking differently about money.
-      </p>
-
-      <!-- Pricing -->
-      <div class="mb-6">
-        <p class="font-body text-xs uppercase tracking-[0.2em] text-burgundy/50 mb-1">Total value:</p>
-        <p class="font-display font-700 text-3xl text-burgundy-dark line-through decoration-deep-rose/50 mb-2">$168</p>
-        <p class="font-body text-sm text-burgundy-dark/70">Your price today: <span class="font-display font-900 text-2xl text-deep-rose">$27</span></p>
-      </div>
-
-      <!-- Countdown Timer -->
-      <div class="mb-8 py-4 border-t border-b border-burgundy/10">
-        <p class="font-body text-xs uppercase tracking-[0.2em] text-deep-rose font-500 mb-3">This offer expires when you leave this page</p>
-        <div class="flex justify-center gap-6">
-          <div class="text-center">
-            <div class="timer-digit" id="minutes">10</div>
-            <div class="timer-label">Minutes</div>
-          </div>
-          <div class="text-center">
-            <div class="timer-digit" id="seconds">00</div>
-            <div class="timer-label">Seconds</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CTA -->
-      <div id="checkout">
-        <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 active:scale-[0.98] transition-transform">
-          Yes, I Want to Upgrade for $27
-        </a>
-        <p class="mt-4 text-xs text-burgundy-dark/40 cursor-pointer hover:text-burgundy-dark/60 transition-colors">
-          <a href="#">No thanks, I&rsquo;ll attend the webinar without the VIP bundle</a>
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── Get Instant Access ───────────────────────────────────────────── -->
-<section class="bg-cream py-16 md:py-24 border-t border-burgundy/8">
-  <div class="max-w-3xl mx-auto px-4 text-center">
-    <h2 class="font-display font-900 text-3xl md:text-5xl lg:text-[3.2rem] leading-[1.08] text-burgundy-dark tracking-tight mb-4">
-      Get Instant Access to My Bundle<br>and Start Building Financial Power Before the Webinar Even Begins
-    </h2>
-    <p class="font-body text-sm text-burgundy-dark/55 mb-10">Look at what you get when you upgrade now&hellip;</p>
-
-    <a href="#" class="inline-block px-10 py-4 bg-deep-rose text-cream font-body font-600 text-xs uppercase tracking-[0.15em] rounded-sm mb-4 hover:bg-burgundy focus-visible:ring-2 focus-visible:ring-gold active:scale-[0.98] transition-transform">
-      Upgrade Now for Just $27
-    </a>
-    <p class="font-body text-xs text-burgundy-dark/40 mb-12">This isn&rsquo;t motivation. It&rsquo;s education, clarity, and protection.<br>This bundle gives you what most women were never taught.</p>
-
-    <!-- Product Cards -->
-    <div class="space-y-8 text-left max-w-2xl mx-auto">
-      <!-- Product 1 -->
-      <div class="bg-white border border-burgundy/8 rounded-lg p-6 md:p-8 relative">
-        <div class="absolute top-4 right-4 bg-blush text-burgundy font-display font-700 text-sm px-3 py-1 rounded-sm">$79 Value</div>
-        <h3 class="font-display font-700 text-xl md:text-2xl text-burgundy-dark mb-4">Mutual Funds, Finally Explained</h3>
-        <p class="font-body text-sm text-burgundy-dark/60 mb-4">Most people own mutual funds. Very few understand them. In this training, I break down:</p>
-        <ol class="space-y-2 mb-4">
-          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
-            <span class="font-display font-700 text-deep-rose flex-shrink-0">1.</span>What mutual funds really are
-          </li>
-          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
-            <span class="font-display font-700 text-deep-rose flex-shrink-0">2.</span>How fees quietly eat away at your future
-          </li>
-          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
-            <span class="font-display font-700 text-deep-rose flex-shrink-0">3.</span>What actually matters when choosing funds
-          </li>
-          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
-            <span class="font-display font-700 text-deep-rose flex-shrink-0">4.</span>How to avoid costly mistakes you don&rsquo;t even know you&rsquo;re making
-          </li>
-        </ol>
-        <p class="font-display italic text-sm text-burgundy-dark/50">This is clarity. And clarity is protection.</p>
-      </div>
-
-      <!-- Product 2 -->
-      <div class="bg-white border border-burgundy/8 rounded-lg p-6 md:p-8 relative">
-        <div class="absolute top-4 right-4 bg-blush text-burgundy font-display font-700 text-sm px-3 py-1 rounded-sm">$89 Value</div>
-        <h3 class="font-display font-700 text-xl md:text-2xl text-burgundy-dark mb-4">Retire Like a Queen</h3>
-        <p class="font-body text-sm text-burgundy-dark/60 mb-4">Retirement doesn&rsquo;t have to be confusing or overwhelming. In this course, you&rsquo;ll learn:</p>
-        <ol class="space-y-2 mb-4">
-          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
-            <span class="font-display font-700 text-deep-rose flex-shrink-0">1.</span>How retirement accounts actually work
-          </li>
-          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
-            <span class="font-display font-700 text-deep-rose flex-shrink-0">2.</span>How to plan long-term without fear or jargon
-          </li>
-          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
-            <span class="font-display font-700 text-deep-rose flex-shrink-0">3.</span>How to stop avoiding the future and start securing it
-          </li>
-          <li class="font-body text-sm text-burgundy-dark/70 flex gap-3 items-start">
-            <span class="font-display font-700 text-deep-rose flex-shrink-0">4.</span>How to make sure future-you is never trapped or dependent
-          </li>
-        </ol>
-        <p class="font-display italic text-sm text-burgundy-dark/50">This is about freedom, not fantasy.</p>
-      </div>
-    </div>
-
-    <div class="mt-8">
-      <a href="#" class="inline-block px-10 py-4 bg-deep-rose text-cream font-body font-600 text-xs uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy focus-visible:ring-2 focus-visible:ring-gold active:scale-[0.98] transition-transform">
-        Upgrade Now for Just $27
+  <!-- ============================================ -->
+  <!-- STICKY CTA BAR (TOP) -->
+  <!-- ============================================ -->
+  <div id="sticky-top" class="sticky-top-cta fixed top-0 left-0 right-0 z-50 bg-burgundy-darker/95 py-3 px-4 border-b border-burgundy/30" style="box-shadow: 0 4px 20px rgba(52,22,27,0.15);">
+    <div class="max-w-4xl mx-auto flex items-center justify-between gap-4">
+      <p class="font-body text-xs md:text-sm text-champagne/70 hidden md:block">Special one-time offer &mdash; upgrade for just $27</p>
+      <a href="#checkout" class="cta-gold font-body font-bold text-xs uppercase tracking-button w-full md:w-auto text-center px-8 py-2.5 rounded">
+        Yes, I Want to Upgrade for $27
       </a>
     </div>
   </div>
-</section>
 
-<!-- ── Value Stack Summary ──────────────────────────────────────────── -->
-<section class="bg-soft-pink py-14 md:py-20">
-  <div class="max-w-2xl mx-auto px-4 text-center">
-    <h2 class="font-display font-900 text-2xl md:text-3xl lg:text-4xl leading-[1.1] text-burgundy-dark tracking-tight mb-8">
-      Here&rsquo;s What You Get Today Only on This Page:
-    </h2>
-
-    <div class="space-y-4 text-left mb-8">
-      <div class="bg-white/60 border border-burgundy/6 rounded-md p-5">
-        <p class="font-display font-700 text-base text-burgundy-dark mb-1">Mutual Funds, Finally Explained <span class="text-deep-rose">(Value: $79)</span></p>
-        <p class="font-body text-sm text-burgundy-dark/55">A clear, elegant guide to understanding mutual funds, avoiding hidden fees, and safeguarding your financial future.</p>
-      </div>
-      <div class="bg-white/60 border border-burgundy/6 rounded-md p-5">
-        <p class="font-display font-700 text-base text-burgundy-dark mb-1">Retire Like a Queen <span class="text-deep-rose">(Value: $89)</span></p>
-        <p class="font-body text-sm text-burgundy-dark/55">A calm, empowering guide to understanding retirement, planning with confidence, and securing a future built on freedom rather than fear.</p>
+  <!-- ============================================ -->
+  <!-- PROGRESS BAR -->
+  <!-- ============================================ -->
+  <div class="pt-14 bg-ivory border-b border-blush/30">
+    <div class="max-w-2xl mx-auto px-4 py-5">
+      <div class="flex items-center justify-center gap-2 md:gap-4 text-xs md:text-sm">
+        <!-- Step 1: Complete -->
+        <div class="flex items-center gap-1.5">
+          <div class="w-6 h-6 rounded-full bg-burgundy flex items-center justify-center" style="box-shadow: 0 2px 8px rgba(139,26,58,0.2);">
+            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <span class="font-body text-charcoal/50">Registered</span>
+        </div>
+        <div class="w-8 md:w-16 h-px bg-burgundy/30"></div>
+        <!-- Step 2: Current -->
+        <div class="flex items-center gap-1.5">
+          <div class="w-6 h-6 rounded-full bg-burgundy-light flex items-center justify-center" style="box-shadow: 0 2px 8px rgba(168,32,80,0.2);">
+            <span class="text-white text-[10px] font-bold">2</span>
+          </div>
+          <span class="font-body font-semibold text-charcoal">Upgrade</span>
+        </div>
+        <div class="w-8 md:w-16 h-px bg-blush/50"></div>
+        <!-- Step 3: Pending -->
+        <div class="flex items-center gap-1.5">
+          <div class="w-6 h-6 rounded-full bg-blush/40 flex items-center justify-center">
+            <span class="text-charcoal/40 text-[10px] font-bold">3</span>
+          </div>
+          <span class="font-body text-charcoal/40">Enjoy</span>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="py-6 border-t border-b border-burgundy/10 mb-8">
-      <p class="font-body text-xs uppercase tracking-[0.2em] text-burgundy/50 mb-1">That&rsquo;s not the value. That&rsquo;s the entry point.</p>
-      <p class="font-display font-700 text-2xl text-burgundy-dark">
-        Total Value: <span class="line-through decoration-deep-rose/50">$168</span> &rarr; Yours today for just <span class="text-deep-rose">$27</span>
+  <!-- ============================================ -->
+  <!-- SECTION 1: CONGRATS + HEADLINE -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-12 md:py-16 overflow-hidden">
+    <svg class="diamond-deco right-[8%] top-[5%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#E8C4B0" stroke-width="0.3"/></svg>
+
+    <div class="max-w-3xl mx-auto px-6 text-center relative z-10">
+      <p class="font-body text-xs font-bold uppercase tracking-label text-burgundy-light mb-2 reveal">Congrats! You&rsquo;re registered.</p>
+      <p class="font-body text-sm text-charcoal/55 mb-8 reveal reveal-delay-1">Before you go, I have a special invitation for you:</p>
+
+      <h1 class="font-display text-3xl md:text-5xl lg:text-[3.5rem] font-semibold text-charcoal leading-tight mb-6 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        Master the Money Basics Most Women Were Never Taught Before the Webinar Starts
+      </h1>
+
+      <div class="w-16 h-[2px] bg-gold mx-auto mb-6 reveal reveal-delay-2"></div>
+
+      <p class="font-body text-base md:text-lg text-charcoal/65 max-w-2xl mx-auto leading-relaxed reveal reveal-delay-2">
+        Fast-track your confidence with two of my bestselling mini-courses, &ldquo;Mutual Funds, Finally Explained&rdquo; and &ldquo;Retire Like a Queen&rdquo; for just $27.
       </p>
-      <p class="font-body text-xs text-burgundy-dark/50 mt-2">Save 85% and get lifetime access before the price jumps!</p>
     </div>
+  </section>
 
-    <p class="font-body text-xs text-deep-rose font-500 uppercase tracking-[0.15em] mb-6">You won&rsquo;t see this offer again once you leave this page.</p>
+  <!-- ============================================ -->
+  <!-- SECTION 2: VIDEO + PRICING + COUNTDOWN -->
+  <!-- ============================================ -->
+  <section class="relative bg-champagne/50 py-14 md:py-20 overflow-hidden noise-overlay">
+    <div class="max-w-3xl mx-auto px-6 relative z-10">
+      <!-- Video Embed Placeholder -->
+      <div class="aspect-video bg-burgundy-darker/10 rounded-2xl mb-10 flex items-center justify-center overflow-hidden relative reveal" style="box-shadow: 0 20px 60px rgba(139,26,58,0.08), 0 8px 25px rgba(139,26,58,0.04);">
+        <div class="w-16 h-16 rounded-full bg-burgundy/80 flex items-center justify-center cursor-pointer hover:bg-burgundy transition-colors" style="box-shadow: 0 4px 20px rgba(139,26,58,0.3);">
+          <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+        <p class="absolute bottom-4 left-4 font-body text-xs text-charcoal/30">Watch the video above</p>
+      </div>
 
-    <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 active:scale-[0.98] transition-transform mb-4">
-      Yes! I Want the Bundle for $27
-    </a>
-    <p class="text-xs text-burgundy-dark/40 cursor-pointer hover:text-burgundy-dark/60 transition-colors">
-      <a href="#">No thanks, I&rsquo;ll skip the upgrade</a>
-    </p>
-  </div>
-</section>
+      <div class="text-center">
+        <p class="font-display text-xl md:text-2xl font-semibold text-charcoal/80 mb-4 max-w-xl mx-auto leading-snug reveal">
+          Walk into the webinar already clear, grounded, and thinking differently about money and power.
+        </p>
+        <p class="font-body text-sm text-charcoal/55 max-w-lg mx-auto leading-relaxed mb-10 reveal reveal-delay-1">
+          You invest first. Then you buy the bag with dividends. Get instant lifetime access to two of my best-selling mini courses so you can walk into the webinar already thinking differently about money.
+        </p>
 
-<!-- ── Why This Matters ─────────────────────────────────────────────── -->
-<section class="bg-cream py-16 md:py-24 border-t border-burgundy/8">
-  <div class="max-w-2xl mx-auto px-4 text-center">
-    <h2 class="font-display font-900 text-3xl md:text-4xl lg:text-5xl leading-[1.1] text-burgundy-dark tracking-tight mb-8">
-      Why This Matters
-    </h2>
-    <p class="font-display italic text-base md:text-lg text-burgundy-dark/60 mb-8 max-w-lg mx-auto leading-relaxed">
-      I created this offer for women who are done guessing, hoping, and second-guessing themselves around money.
-    </p>
+        <!-- Pricing -->
+        <div class="mb-8 reveal reveal-delay-2">
+          <p class="font-body text-[10px] font-bold uppercase tracking-label text-charcoal/40 mb-2">Total value:</p>
+          <p class="font-display text-3xl font-bold text-charcoal/40 line-through decoration-burgundy-light/50 mb-1">$168</p>
+          <p class="font-body text-sm text-charcoal/65">Your price today: <span class="font-display text-3xl font-bold text-burgundy">$27</span></p>
+        </div>
 
-    <div class="text-left max-w-md mx-auto mb-10">
-      <p class="font-body text-sm text-burgundy-dark/65 mb-4 font-500">This bundle helps you:</p>
-      <ul class="space-y-3">
-        <li class="flex items-start gap-3">
-          <div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div>
-          <span class="font-body text-sm text-burgundy-dark/70">Walk into the webinar already empowered</span>
-        </li>
-        <li class="flex items-start gap-3">
-          <div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div>
-          <span class="font-body text-sm text-burgundy-dark/70">Spot red flags faster</span>
-        </li>
-        <li class="flex items-start gap-3">
-          <div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div>
-          <span class="font-body text-sm text-burgundy-dark/70">Ask better questions</span>
-        </li>
-        <li class="flex items-start gap-3">
-          <div class="w-1.5 h-1.5 rounded-full bg-deep-rose mt-2 flex-shrink-0"></div>
-          <span class="font-body text-sm text-burgundy-dark/70">Make decisions from strength, not fear</span>
-        </li>
-      </ul>
+        <!-- Countdown Timer -->
+        <div class="mb-10 reveal reveal-delay-2">
+          <div class="inline-flex flex-col items-center bg-ivory/80 rounded-2xl px-8 py-5 border border-blush/30" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+            <p class="font-body text-[10px] font-bold uppercase tracking-label text-burgundy-light mb-3">This offer expires when you leave this page</p>
+            <div class="flex gap-8 text-charcoal">
+              <div class="text-center">
+                <div class="countdown-num" id="minutes">10</div>
+                <div class="countdown-label text-charcoal/50">Minutes</div>
+              </div>
+              <div class="countdown-num text-charcoal/20">:</div>
+              <div class="text-center">
+                <div class="countdown-num" id="seconds">00</div>
+                <div class="countdown-label text-charcoal/50">Seconds</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div id="checkout" class="reveal reveal-delay-3">
+          <a href="#" class="cta-primary font-body font-bold text-sm uppercase tracking-button inline-block w-full max-w-md px-10 py-4 rounded-lg">
+            Yes, I Want to Upgrade for $27
+          </a>
+          <p class="mt-4">
+            <a href="#" class="decline-link font-body text-xs text-charcoal/40 hover:text-charcoal/60">
+              No thanks, I&rsquo;ll attend the webinar without the VIP bundle
+            </a>
+          </p>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <p class="font-display font-700 text-sm uppercase tracking-[0.15em] text-burgundy/50 mb-8">
-      If you&rsquo;re serious about becoming AccompliSHE, this is how you start.
-    </p>
+  <!-- ============================================ -->
+  <!-- SECTION 3: PRODUCT CARDS -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-20 md:py-28 lg:py-36 overflow-hidden">
+    <svg class="diamond-deco left-[-3%] top-[15%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#E8C4B0" stroke-width="0.3"/></svg>
 
-    <a href="#" class="inline-block w-full max-w-md px-10 py-4 bg-burgundy text-cream font-body font-700 text-sm uppercase tracking-[0.15em] rounded-sm hover:bg-burgundy-dark focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 active:scale-[0.98] transition-transform">
-      Upgrade for Just $27
+    <div class="max-w-3xl mx-auto px-6 text-center relative z-10">
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">What You Get</p>
+      <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-charcoal leading-tight mb-4 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        Get Instant Access to My Bundle
+      </h2>
+      <p class="font-body text-sm text-charcoal/55 mb-12 reveal reveal-delay-2">Look at what you get when you upgrade now&hellip;</p>
+
+      <!-- Product Cards -->
+      <div class="space-y-6 text-left max-w-2xl mx-auto">
+        <!-- Product 1 -->
+        <div class="product-card bg-white rounded-2xl p-6 md:p-8 border border-blush/30 relative reveal" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="absolute top-4 right-4 bg-gold/15 text-gold font-body font-bold text-xs px-3 py-1.5 rounded-full border border-gold/20">$79 Value</div>
+          <h3 class="font-display text-xl md:text-2xl font-semibold text-charcoal mb-3 pr-20">Mutual Funds, Finally Explained</h3>
+          <p class="font-body text-sm text-charcoal/60 mb-5">Most people own mutual funds. Very few understand them. In this training, I break down:</p>
+          <ol class="space-y-3 mb-4">
+            <li class="font-body text-sm text-charcoal/70 flex gap-3 items-start">
+              <span class="font-display text-lg font-bold text-burgundy/30 flex-shrink-0 w-5">1.</span>What mutual funds really are
+            </li>
+            <li class="font-body text-sm text-charcoal/70 flex gap-3 items-start">
+              <span class="font-display text-lg font-bold text-burgundy/30 flex-shrink-0 w-5">2.</span>How fees quietly eat away at your future
+            </li>
+            <li class="font-body text-sm text-charcoal/70 flex gap-3 items-start">
+              <span class="font-display text-lg font-bold text-burgundy/30 flex-shrink-0 w-5">3.</span>What actually matters when choosing funds
+            </li>
+            <li class="font-body text-sm text-charcoal/70 flex gap-3 items-start">
+              <span class="font-display text-lg font-bold text-burgundy/30 flex-shrink-0 w-5">4.</span>How to avoid costly mistakes you don&rsquo;t even know you&rsquo;re making
+            </li>
+          </ol>
+          <p class="font-display italic text-sm text-charcoal/45">This is clarity. And clarity is protection.</p>
+        </div>
+
+        <!-- Product 2 -->
+        <div class="product-card bg-white rounded-2xl p-6 md:p-8 border border-blush/30 relative reveal reveal-delay-1" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="absolute top-4 right-4 bg-gold/15 text-gold font-body font-bold text-xs px-3 py-1.5 rounded-full border border-gold/20">$89 Value</div>
+          <h3 class="font-display text-xl md:text-2xl font-semibold text-charcoal mb-3 pr-20">Retire Like a Queen</h3>
+          <p class="font-body text-sm text-charcoal/60 mb-5">Retirement doesn&rsquo;t have to be confusing or overwhelming. In this course, you&rsquo;ll learn:</p>
+          <ol class="space-y-3 mb-4">
+            <li class="font-body text-sm text-charcoal/70 flex gap-3 items-start">
+              <span class="font-display text-lg font-bold text-burgundy/30 flex-shrink-0 w-5">1.</span>How retirement accounts actually work
+            </li>
+            <li class="font-body text-sm text-charcoal/70 flex gap-3 items-start">
+              <span class="font-display text-lg font-bold text-burgundy/30 flex-shrink-0 w-5">2.</span>How to plan long-term without fear or jargon
+            </li>
+            <li class="font-body text-sm text-charcoal/70 flex gap-3 items-start">
+              <span class="font-display text-lg font-bold text-burgundy/30 flex-shrink-0 w-5">3.</span>How to stop avoiding the future and start securing it
+            </li>
+            <li class="font-body text-sm text-charcoal/70 flex gap-3 items-start">
+              <span class="font-display text-lg font-bold text-burgundy/30 flex-shrink-0 w-5">4.</span>How to make sure future-you is never trapped or dependent
+            </li>
+          </ol>
+          <p class="font-display italic text-sm text-charcoal/45">This is about freedom, not fantasy.</p>
+        </div>
+      </div>
+
+      <div class="mt-10 reveal">
+        <a href="#checkout" class="cta-primary font-body font-bold text-sm uppercase tracking-button inline-block px-10 py-4 rounded-lg">
+          Upgrade Now for Just $27
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 4: VALUE STACK (DARK) -->
+  <!-- ============================================ -->
+  <section class="relative py-20 md:py-28 lg:py-36 overflow-hidden noise-overlay" style="background: linear-gradient(135deg, #34161B 0%, #5C1128 50%, #8B1A3A 100%);">
+    <svg class="diamond-deco right-[5%] top-[10%] opacity-[0.04]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#F5E6D0" stroke-width="0.5"/></svg>
+
+    <div class="max-w-2xl mx-auto px-6 text-center relative z-10">
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">Your Bundle</p>
+      <h2 class="font-display text-2xl md:text-4xl font-semibold text-white leading-tight mb-10 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        Here&rsquo;s What You Get Today Only on This Page:
+      </h2>
+
+      <div class="space-y-4 text-left mb-10">
+        <div class="bg-white/8 border border-champagne/10 rounded-2xl p-5 backdrop-blur-sm reveal" style="box-shadow: 0 8px 30px rgba(0,0,0,0.1);">
+          <p class="font-body text-base font-semibold text-white mb-1">Mutual Funds, Finally Explained <span class="text-gold font-normal">(Value: $79)</span></p>
+          <p class="font-body text-sm text-champagne/60">A clear, elegant guide to understanding mutual funds, avoiding hidden fees, and safeguarding your financial future.</p>
+        </div>
+        <div class="bg-white/8 border border-champagne/10 rounded-2xl p-5 backdrop-blur-sm reveal reveal-delay-1" style="box-shadow: 0 8px 30px rgba(0,0,0,0.1);">
+          <p class="font-body text-base font-semibold text-white mb-1">Retire Like a Queen <span class="text-gold font-normal">(Value: $89)</span></p>
+          <p class="font-body text-sm text-champagne/60">A calm, empowering guide to understanding retirement, planning with confidence, and securing a future built on freedom.</p>
+        </div>
+      </div>
+
+      <div class="py-6 border-t border-b border-champagne/10 mb-8 reveal reveal-delay-2">
+        <p class="font-body text-[10px] font-bold uppercase tracking-label text-champagne/40 mb-2">That&rsquo;s not the value. That&rsquo;s the entry point.</p>
+        <p class="font-display text-2xl md:text-3xl font-semibold text-white">
+          Total Value: <span class="line-through text-champagne/40">$168</span> <span class="mx-2 text-champagne/30">&rarr;</span> Yours for just <span class="text-gold">$27</span>
+        </p>
+        <p class="font-body text-xs text-champagne/40 mt-2">Save 85% and get lifetime access before the price jumps!</p>
+      </div>
+
+      <p class="font-body text-xs font-bold uppercase tracking-label text-burgundy-light mb-6 reveal reveal-delay-2">You won&rsquo;t see this offer again once you leave this page.</p>
+
+      <div class="reveal reveal-delay-3">
+        <a href="#" class="cta-gold font-body font-bold text-sm uppercase tracking-button inline-block w-full max-w-md px-10 py-4 rounded-lg">
+          Yes! I Want the Bundle for $27
+        </a>
+        <p class="mt-4">
+          <a href="#" class="decline-link font-body text-xs text-champagne/35 hover:text-champagne/55">
+            No thanks, I&rsquo;ll skip the upgrade
+          </a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 5: WHY THIS MATTERS -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-20 md:py-28 lg:py-36 overflow-hidden">
+    <svg class="diamond-deco left-[5%] bottom-[10%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#E8C4B0" stroke-width="0.3"/></svg>
+
+    <div class="max-w-2xl mx-auto px-6 text-center relative z-10">
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">The Real Reason</p>
+      <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-charcoal leading-tight mb-6 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        Why This Matters
+      </h2>
+      <div class="w-16 h-[2px] bg-gold mx-auto mb-8 reveal reveal-delay-2"></div>
+
+      <p class="font-display text-lg md:text-xl italic text-charcoal/60 mb-10 max-w-lg mx-auto leading-relaxed reveal reveal-delay-2">
+        I created this offer for women who are done guessing, hoping, and second-guessing themselves around money.
+      </p>
+
+      <div class="bg-champagne/40 rounded-2xl p-6 md:p-8 border border-blush/30 text-left max-w-md mx-auto mb-10 reveal" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+        <p class="font-body text-sm font-semibold text-charcoal mb-4">This bundle helps you:</p>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div>
+            <span class="font-body text-sm text-charcoal/70">Walk into the webinar already empowered</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div>
+            <span class="font-body text-sm text-charcoal/70">Spot red flags faster</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div>
+            <span class="font-body text-sm text-charcoal/70">Ask better questions</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-2 h-2 rounded-sm bg-burgundy rotate-45 mt-1.5 flex-shrink-0" style="box-shadow: 0 1px 4px rgba(139,26,58,0.2);"></div>
+            <span class="font-body text-sm text-charcoal/70">Make decisions from strength, not fear</span>
+          </li>
+        </ul>
+      </div>
+
+      <p class="font-body text-xs font-bold uppercase tracking-label text-charcoal/40 mb-8 reveal">
+        If you&rsquo;re serious about becoming AccompliSHE, this is how you start.
+      </p>
+
+      <div class="reveal">
+        <a href="#" class="cta-primary font-body font-bold text-sm uppercase tracking-button inline-block w-full max-w-md px-10 py-4 rounded-lg">
+          Upgrade for Just $27
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- STICKY MOBILE CTA -->
+  <!-- ============================================ -->
+  <div class="sticky-cta" id="stickyCta">
+    <a href="#checkout" class="cta-primary font-body font-bold text-sm uppercase tracking-button py-3.5 rounded-lg block text-center w-full">
+      Upgrade for $27
     </a>
   </div>
-</section>
 
-<!-- Countdown Timer Script -->
-<script>
-(function() {
-  let total = 10 * 60; // 10 minutes
-  function update() {
-    if (total <= 0) return;
-    total--;
-    const m = Math.floor(total / 60);
-    const s = total % 60;
-    document.getElementById('minutes').textContent = String(m).padStart(2, '0');
-    document.getElementById('seconds').textContent = String(s).padStart(2, '0');
-  }
-  setInterval(update, 1000);
+  <!-- ============================================ -->
+  <!-- SCRIPTS -->
+  <!-- ============================================ -->
+  <script>
+    // Countdown timer (10 minutes)
+    (function() {
+      let total = 10 * 60;
+      function update() {
+        if (total <= 0) return;
+        total--;
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        document.getElementById('minutes').textContent = String(m).padStart(2, '0');
+        document.getElementById('seconds').textContent = String(s).padStart(2, '0');
+      }
+      setInterval(update, 1000);
+    })();
 
-  // Sticky CTA: hide when user is near a CTA button
-  const stickyCta = document.getElementById('sticky-cta');
-  const checkout = document.getElementById('checkout');
-  if (stickyCta && checkout) {
-    const observer = new IntersectionObserver(([entry]) => {
-      stickyCta.style.transform = entry.isIntersecting ? 'translateY(-100%)' : 'translateY(0)';
-    }, { threshold: 0.1 });
-    observer.observe(checkout);
-  }
-})();
-</script>
+    // Scroll reveal observer
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px 80px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    setTimeout(() => {
+      document.querySelectorAll('.reveal:not(.visible)').forEach(el => el.classList.add('visible'));
+    }, 1500);
+
+    // Sticky top CTA: hide when checkout section is visible
+    const stickyTop = document.getElementById('sticky-top');
+    const checkoutEl = document.getElementById('checkout');
+    if (stickyTop && checkoutEl) {
+      const obs = new IntersectionObserver(([entry]) => {
+        stickyTop.style.transform = entry.isIntersecting ? 'translateY(-100%)' : 'translateY(0)';
+      }, { threshold: 0.1 });
+      obs.observe(checkoutEl);
+    }
+
+    // Sticky mobile CTA: show after progress bar, hide at checkout
+    const stickyCta = document.getElementById('stickyCta');
+    function updateStickyCta() {
+      const scrollY = window.scrollY;
+      const checkoutRect = checkoutEl.getBoundingClientRect();
+      const checkoutVisible = checkoutRect.top < window.innerHeight && checkoutRect.bottom > 0;
+      if (scrollY > 200 && !checkoutVisible) {
+        stickyCta.classList.add('show');
+      } else {
+        stickyCta.classList.remove('show');
+      }
+    }
+    window.addEventListener('scroll', updateStickyCta, { passive: true });
+    updateStickyCta();
+  </script>
 
 </body>
 </html>

@@ -1,620 +1,485 @@
-/**
- * server.js — Impact OS Funnel Designer backend.
- * Express server with SSE progress streaming, job management.
- * Automated stages: Ingest → Map (parse copy blocks). Then pauses for Claude Code
- * to take over Build → QA → Deploy using reference-based design.
- */
-
 import 'dotenv/config';
 import express from 'express';
-import { createServer } from 'http';
-import { mkdir, readFile, readdir, writeFile } from 'fs/promises';
-import { existsSync, createReadStream, readFileSync } from 'fs';
-import { join, extname, basename } from 'path';
-import { randomUUID } from 'crypto';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import multer from 'multer';
-import mime from 'mime-types';
 import session from 'express-session';
+import multer from 'multer';
+import AdmZip from 'adm-zip';
+import mammoth from 'mammoth';
+import { chromium } from 'playwright';
+import { randomBytes } from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
 
-import { ingest } from './ingest.js';
-import { mapCopy } from './mapper.js';
-import { deployAll } from './deploy.js';
+const PORT = parseInt(process.env.PORT || '3002', 10);
+const PASSWORD = process.env.APP_PASSWORD || 'impact2024';
+const ROOT = process.cwd();
+const funnelConfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'funnel-config.json'), 'utf8'));
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PORT = parseInt(process.env.PORT || '3002');
-const APP_PASSWORD = process.env.APP_PASSWORD;
-
-if (!APP_PASSWORD) {
-  console.error('ERROR: APP_PASSWORD is not set. Add it to your .env file.');
-  process.exit(1);
-}
-
-// ── In-memory job store ───────────────────────────────────────────────────────
-
-/** @type {Map<string, object>} */
+// ── In-memory job store ─────────────────────────────────────────────────────
 const jobs = new Map();
 
-/** @type {Map<string, Set<import('express').Response>>} */
-const sseClients = new Map();
-
-/**
- * Page types for the webinar funnel, in pipeline order.
- */
-const WEBINAR_PAGES = ['landing', 'upgrade', 'upsell', 'thank_you', 'replay', 'sales'];
-
-function createJob(id, clientName, funnelType) {
-  const job = {
-    id,
-    status: 'pending', // pending | ingesting | mapping | building | qa | review | deploying | complete | error
-    clientName,
-    funnelType,
-    brand: {
-      colors: [],
-      fonts: [],
-      logoPath: null,
-      photoPaths: [],
-      brandGuide: ''
-    },
-    pages: [], // populated during ingest
-    progress: [],
-    tempDir: `/tmp/funnel-${id}`,
-    createdAt: Date.now(),
-    error: null
-  };
-  jobs.set(id, job);
-  return job;
-}
-
-function createPageEntry(pageType) {
-  return {
-    pageType,
-    referencePath: null,
-    copyRaw: '',
-    copyBlocks: [],
-    htmlPath: null,
-    qaRounds: 0,
-    qaStatus: 'pending', // pending | building | qa | approved | changes_requested
-    qaFeedback: [],
-    screenshots: { mobile: null, tablet: null, desktop: null },
-    deployedUrl: null
-  };
-}
-
-// ── SSE helpers ───────────────────────────────────────────────────────────────
-
-function emitProgress(jobId, message) {
-  const job = jobs.get(jobId);
-  if (job) job.progress.push(message);
-
-  const clients = sseClients.get(jobId);
-  if (!clients) return;
-  const data = JSON.stringify({ message, ts: Date.now() });
-  for (const res of clients) {
-    res.write(`data: ${data}\n\n`);
-  }
-}
-
-function emitStatus(jobId, status, extra = {}) {
-  const job = jobs.get(jobId);
-  if (job) job.status = status;
-
-  const clients = sseClients.get(jobId);
-  if (!clients) return;
-  const data = JSON.stringify({ status, ...extra, ts: Date.now() });
-  for (const res of clients) {
-    res.write(`event: status\ndata: ${data}\n\n`);
-  }
-}
-
-function emitPageStatus(jobId, pageIndex, pageStatus, extra = {}) {
-  const job = jobs.get(jobId);
-  if (job && job.pages[pageIndex]) {
-    job.pages[pageIndex].qaStatus = pageStatus;
-  }
-
-  const clients = sseClients.get(jobId);
-  if (!clients) return;
-  const data = JSON.stringify({ pageIndex, status: pageStatus, ...extra, ts: Date.now() });
-  for (const res of clients) {
-    res.write(`event: page\ndata: ${data}\n\n`);
-  }
-}
-
-// ── Pipeline orchestrator ─────────────────────────────────────────────────────
-
-async function runPipeline(job) {
-  const { id, tempDir } = job;
-  const emit = msg => emitProgress(id, msg);
-
-  try {
-    await mkdir(tempDir, { recursive: true });
-    emit('Pipeline started.');
-
-    // Stage 1 — Ingest
-    emitStatus(id, 'ingesting');
-    emit('Stage 1/5 — Ingesting brand package + copy documents...');
-    await ingest(job, emit);
-
-    // Stage 2 — Map (parse copy into content blocks)
-    emitStatus(id, 'mapping');
-    emit('Stage 2/5 — Parsing copy into content blocks...');
-    await mapCopy(job, emit);
-
-    // Pipeline pauses here — Claude Code handles Build → QA → Deploy
-    emitStatus(id, 'mapped');
-    emit('Ingest + Map complete. Ready for Claude Code to build pages.');
-
-  } catch (err) {
-    console.error(`[job ${id}] Pipeline error:`, err);
-    job.status = 'error';
-    job.error = err.message;
-    emit(`Error: ${err.message}`);
-    emitStatus(id, 'error', { error: err.message });
-  }
-}
-
-// ── Express setup ─────────────────────────────────────────────────────────────
-
+// ── Express setup ───────────────────────────────────────────────────────────
 const app = express();
-
-// CORS — allow cross-origin access from deployed UI (Vercel, etc.)
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
-  next();
-});
-
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json());
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'funnel-designer-secret',
+  secret: randomBytes(32).toString('hex'),
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 }
+  cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
-app.use(express.static(join(__dirname, 'public')));
 
-// Multer: store uploads in project uploads/ dir keyed by job id
-const uploadStorage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    const dir = join(__dirname, 'uploads', req.uploadJobId || 'tmp');
-    await mkdir(dir, { recursive: true });
+// Multer — preserve original filenames
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    const dir = path.join(ROOT, 'uploads', 'tmp');
+    fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  }
+  filename: (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
 });
+const upload = multer({ storage });
 
-const upload = multer({
-  storage: uploadStorage,
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB max
-});
+// Static files
+app.use('/output', express.static(path.join(ROOT, 'output')));
+app.use('/brand_assets', express.static(path.join(ROOT, 'brand_assets')));
+app.use(express.static(path.join(ROOT, 'public')));
 
-// ── Routes ────────────────────────────────────────────────────────────────────
-
-/**
- * POST /api/auth
- */
-app.post('/api/auth', (req, res) => {
-  const { password } = req.body;
-  if (password === APP_PASSWORD) {
-    req.session.authed = true;
-    res.json({ ok: true });
-  } else {
-    res.status(401).json({ ok: false, error: 'Incorrect password' });
-  }
-});
-
-/**
- * GET /api/auth/check
- */
-app.get('/api/auth/check', (req, res) => {
-  // Check session or Authorization header
-  let authed = !!req.session?.authed;
-  if (!authed) {
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ') && authHeader.slice(7) === APP_PASSWORD) {
-      authed = true;
-    }
-  }
-  res.json({ authed });
-});
-
-// Auth guard — protect all /api/* routes below this point
-// Supports session cookies (local) OR Authorization header (remote UI)
-// Exempt page HTML preview and asset endpoints so Playwright can screenshot them
-app.use('/api', (req, res, next) => {
-  if (req.path === '/auth' || req.path === '/auth/check') return next();
-  if (/^\/jobs\/[^/]+\/pages\/\d+\/html$/.test(req.path) && req.method === 'GET') return next();
-  if (/^\/jobs\/[^/]+\/assets\//.test(req.path) && req.method === 'GET') return next();
-
-  // Check session auth first
-  if (req.session?.authed) return next();
-
-  // Fallback: Authorization header (Bearer <password>)
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.slice(7);
-    if (token === APP_PASSWORD) return next();
-  }
-
-  return res.status(401).json({ error: 'Not authenticated' });
-});
-
-/**
- * POST /api/funnel
- * Multipart: brand (zip), copies (docx files), clientName, funnelType
- */
-app.post('/api/funnel', (req, res, next) => {
-  const jobId = randomUUID().split('-')[0];
-  req.uploadJobId = jobId;
+// ── Auth middleware ──────────────────────────────────────────────────────────
+function requireAuth(req, res, next) {
+  if (!req.session?.authed) return res.status(401).json({ error: 'Not authenticated' });
   next();
-}, upload.fields([
+}
+
+// ── SSE helpers ─────────────────────────────────────────────────────────────
+function emitSSE(jobId, event, data) {
+  const job = jobs.get(jobId);
+  if (!job) return;
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of job.sseClients) {
+    try { client.write(payload); } catch { /* client gone */ }
+  }
+}
+
+function emitMessage(jobId, message) {
+  emitSSE(jobId, 'message', { message });
+}
+
+// ── 1. POST /api/auth — Login ───────────────────────────────────────────────
+app.post('/api/auth', (req, res) => {
+  if (req.body.password === PASSWORD) {
+    req.session.authed = true;
+    return res.json({ ok: true });
+  }
+  res.json({ ok: false });
+});
+
+// ── 2. GET /api/auth/check — Session check ──────────────────────────────────
+app.get('/api/auth/check', (req, res) => {
+  res.json({ authed: !!req.session?.authed });
+});
+
+// Auth gate for all remaining /api/* routes
+app.use('/api', requireAuth);
+
+// ── 3. POST /api/funnel — Create job ────────────────────────────────────────
+app.post('/api/funnel', upload.fields([
   { name: 'brand', maxCount: 1 },
   { name: 'copies', maxCount: 10 }
-]), (req, res) => {
-  const { clientName, funnelType } = req.body;
-
-  if (!clientName) {
-    return res.status(400).json({ error: 'clientName is required' });
-  }
-  if (!req.files?.brand?.[0]) {
-    return res.status(400).json({ error: 'Brand package (.zip) is required' });
-  }
-  if (!req.files?.copies?.length) {
-    return res.status(400).json({ error: 'At least one copy document (.docx) is required' });
-  }
-
-  const jobId = req.uploadJobId;
-  const job = createJob(jobId, clientName.trim(), funnelType || 'webinar');
-
-  // Attach upload paths to job for ingest stage
-  job.uploadDir = join(__dirname, 'uploads', jobId);
-  job.brandZipPath = req.files.brand[0].path;
-  job.copyDocPaths = req.files.copies.map(f => ({
-    path: f.path,
-    originalName: f.originalname
-  }));
-
-  // Run pipeline in background
-  runPipeline(job).catch(err => console.error('Unhandled pipeline error:', err));
-
-  res.json({ jobId });
-});
-
-/**
- * GET /api/funnel-config — reference URLs and metadata per funnel type.
- */
-app.get('/api/funnel-config', (req, res) => {
+]), async (req, res) => {
   try {
-    const config = JSON.parse(readFileSync(join(__dirname, 'funnel-config.json'), 'utf-8'));
-    res.json(config);
-  } catch (e) {
-    res.status(500).json({ error: 'Could not load funnel-config.json' });
+    const { clientName, funnelType } = req.body;
+    if (!clientName || !funnelType) return res.status(400).json({ error: 'Missing fields' });
+
+    const config = funnelConfig[funnelType];
+    if (!config) return res.status(400).json({ error: `Unknown funnel type: ${funnelType}` });
+
+    const jobId = randomBytes(4).toString('hex');
+    const jobDir = path.join(ROOT, 'uploads', jobId);
+    fs.mkdirSync(jobDir, { recursive: true });
+
+    // Move uploaded files to job directory
+    const brandFile = req.files?.brand?.[0];
+    const copyFilesList = req.files?.copies || [];
+
+    let brandZipPath = null;
+    if (brandFile) {
+      brandZipPath = path.join(jobDir, 'brand.zip');
+      fs.renameSync(brandFile.path, brandZipPath);
+    }
+
+    const copyPaths = [];
+    for (const f of copyFilesList) {
+      const dest = path.join(jobDir, f.originalname.replace(/^\d+-/, ''));
+      fs.renameSync(f.path, dest);
+      copyPaths.push(dest);
+    }
+
+    // Build pages array from funnel config
+    const pages = config.pages.map(p => {
+      const shortType = p.type.replace(/_page$/, '');
+      return {
+        pageType: shortType,
+        name: p.name,
+        outputDir: p.output_dir,
+        configType: p.type,
+        hasCopy: false,
+        copyText: '',
+        qaStatus: 'pending',
+        feedback: null
+      };
+    });
+
+    const job = {
+      id: jobId,
+      clientName,
+      funnelType,
+      status: 'ingesting',
+      brandZipPath,
+      copyPaths,
+      pages,
+      sseClients: new Set(),
+      deployUrl: null
+    };
+    jobs.set(jobId, job);
+
+    // Respond immediately, process async
+    res.json({ jobId });
+
+    // ── Async ingestion pipeline ──
+    try {
+      emitSSE(jobId, 'status', { status: 'ingesting' });
+      emitMessage(jobId, `Starting funnel: ${clientName} (${funnelType})`);
+
+      // Extract brand ZIP → brand_assets/
+      if (brandZipPath) {
+        emitMessage(jobId, 'Extracting brand package...');
+        const zip = new AdmZip(brandZipPath);
+        const entries = zip.getEntries();
+        const brandDir = path.join(ROOT, 'brand_assets');
+        fs.mkdirSync(brandDir, { recursive: true });
+
+        // Detect nested top-level folder
+        const topFolders = new Set();
+        for (const e of entries) {
+          const first = e.entryName.split('/')[0];
+          if (first) topFolders.add(first);
+        }
+        const hasWrapper = topFolders.size === 1 &&
+          entries.every(e => e.entryName.startsWith([...topFolders][0] + '/') || e.entryName === [...topFolders][0]);
+        const prefix = hasWrapper ? [...topFolders][0] + '/' : '';
+
+        for (const entry of entries) {
+          if (entry.isDirectory) continue;
+          let entryPath = entry.entryName;
+          if (prefix && entryPath.startsWith(prefix)) entryPath = entryPath.slice(prefix.length);
+          if (!entryPath) continue;
+          const destPath = path.join(brandDir, entryPath);
+          fs.mkdirSync(path.dirname(destPath), { recursive: true });
+          fs.writeFileSync(destPath, entry.getData());
+        }
+        emitMessage(jobId, '\u2713 Brand assets extracted');
+
+        // Copy photos/logos to output/ for page preview
+        const photosDir = path.join(brandDir, 'photos');
+        const logosDir = path.join(brandDir, 'logos');
+        if (fs.existsSync(photosDir)) {
+          const dest = path.join(ROOT, 'output', 'photos');
+          fs.mkdirSync(dest, { recursive: true });
+          fs.cpSync(photosDir, dest, { recursive: true });
+          emitMessage(jobId, `\u2713 Photos copied to output/ (${fs.readdirSync(dest).length} files)`);
+        }
+        if (fs.existsSync(logosDir)) {
+          const dest = path.join(ROOT, 'output', 'logos');
+          fs.mkdirSync(dest, { recursive: true });
+          fs.cpSync(logosDir, dest, { recursive: true });
+          emitMessage(jobId, `\u2713 Logos copied to output/ (${fs.readdirSync(dest).length} files)`);
+        }
+      }
+
+      // Parse each .docx with mammoth → map to pages
+      emitMessage(jobId, 'Processing copy documents...');
+      for (const cp of copyPaths) {
+        const fname = path.basename(cp, '.docx');
+        try {
+          const result = await mammoth.extractRawText({ path: cp });
+          const text = result.value;
+          for (const page of pages) {
+            if (fname === page.pageType || fname === page.configType || page.configType.startsWith(fname)) {
+              page.hasCopy = true;
+              page.copyText = text;
+              emitMessage(jobId, `\u2713 Mapped ${fname}.docx \u2192 ${page.name}`);
+              break;
+            }
+          }
+        } catch {
+          emitMessage(jobId, `Warning: Could not parse ${fname}.docx`);
+        }
+      }
+
+      job.status = 'mapped';
+      emitSSE(jobId, 'status', { status: 'mapped' });
+      emitMessage(jobId, '\u2713 All copy mapped. Ready for Claude Code to build pages.');
+      emitMessage(jobId, 'Waiting for pages to be built...');
+    } catch (err) {
+      job.status = 'error';
+      emitSSE(jobId, 'status', { status: 'error', error: err.message });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-/**
- * GET /api/jobs — list all jobs (summary only), newest first.
- */
-app.get('/api/jobs', (req, res) => {
-  const list = Array.from(jobs.values())
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .map(j => ({
-      id: j.id,
-      clientName: j.clientName,
-      funnelType: j.funnelType,
-      status: j.status,
-      pageCount: j.pages?.length || 0,
-      createdAt: j.createdAt
-    }));
+// ── 4. GET /api/jobs/:jobId — Get job state ─────────────────────────────────
+app.get('/api/jobs/:jobId', (req, res) => {
+  const job = jobs.get(req.params.jobId);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  const { sseClients, ...safe } = job;
+  res.json(safe);
+});
+
+// ── GET /api/jobs — List all jobs (session restore) ─────────────────────────
+app.get('/api/jobs', (_req, res) => {
+  const list = [];
+  for (const [, job] of jobs) {
+    const { sseClients, ...safe } = job;
+    list.push(safe);
+  }
   res.json(list);
 });
 
-/**
- * GET /api/jobs/:id
- */
-app.get('/api/jobs/:id', (req, res) => {
-  const job = jobs.get(req.params.id);
+// ── 5. GET /api/jobs/:jobId/stream — SSE stream ────────────────────────────
+app.get('/api/jobs/:jobId/stream', (req, res) => {
+  const job = jobs.get(req.params.jobId);
   if (!job) return res.status(404).json({ error: 'Job not found' });
 
-  // Strip large fields for the response
-  const safeJob = {
-    id: job.id,
-    status: job.status,
-    clientName: job.clientName,
-    funnelType: job.funnelType,
-    brand: {
-      colors: job.brand.colors,
-      fonts: job.brand.fonts,
-      hasLogo: !!job.brand.logoPath,
-      photoCount: job.brand.photoPaths.length
-    },
-    pages: job.pages.map(p => ({
-      pageType: p.pageType,
-      qaStatus: p.qaStatus,
-      qaRounds: p.qaRounds,
-      referencePath: p.referencePath,
-      copyBlockCount: p.copyBlocks?.length || 0,
-      deployedUrl: p.deployedUrl,
-      hasScreenshots: !!(p.screenshots.mobile || p.screenshots.desktop),
-      hasCopy: p.copyRaw !== null
-    })),
-    progress: job.progress,
-    createdAt: job.createdAt,
-    error: job.error
-  };
-
-  res.json(safeJob);
-});
-
-/**
- * GET /api/jobs/:id/stream
- */
-app.get('/api/jobs/:id/stream', (req, res) => {
-  const job = jobs.get(req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
-
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  res.flushHeaders();
-
-  // Register SSE client
-  if (!sseClients.has(req.params.id)) sseClients.set(req.params.id, new Set());
-  sseClients.get(req.params.id).add(res);
-
-  // Replay past messages
-  for (const msg of job.progress) {
-    res.write(`data: ${JSON.stringify({ message: msg, ts: Date.now() })}\n\n`);
-  }
-
-  // Replay current page statuses
-  job.pages.forEach((page, i) => {
-    const data = JSON.stringify({ pageIndex: i, status: page.qaStatus, ts: Date.now() });
-    res.write(`event: page\ndata: ${data}\n\n`);
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive'
   });
 
-  // If terminal state, emit status immediately
-  if (['mapped', 'review', 'complete', 'error'].includes(job.status)) {
-    const payload = { status: job.status, ts: Date.now() };
-    if (job.error) payload.error = job.error;
-    res.write(`event: status\ndata: ${JSON.stringify(payload)}\n\n`);
-  }
+  job.sseClients.add(res);
 
-  // Heartbeat
-  const heartbeat = setInterval(() => res.write(': ping\n\n'), 20000);
+  // Send current status on connect
+  res.write(`event: status\ndata: ${JSON.stringify({ status: job.status })}\n\n`);
 
-  req.on('close', () => {
-    clearInterval(heartbeat);
-    sseClients.get(req.params.id)?.delete(res);
+  // Send current page statuses
+  job.pages.forEach((p, i) => {
+    if (p.qaStatus !== 'pending') {
+      res.write(`event: page\ndata: ${JSON.stringify({ pageIndex: i, status: p.qaStatus })}\n\n`);
+    }
   });
+
+  req.on('close', () => job.sseClients.delete(res));
 });
 
-/**
- * GET /api/jobs/:id/pages/:idx/screenshot/:viewport
- * Serves a QA screenshot image.
- */
-app.get('/api/jobs/:id/pages/:idx/screenshot/:viewport', (req, res) => {
-  const job = jobs.get(req.params.id);
+// ── 6. GET /api/jobs/:jobId/pages/:idx/screenshot/:viewport ─────────────────
+app.get('/api/jobs/:jobId/pages/:idx/screenshot/:viewport', async (req, res) => {
+  const job = jobs.get(req.params.jobId);
   if (!job) return res.status(404).json({ error: 'Job not found' });
 
-  const page = job.pages[parseInt(req.params.idx)];
+  const idx = parseInt(req.params.idx, 10);
+  const page = job.pages[idx];
   if (!page) return res.status(404).json({ error: 'Page not found' });
 
-  const viewport = req.params.viewport; // mobile, tablet, desktop
-  const screenshotPath = page.screenshots[viewport];
-  if (!screenshotPath || !existsSync(screenshotPath)) {
-    return res.status(404).json({ error: 'Screenshot not found' });
+  const viewport = req.params.viewport;
+  const width = viewport === 'mobile' ? 375 : 1280;
+
+  const screenshotDir = path.join(ROOT, 'temporary screenshots');
+  fs.mkdirSync(screenshotDir, { recursive: true });
+  const cachePath = path.join(screenshotDir, `${job.id}-${page.pageType}-${viewport}.png`);
+
+  // Serve cached screenshot
+  if (fs.existsSync(cachePath)) {
+    return res.sendFile(cachePath);
   }
 
-  res.setHeader('Content-Type', 'image/png');
-  createReadStream(screenshotPath).pipe(res);
-});
-
-/**
- * GET /api/jobs/:id/assets/*
- * Serves brand assets (logos, photos) from the job's output_assets directory.
- */
-app.get('/api/jobs/:id/assets/*', (req, res) => {
-  const job = jobs.get(req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
-
-  const assetPath = req.params[0];
-  if (assetPath.includes('..')) return res.status(400).json({ error: 'Invalid path' });
-
-  const fullPath = join(job.tempDir, 'output_assets', assetPath);
-  if (!existsSync(fullPath)) return res.status(404).json({ error: 'Asset not found' });
-
-  res.setHeader('Content-Type', mime.lookup(fullPath) || 'application/octet-stream');
-  createReadStream(fullPath).pipe(res);
-});
-
-/**
- * GET /api/jobs/:id/pages/:idx/html
- * Serves the generated HTML for preview.
- */
-app.get('/api/jobs/:id/pages/:idx/html', (req, res) => {
-  const job = jobs.get(req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
-
-  const page = job.pages[parseInt(req.params.idx)];
-  if (!page || !page.htmlPath || !existsSync(page.htmlPath)) {
-    return res.status(404).json({ error: 'HTML not found' });
+  // Check page exists
+  const htmlPath = path.join(ROOT, page.outputDir, 'index.html');
+  if (!fs.existsSync(htmlPath)) {
+    return res.status(404).json({ error: 'Page not built yet' });
   }
 
-  res.setHeader('Content-Type', 'text/html');
-  createReadStream(page.htmlPath).pipe(res);
+  let browser;
+  try {
+    browser = await chromium.launch();
+    const ctx = await browser.newContext({ viewport: { width, height: 800 } });
+    const bp = await ctx.newPage();
+    await bp.goto(`http://localhost:${PORT}/output/${page.configType}/`, { waitUntil: 'networkidle', timeout: 30000 });
+    await bp.screenshot({ path: cachePath, fullPage: true });
+    await browser.close();
+    browser = null;
+    res.sendFile(cachePath);
+  } catch (err) {
+    if (browser) await browser.close().catch(() => {});
+    res.status(500).json({ error: `Screenshot failed: ${err.message}` });
+  }
 });
 
-/**
- * POST /api/jobs/:id/pages/:idx/approve
- */
-app.post('/api/jobs/:id/pages/:idx/approve', (req, res) => {
-  const job = jobs.get(req.params.id);
+// ── 7. POST /api/jobs/:jobId/pages/:idx/approve ─────────────────────────────
+app.post('/api/jobs/:jobId/pages/:idx/approve', (req, res) => {
+  const job = jobs.get(req.params.jobId);
   if (!job) return res.status(404).json({ error: 'Job not found' });
 
-  const page = job.pages[parseInt(req.params.idx)];
+  const idx = parseInt(req.params.idx, 10);
+  const page = job.pages[idx];
   if (!page) return res.status(404).json({ error: 'Page not found' });
 
   page.qaStatus = 'approved';
-  emitPageStatus(job.id, parseInt(req.params.idx), 'approved');
-  emitProgress(job.id, `${page.pageType} page approved. ✓`);
+  page.feedback = null;
+  emitSSE(job.id, 'page', { pageIndex: idx, status: 'approved' });
+
+  // If all approved → transition to review
+  if (job.pages.every(p => p.qaStatus === 'approved')) {
+    job.status = 'review';
+    emitSSE(job.id, 'status', { status: 'review' });
+    emitMessage(job.id, '\u2713 All pages approved \u2014 ready for deploy');
+  }
 
   res.json({ ok: true });
 });
 
-/**
- * POST /api/jobs/:id/pages/:idx/request-changes
- */
-app.post('/api/jobs/:id/pages/:idx/request-changes', (req, res) => {
-  const job = jobs.get(req.params.id);
+// ── 8. POST /api/jobs/:jobId/pages/:idx/request-changes ─────────────────────
+app.post('/api/jobs/:jobId/pages/:idx/request-changes', (req, res) => {
+  const job = jobs.get(req.params.jobId);
   if (!job) return res.status(404).json({ error: 'Job not found' });
 
-  const idx = parseInt(req.params.idx);
+  const idx = parseInt(req.params.idx, 10);
   const page = job.pages[idx];
   if (!page) return res.status(404).json({ error: 'Page not found' });
 
-  const { feedback } = req.body;
-  if (!feedback) return res.status(400).json({ error: 'feedback is required' });
-
-  page.qaFeedback.push(feedback);
   page.qaStatus = 'changes_requested';
-  emitPageStatus(job.id, idx, 'changes_requested');
-  emitProgress(job.id, `${page.pageType}: changes requested — "${feedback}"`);
+  page.feedback = req.body.feedback || '';
+
+  // Invalidate screenshot cache
+  const screenshotDir = path.join(ROOT, 'temporary screenshots');
+  for (const vp of ['mobile', 'desktop']) {
+    const cp = path.join(screenshotDir, `${job.id}-${page.pageType}-${vp}.png`);
+    if (fs.existsSync(cp)) fs.unlinkSync(cp);
+  }
+
+  emitSSE(job.id, 'page', { pageIndex: idx, status: 'changes_requested' });
+  emitMessage(job.id, `Changes requested for ${page.name}: ${page.feedback}`);
+
+  if (job.status === 'review') {
+    job.status = 'building';
+    emitSSE(job.id, 'status', { status: 'building' });
+  }
 
   res.json({ ok: true });
 });
 
-/**
- * GET /api/jobs/:id/full
- * Returns full job data including raw copy, brand paths, slots — for Claude Code.
- */
-app.get('/api/jobs/:id/full', (req, res) => {
-  const job = jobs.get(req.params.id);
+// ── 9. POST /api/jobs/:jobId/deploy — Vercel deploy ─────────────────────────
+app.post('/api/jobs/:jobId/deploy', (req, res) => {
+  const job = jobs.get(req.params.jobId);
   if (!job) return res.status(404).json({ error: 'Job not found' });
 
-  // Return the full job object (minus SSE internals) with asset URLs
-  const assetBaseUrl = `/api/jobs/${job.id}/assets`;
-  const fullJob = {
-    id: job.id,
-    status: job.status,
-    clientName: job.clientName,
-    funnelType: job.funnelType,
-    brand: {
-      ...job.brand,
-      assetBaseUrl,
-      logoUrl: job.brand.logoPath ? `${assetBaseUrl}/logos/${basename(job.brand.logoPath)}` : null,
-      photoUrls: (job.brand.photoPaths || []).map(p => ({
-        filename: basename(p),
-        url: `${assetBaseUrl}/photos/${basename(p)}`
-      }))
-    },
-    pages: job.pages,
-    tempDir: job.tempDir,
-    progress: job.progress,
-    error: job.error
-  };
-
-  res.json(fullJob);
-});
-
-/**
- * POST /api/jobs/:id/pages/:idx/html
- * Upload generated HTML for a page. Body: { html: "..." }
- */
-app.post('/api/jobs/:id/pages/:idx/html', async (req, res) => {
-  const job = jobs.get(req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
-
-  const idx = parseInt(req.params.idx);
-  const page = job.pages[idx];
-  if (!page) return res.status(404).json({ error: 'Page not found' });
-
-  const { html } = req.body;
-  if (!html) return res.status(400).json({ error: 'html is required' });
-
-  // Save HTML to output dir
-  const outputDir = join(job.tempDir, 'output', page.pageType);
-  await mkdir(outputDir, { recursive: true });
-  const htmlPath = join(outputDir, 'index.html');
-  await writeFile(htmlPath, html, 'utf-8');
-  page.htmlPath = htmlPath;
-  page.qaStatus = 'pending';
-
-  emitProgress(job.id, `${page.pageType} HTML saved. ✓`);
-  emitPageStatus(job.id, idx, 'pending');
-
-  res.json({ ok: true, htmlPath });
-});
-
-/**
- * POST /api/jobs/:id/pages/:idx/screenshot
- * Trigger Playwright screenshots for a page. Returns screenshot paths.
- */
-app.post('/api/jobs/:id/pages/:idx/screenshot', async (req, res) => {
-  const job = jobs.get(req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
-
-  const idx = parseInt(req.params.idx);
-  const page = job.pages[idx];
-  if (!page) return res.status(404).json({ error: 'Page not found' });
-  if (!page.htmlPath) return res.status(400).json({ error: 'No HTML generated yet' });
+  const clientSlug = job.clientName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const tmpDir = `/tmp/vercel-deploy-${clientSlug}-funnel`;
 
   try {
-    const { screenshotPage } = await import('./qa.js');
-    const round = (page.qaRounds || 0) + 1;
-    const screenshots = await screenshotPage(job, idx, round);
-    emitProgress(job.id, `${page.pageType} screenshots taken (round ${round}). ✓`);
-    res.json({ ok: true, screenshots });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+    // Clean and create temp directory
+    if (fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true });
+    fs.mkdirSync(tmpDir, { recursive: true });
 
-/**
- * POST /api/jobs/:id/deploy
- */
-app.post('/api/jobs/:id/deploy', async (req, res) => {
-  const job = jobs.get(req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
+    // Copy each page, rewriting asset paths
+    for (const page of job.pages) {
+      const srcHtml = path.join(ROOT, page.outputDir, 'index.html');
+      if (!fs.existsSync(srcHtml)) {
+        return res.status(400).json({ error: `Page not built: ${page.name}` });
+      }
 
-  // Check all pages are approved
-  const unapproved = job.pages.filter(p => p.qaStatus !== 'approved');
-  if (unapproved.length > 0) {
-    return res.status(400).json({
-      error: `${unapproved.length} page(s) not yet approved: ${unapproved.map(p => p.pageType).join(', ')}`
+      const destDir = path.join(tmpDir, page.configType);
+      fs.mkdirSync(destDir, { recursive: true });
+
+      let html = fs.readFileSync(srcHtml, 'utf8');
+      // Rewrite all photo/logo paths to relative ../photos/ and ../logos/
+      html = html.replace(/(["'(])(?:\.\.\/)*(?:output\/)?(?:brand_assets\/)?photos\//g, '$1../photos/');
+      html = html.replace(/(["'(])(?:\.\.\/)*(?:output\/)?(?:brand_assets\/)?logos\//g, '$1../logos/');
+      fs.writeFileSync(path.join(destDir, 'index.html'), html);
+    }
+
+    // Copy photos and logos from both output/ and brand_assets/
+    fs.mkdirSync(path.join(tmpDir, 'photos'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, 'logos'), { recursive: true });
+
+    for (const src of [path.join(ROOT, 'brand_assets', 'photos'), path.join(ROOT, 'output', 'photos')]) {
+      if (fs.existsSync(src)) fs.cpSync(src, path.join(tmpDir, 'photos'), { recursive: true });
+    }
+    for (const src of [path.join(ROOT, 'brand_assets', 'logos'), path.join(ROOT, 'output', 'logos')]) {
+      if (fs.existsSync(src)) fs.cpSync(src, path.join(tmpDir, 'logos'), { recursive: true });
+    }
+
+    // Root redirect → landing_page
+    fs.writeFileSync(path.join(tmpDir, 'index.html'),
+      '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=/landing_page/"></head><body>Redirecting...</body></html>');
+
+    emitMessage(job.id, 'Deploying to Vercel...');
+
+    const output = execSync('npx vercel deploy --prod --yes', {
+      cwd: tmpDir,
+      encoding: 'utf8',
+      timeout: 120000
     });
-  }
 
-  const emit = msg => emitProgress(job.id, msg);
+    const deployUrl = output.trim().split('\n').pop().trim();
+    job.deployUrl = deployUrl;
+    job.status = 'deployed';
 
-  emitStatus(job.id, 'deploying');
-  emit('Stage 5/5 — Deploying to Vercel...');
+    emitSSE(job.id, 'status', { status: 'deployed' });
+    emitMessage(job.id, `\u2713 Deployed to ${deployUrl}`);
 
-  try {
-    const urls = await deployAll(job, emit);
-    job.status = 'complete';
-    emitStatus(job.id, 'complete', { urls });
-    emit('All pages deployed. ✓');
-    res.json({ ok: true, urls });
+    // Build per-page URLs
+    const urls = {};
+    for (const page of job.pages) {
+      urls[page.pageType] = `${deployUrl}/${page.configType}/`;
+    }
+
+    // Cleanup temp dir
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+
+    res.json({ urls });
   } catch (err) {
-    emit(`Deploy error: ${err.message}`);
-    emitStatus(job.id, 'error', { error: err.message });
-    res.status(500).json({ error: err.message });
+    if (fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
+    res.status(500).json({ error: `Deploy failed: ${err.message}` });
   }
 });
 
-// ── Start server ──────────────────────────────────────────────────────────────
+// ── 10. POST /api/jobs/:jobId/progress — Internal helper for Claude Code ────
+app.post('/api/jobs/:jobId/progress', (req, res) => {
+  const job = jobs.get(req.params.jobId);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
 
-const server = createServer(app);
-server.listen(PORT, () => {
-  console.log(`\n  Impact OS — Funnel Designer`);
-  console.log(`  Running at http://localhost:${PORT}\n`);
+  const { message, pageIndex, pageStatus, jobStatus } = req.body;
+
+  if (message) emitMessage(job.id, message);
+
+  if (pageIndex !== undefined && pageStatus) {
+    const page = job.pages[pageIndex];
+    if (page) {
+      page.qaStatus = pageStatus;
+      emitSSE(job.id, 'page', { pageIndex, status: pageStatus });
+
+      // Invalidate screenshot cache when page changes
+      if (['building', 'qa', 'changes_requested'].includes(pageStatus)) {
+        const screenshotDir = path.join(ROOT, 'temporary screenshots');
+        for (const vp of ['mobile', 'desktop']) {
+          const cp = path.join(screenshotDir, `${job.id}-${page.pageType}-${vp}.png`);
+          if (fs.existsSync(cp)) fs.unlinkSync(cp);
+        }
+      }
+    }
+  }
+
+  if (jobStatus) {
+    job.status = jobStatus;
+    emitSSE(job.id, 'status', { status: jobStatus });
+  }
+
+  res.json({ ok: true });
+});
+
+// ── Start ───────────────────────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`Funnel Designer server running at http://localhost:${PORT}`);
 });

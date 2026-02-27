@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Designer Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg:      '#0C0C10',
+            s1:      '#141418',
+            s2:      '#1C1C22',
+            s3:      '#242430',
+            bd:      '#2A2A34',
+            'bd-h':  '#3A3A48',
+            'bd-a':  '#4A4A58',
+            acc:     '#D4A853',
+            'acc-h': '#E0B964',
+            'acc-m': 'rgba(212,168,83,0.10)',
+            tp:      '#ECECF0',
+            ts:      '#8A8A96',
+            tm:      '#5A5A66',
+            ok:      '#4ADE80',
+            err:     '#F87171',
+            info:    '#60A5FA',
+          },
+          fontFamily: {
+            display: ['Syne', 'sans-serif'],
+            body:    ['Outfit', 'sans-serif'],
+            mono:    ['"JetBrains Mono"', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; -webkit-font-smoothing: antialiased; overflow: hidden; }
+
+    /* Noise overlay */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2A2A34; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3A3A48; }
+
+    /* Custom file input */
+    .file-label {
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .file-label:hover { border-color: #3A3A48; background: #1C1C22; }
+    .file-label.has-file { border-color: #D4A853; background: rgba(212,168,83,0.08); }
+
+    /* Textarea auto-resize */
+    .edit-field {
+      resize: none;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .edit-field:focus {
+      border-color: #D4A853;
+      box-shadow: 0 0 0 2px rgba(212,168,83,0.15);
+      outline: none;
+    }
+    .edit-field.modified {
+      border-left: 2px solid #D4A853;
+    }
+
+    /* Section card */
+    .section-card {
+      transition: border-color 0.2s;
+    }
+    .section-card:hover { border-color: #3A3A48; }
+    .section-body {
+      max-height: 2000px;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.25s ease,
+                  padding 0.35s ease;
+      opacity: 1;
+    }
+    .section-body.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    /* Toast */
+    .toast {
+      animation: toastIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .toast.out {
+      animation: toastOut 0.3s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to   { opacity: 0; transform: translateY(-8px) scale(0.96); }
+    }
+
+    /* Pulse dot */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .pulse-dot { animation: pulse 2s ease-in-out infinite; }
+
+    /* Spin */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+
+    /* Button press */
+    .btn-press { transition: transform 0.1s, opacity 0.15s; }
+    .btn-press:hover { opacity: 0.92; }
+    .btn-press:active { transform: scale(0.97); }
+    .btn-press:focus-visible { outline: 2px solid #D4A853; outline-offset: 2px; }
+
+    /* Export dropdown */
+    .export-menu {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .export-menu.open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .export-option {
+      border: none; background: none; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .export-option:hover { background: #1C1C22; }
+    .export-option:active { background: #242430; }
+  </style>
+</head>
+<body class="bg-bg text-tp font-body">
+
+  <!-- ══════════ TOP BAR ══════════ -->
+  <header class="bg-s1 border-b border-bd" style="height: 116px;">
+    <!-- Row 1: Brand + Client + Status -->
+    <div class="flex items-center justify-between px-6 h-12 border-b border-bd/50">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded bg-acc/20 flex items-center justify-center">
+          <svg class="w-3.5 h-3.5 text-acc" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+          </svg>
+        </div>
+        <span class="font-display font-700 text-sm tracking-wide text-tp">Web Designer Studio</span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="font-mono text-[10px] font-500 text-tm uppercase tracking-widest">Client</span>
+          <select id="client-select" class="bg-s2 border border-bd rounded px-3 py-1.5 text-xs font-500 text-tp focus:border-acc focus:outline-none cursor-pointer" style="min-width: 160px;">
+            <option value="">Loading...</option>
+          </select>
+        </div>
+        <div id="status-indicator" class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-tm"></span>
+          <span class="font-mono text-[10px] text-tm">Disconnected</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Inputs + Build -->
+    <div class="flex items-center gap-3 px-6 h-16">
+      <!-- Brand Upload -->
+      <div class="flex-shrink-0">
+        <label class="file-label flex items-center gap-2 bg-s2 border border-bd rounded px-3 py-2" id="brand-label">
+          <svg class="w-4 h-4 text-ts flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+          </svg>
+          <span class="text-xs font-500 text-ts" id="brand-text">Brand Package</span>
+          <input type="file" accept=".zip" class="hidden" id="brand-input">
+        </label>
+      </div>
+
+      <!-- Copy Upload -->
+      <div class="flex-shrink-0">
+        <label class="file-label flex items-center gap-2 bg-s2 border border-bd rounded px-3 py-2" id="copy-label">
+          <svg class="w-4 h-4 text-ts flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+          </svg>
+          <span class="text-xs font-500 text-ts" id="copy-text">Copy Document</span>
+          <input type="file" accept=".docx,.doc,.txt,.pdf" class="hidden" id="copy-input">
+        </label>
+      </div>
+
+      <!-- Template URL -->
+      <div class="flex-1 max-w-md">
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-tm" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.914-3.311a4.5 4.5 0 00-1.242-7.244l4.5-4.5a4.5 4.5 0 016.364 6.364l-1.757 1.757"/>
+          </svg>
+          <input type="text" id="template-url" placeholder="Template URL (reference page to match)" class="w-full bg-s2 border border-bd rounded pl-9 pr-3 py-2 text-xs font-400 text-tp placeholder:text-tm focus:border-acc focus:outline-none">
+        </div>
+      </div>
+
+      <!-- Spacer -->
+      <div class="flex-1"></div>
+
+      <!-- Export Dropdown -->
+      <div class="relative" id="export-wrapper">
+        <button id="export-btn" class="btn-press flex items-center gap-2 bg-s2 border border-bd text-tp font-600 text-xs tracking-wide rounded px-4 py-2.5 uppercase" disabled>
+          <svg class="w-4 h-4 text-ts" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+          </svg>
+          Export
+          <svg class="w-3 h-3 text-tm" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+          </svg>
+        </button>
+        <div id="export-menu" class="export-menu absolute right-0 top-full mt-1.5 w-80 bg-s1 border border-bd rounded-lg z-50" style="box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);">
+          <div class="p-1.5 space-y-0.5">
+            <button class="export-option w-full text-left px-3 py-2.5 rounded-md" data-format="standard">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-acc flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
+                </svg>
+                <div>
+                  <div class="text-xs font-600 text-tp">Standard HTML</div>
+                  <div class="text-[10px] text-tm mt-0.5">Self-contained file with Tailwind CDN</div>
+                </div>
+              </div>
+            </button>
+            <div class="mx-3 border-t border-bd/50"></div>
+            <button class="export-option w-full text-left px-3 py-2.5 rounded-md" data-format="elementor">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-info flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"/>
+                </svg>
+                <div>
+                  <div class="text-xs font-600 text-tp">Elementor Widget</div>
+                  <div class="text-[10px] text-tm mt-0.5">Scoped with .elementor-widget-html prefix</div>
+                </div>
+              </div>
+            </button>
+            <div class="mx-3 border-t border-bd/50"></div>
+            <button class="export-option w-full text-left px-3 py-2.5 rounded-md" data-format="snippet">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-ok flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h14.25c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z"/>
+                </svg>
+                <div>
+                  <div class="text-xs font-600 text-tp">CF / GHL / Kajabi</div>
+                  <div class="text-[10px] text-tm mt-0.5">Clean HTML snippet for custom HTML blocks</div>
+                </div>
+              </div>
+            </button>
+            <div class="mx-3 my-1 border-t border-bd"></div>
+            <button class="export-option w-full text-left px-3 py-2.5 rounded-md" data-format="publish-cdn">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#F97316] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/>
+                </svg>
+                <div>
+                  <div class="text-xs font-600 text-tp">Publish Assets to CDN</div>
+                  <div class="text-[10px] text-tm mt-0.5">Upload images to Vercel + rewrite HTML to permanent URLs</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Build Button -->
+      <button id="build-btn" class="btn-press flex items-center gap-2 bg-acc text-bg font-600 text-xs tracking-wide rounded px-5 py-2.5 uppercase">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/>
+        </svg>
+        Build Page
+      </button>
+    </div>
+  </header>
+
+  <!-- ══════════ MAIN PANELS ══════════ -->
+  <main class="flex" style="height: calc(100vh - 116px - 32px);">
+
+    <!-- LEFT: Live Preview -->
+    <div class="flex flex-col border-r border-bd" style="width: 55%;">
+      <!-- Panel Header -->
+      <div class="flex items-center justify-between px-4 h-10 bg-s1 border-b border-bd/50 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-ok pulse-dot"></span>
+          <span class="font-mono text-[10px] font-500 text-ts uppercase tracking-widest">Live Preview</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="preview-url" class="font-mono text-[10px] text-tm truncate max-w-xs"></span>
+          <button id="refresh-btn" class="btn-press p-1.5 rounded hover:bg-s2" title="Refresh preview">
+            <svg class="w-3.5 h-3.5 text-ts" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- iframe -->
+      <div class="flex-1 bg-s2 relative">
+        <div id="preview-empty" class="absolute inset-0 flex flex-col items-center justify-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-s3 flex items-center justify-center">
+            <svg class="w-8 h-8 text-tm" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+            </svg>
+          </div>
+          <div class="text-center">
+            <p class="text-sm font-500 text-ts">No preview available</p>
+            <p class="text-xs text-tm mt-1">Select a client to load the page preview</p>
+          </div>
+        </div>
+        <iframe id="preview-frame" class="w-full h-full border-0 hidden" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+
+    <!-- RIGHT: Section Editor -->
+    <div class="flex flex-col" style="width: 45%;">
+      <!-- Panel Header -->
+      <div class="flex items-center justify-between px-4 h-10 bg-s1 border-b border-bd/50 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <svg class="w-3.5 h-3.5 text-ts" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+          </svg>
+          <span class="font-mono text-[10px] font-500 text-ts uppercase tracking-widest">Section Editor</span>
+          <span id="modified-count" class="hidden ml-2 px-1.5 py-0.5 rounded text-[9px] font-mono font-600 bg-acc/15 text-acc">0 modified</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="reset-btn" class="btn-press px-2.5 py-1 rounded text-[10px] font-mono font-500 text-tm hover:text-ts hover:bg-s2 uppercase tracking-wider hidden">Reset</button>
+          <button id="apply-btn" class="btn-press px-3 py-1 rounded text-[10px] font-mono font-600 bg-acc/15 text-acc hover:bg-acc/25 uppercase tracking-wider hidden">
+            Apply All
+          </button>
+        </div>
+      </div>
+      <!-- Sections list -->
+      <div id="sections-container" class="flex-1 overflow-y-auto p-4 space-y-3">
+        <!-- Empty state -->
+        <div id="editor-empty" class="flex flex-col items-center justify-center h-full gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-s3 flex items-center justify-center">
+            <svg class="w-8 h-8 text-tm" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17l-5.384-3.115A2.025 2.025 0 015.92 8.32L14.5 3.88a2.025 2.025 0 012.16.233l5.384 3.115a2.025 2.025 0 01.116 3.736L14.5 15.62a2.025 2.025 0 01-2.16-.233l-.92-.537z" transform="translate(-1 2)"/>
+            </svg>
+          </div>
+          <div class="text-center">
+            <p class="text-sm font-500 text-ts">No sections to edit</p>
+            <p class="text-xs text-tm mt-1">Load a client page to extract editable sections</p>
+          </div>
+        </div>
+        <!-- Loading state -->
+        <div id="editor-loading" class="hidden flex flex-col items-center justify-center h-full gap-3">
+          <svg class="w-6 h-6 text-acc spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" d="M12 2a10 10 0 0110 10" />
+          </svg>
+          <span class="text-xs text-ts">Extracting sections...</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════ STATUS BAR ══════════ -->
+  <footer class="flex items-center justify-between px-4 bg-s1 border-t border-bd" style="height: 32px;">
+    <div class="flex items-center gap-3">
+      <span class="font-mono text-[10px] text-tm">Web Designer v1.0</span>
+      <span class="text-tm">·</span>
+      <span id="status-text" class="font-mono text-[10px] text-tm">Ready</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="section-count" class="font-mono text-[10px] text-tm"></span>
+      <span class="font-mono text-[10px] text-tm">⌘S to apply</span>
+    </div>
+  </footer>
+
+  <!-- ══════════ TOAST CONTAINER ══════════ -->
+  <div id="toast-container" class="fixed bottom-12 right-4 flex flex-col gap-2 z-50"></div>
+
+  <!-- ══════════ JAVASCRIPT ══════════ -->
+  <script>
+    // ─── State ───────────────────────────────────────────
+    const state = {
+      clients: [],
+      activeClient: null,
+      sections: [],
+      originals: new Map(),
+      modified: new Map(),
+      sseSource: null,
+      brandFile: null,
+      copyFile: null,
+    };
+
+    // ─── DOM References ──────────────────────────────────
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    const clientSelect = $('#client-select');
+    const brandInput = $('#brand-input');
+    const copyInput = $('#copy-input');
+    const brandLabel = $('#brand-label');
+    const copyLabel = $('#copy-label');
+    const brandText = $('#brand-text');
+    const copyText = $('#copy-text');
+    const templateUrl = $('#template-url');
+    const buildBtn = $('#build-btn');
+    const previewFrame = $('#preview-frame');
+    const previewEmpty = $('#preview-empty');
+    const previewUrl = $('#preview-url');
+    const refreshBtn = $('#refresh-btn');
+    const sectionsContainer = $('#sections-container');
+    const editorEmpty = $('#editor-empty');
+    const editorLoading = $('#editor-loading');
+    const applyBtn = $('#apply-btn');
+    const resetBtn = $('#reset-btn');
+    const modifiedCount = $('#modified-count');
+    const statusIndicator = $('#status-indicator');
+    const statusText = $('#status-text');
+    const sectionCount = $('#section-count');
+
+    // ─── API Functions ───────────────────────────────────
+    async function fetchClients() {
+      const res = await fetch('/api/clients');
+      return res.json();
+    }
+
+    async function fetchPageContent(client) {
+      const res = await fetch(`/api/page?client=${encodeURIComponent(client)}`);
+      return res.text();
+    }
+
+    async function updateTextOnServer(client, replacements) {
+      const res = await fetch('/api/update-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client, replacements }),
+      });
+      return res.json();
+    }
+
+    async function uploadFile(client, type, file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64 = reader.result.split(',')[1];
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ client, type, filename: file.name, data: base64 }),
+          });
+          resolve(res.json());
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function triggerBuild(client) {
+      const res = await fetch('/api/build', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client,
+          templateUrl: templateUrl.value,
+          brandUploaded: !!state.brandFile,
+          copyUploaded: !!state.copyFile,
+        }),
+      });
+      return res.json();
+    }
+
+    // ─── SSE Connection ──────────────────────────────────
+    function connectSSE(client) {
+      if (state.sseSource) {
+        state.sseSource.close();
+      }
+      state.sseSource = new EventSource(`/api/watch?client=${encodeURIComponent(client)}`);
+
+      state.sseSource.onopen = () => {
+        setStatus('connected', `Watching ${client}`);
+      };
+
+      state.sseSource.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        if (data.filename && data.filename.endsWith('.html')) {
+          refreshPreview();
+          toast('Page updated — preview refreshed', 'info');
+        }
+      };
+
+      state.sseSource.onerror = () => {
+        setStatus('error', 'Connection lost — retrying...');
+      };
+    }
+
+    // ─── Section Extraction ──────────────────────────────
+    function extractSections(doc) {
+      const result = [];
+      let sectionEls = doc.querySelectorAll('section');
+
+      if (sectionEls.length === 0) {
+        sectionEls = doc.querySelectorAll('body > div, body > header, body > footer, body > main');
+      }
+
+      // Also grab header and footer if they exist at top level
+      const header = doc.querySelector('header');
+      const footer = doc.querySelector('footer');
+      const allEls = [...sectionEls];
+      if (header && !allEls.includes(header)) allEls.unshift(header);
+      if (footer && !allEls.includes(footer)) allEls.push(footer);
+
+      let secIndex = 0;
+      for (const section of allEls) {
+        const heading = section.querySelector('h1, h2, h3, h4, h5, h6');
+        const sectionName = heading ? heading.textContent.trim().substring(0, 60) : `Section ${secIndex + 1}`;
+
+        const elements = [];
+        const seen = new Set();
+
+        // Collect meaningful text elements
+        const textEls = section.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, button, a, blockquote, figcaption, label, span');
+        for (const el of textEls) {
+          // Skip nested duplicates — only take leaf-ish text
+          const text = getDirectText(el).trim();
+          if (!text || text.length < 3 || seen.has(text)) continue;
+
+          // Skip if this is a child of an element we already captured with the same text
+          const parent = el.parentElement;
+          if (parent && seen.has(parent.textContent?.trim())) continue;
+
+          // Skip generic structural elements
+          const tag = el.tagName.toLowerCase();
+          if (tag === 'span' && text.length < 15) continue;
+          if (tag === 'a' && text.length < 8) continue;
+          if (tag === 'label' && text.length < 4) continue;
+
+          seen.add(text);
+          const id = `s${secIndex}-e${elements.length}`;
+          elements.push({ id, tag, text });
+        }
+
+        if (elements.length > 0) {
+          result.push({
+            id: `sec-${secIndex}`,
+            name: sectionName,
+            elements,
+            collapsed: false,
+          });
+          secIndex++;
+        }
+      }
+
+      return result;
+    }
+
+    function getDirectText(el) {
+      let text = '';
+      for (const node of el.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          text += node.textContent;
+        }
+      }
+      // If no direct text, fall back to full textContent for leaf elements
+      if (!text.trim() && el.children.length === 0) {
+        text = el.textContent;
+      }
+      return text;
+    }
+
+    // ─── UI Rendering ────────────────────────────────────
+    function renderClientSelector(clients) {
+      clientSelect.innerHTML = '';
+      if (clients.length === 0) {
+        clientSelect.innerHTML = '<option value="">No clients found</option>';
+        return;
+      }
+      clientSelect.innerHTML = '<option value="">Select a client...</option>';
+      for (const c of clients) {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        clientSelect.appendChild(opt);
+      }
+    }
+
+    function renderSections(sections) {
+      // Remove existing section cards but keep empty/loading states
+      sectionsContainer.querySelectorAll('.section-card').forEach(el => el.remove());
+
+      if (sections.length === 0) {
+        editorEmpty.classList.remove('hidden');
+        editorLoading.classList.add('hidden');
+        sectionCount.textContent = '';
+        return;
+      }
+
+      editorEmpty.classList.add('hidden');
+      editorLoading.classList.add('hidden');
+      sectionCount.textContent = `${sections.length} sections · ${sections.reduce((a, s) => a + s.elements.length, 0)} fields`;
+
+      for (const section of sections) {
+        const card = document.createElement('div');
+        card.className = 'section-card bg-s1 border border-bd rounded-lg overflow-hidden';
+        card.id = section.id;
+
+        const tagLabels = {
+          h1: 'H1', h2: 'H2', h3: 'H3', h4: 'H4', h5: 'H5', h6: 'H6',
+          p: 'P', li: 'LI', a: 'A', button: 'BTN', blockquote: 'QUOTE',
+          figcaption: 'CAP', label: 'LBL', span: 'SPAN',
+        };
+
+        const tagColors = {
+          h1: 'text-acc', h2: 'text-acc', h3: 'text-acc',
+          h4: 'text-acc/70', h5: 'text-acc/70', h6: 'text-acc/70',
+          p: 'text-ts', li: 'text-ts',
+          button: 'text-ok', a: 'text-info',
+          span: 'text-tm', blockquote: 'text-info',
+        };
+
+        let fieldsHTML = '';
+        for (const el of section.elements) {
+          const tagLabel = tagLabels[el.tag] || el.tag.toUpperCase();
+          const tagColor = tagColors[el.tag] || 'text-ts';
+
+          state.originals.set(el.id, el.text);
+
+          fieldsHTML += `
+            <div class="flex gap-2 items-start">
+              <span class="font-mono text-[9px] font-600 ${tagColor} mt-2.5 w-8 flex-shrink-0 text-right uppercase tracking-wider">${tagLabel}</span>
+              <textarea
+                class="edit-field flex-1 bg-s2 border border-bd rounded px-3 py-2 text-xs text-tp font-400 leading-relaxed font-body"
+                data-id="${el.id}"
+                data-original="${encodeURIComponent(el.text)}"
+                rows="1"
+              >${escapeHTML(el.text)}</textarea>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between px-3 py-2.5 cursor-pointer select-none hover:bg-s2/50 transition-colors" data-toggle="${section.id}">
+            <div class="flex items-center gap-2">
+              <svg class="w-3 h-3 text-tm transition-transform duration-200 section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+              </svg>
+              <span class="text-xs font-600 text-tp truncate">${escapeHTML(section.name)}</span>
+            </div>
+            <span class="font-mono text-[9px] text-tm">${section.elements.length} fields</span>
+          </div>
+          <div class="section-body px-3 pb-3 space-y-2">
+            ${fieldsHTML}
+          </div>
+        `;
+
+        sectionsContainer.appendChild(card);
+      }
+
+      // Auto-resize all textareas
+      requestAnimationFrame(() => {
+        sectionsContainer.querySelectorAll('.edit-field').forEach(autoResize);
+      });
+    }
+
+    function autoResize(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
+    function escapeHTML(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function updateModifiedUI() {
+      const count = state.modified.size;
+      if (count > 0) {
+        modifiedCount.classList.remove('hidden');
+        modifiedCount.textContent = `${count} modified`;
+        applyBtn.classList.remove('hidden');
+        resetBtn.classList.remove('hidden');
+      } else {
+        modifiedCount.classList.add('hidden');
+        applyBtn.classList.add('hidden');
+        resetBtn.classList.add('hidden');
+      }
+    }
+
+    // ─── Status & Toast ──────────────────────────────────
+    function setStatus(type, text) {
+      const dot = statusIndicator.querySelector('span:first-child');
+      const label = statusIndicator.querySelector('span:last-child');
+
+      dot.className = 'w-1.5 h-1.5 rounded-full';
+      if (type === 'connected') {
+        dot.classList.add('bg-ok', 'pulse-dot');
+        label.className = 'font-mono text-[10px] text-ok';
+      } else if (type === 'error') {
+        dot.classList.add('bg-err');
+        label.className = 'font-mono text-[10px] text-err';
+      } else {
+        dot.classList.add('bg-tm');
+        label.className = 'font-mono text-[10px] text-tm';
+      }
+      label.textContent = text;
+      statusText.textContent = text;
+    }
+
+    function toast(message, type = 'info') {
+      const container = $('#toast-container');
+      const t = document.createElement('div');
+      const colors = {
+        info: 'border-info/30 bg-info/10 text-info',
+        success: 'border-ok/30 bg-ok/10 text-ok',
+        error: 'border-err/30 bg-err/10 text-err',
+        warning: 'border-acc/30 bg-acc/10 text-acc',
+      };
+      t.className = `toast border rounded-lg px-4 py-2.5 font-mono text-[11px] font-500 ${colors[type] || colors.info}`;
+      t.style.minWidth = '240px';
+      t.textContent = message;
+      container.appendChild(t);
+
+      setTimeout(() => {
+        t.classList.add('out');
+        setTimeout(() => t.remove(), 300);
+      }, 3000);
+    }
+
+    // ─── Preview Management ──────────────────────────────
+    function loadPreview(client) {
+      const url = `/clients/${client}/output/index.html`;
+      previewFrame.src = url;
+      previewFrame.classList.remove('hidden');
+      previewEmpty.classList.add('hidden');
+      previewUrl.textContent = url;
+    }
+
+    function refreshPreview() {
+      if (previewFrame.src) {
+        const src = previewFrame.src;
+        previewFrame.src = '';
+        setTimeout(() => { previewFrame.src = src; }, 50);
+      }
+    }
+
+    // ─── Event Handlers ──────────────────────────────────
+
+    // Client selection
+    clientSelect.addEventListener('change', async (e) => {
+      const client = e.target.value;
+      if (!client) {
+        state.activeClient = null;
+        previewFrame.classList.add('hidden');
+        previewEmpty.classList.remove('hidden');
+        previewUrl.textContent = '';
+        editorEmpty.classList.remove('hidden');
+        sectionsContainer.querySelectorAll('.section-card').forEach(el => el.remove());
+        exportBtn.disabled = true;
+        setStatus('idle', 'Ready');
+        return;
+      }
+
+      state.activeClient = client;
+      state.modified.clear();
+      updateModifiedUI();
+      exportBtn.disabled = false;
+
+      // Load preview
+      loadPreview(client);
+
+      // Show loading state
+      editorEmpty.classList.add('hidden');
+      editorLoading.classList.remove('hidden');
+      sectionsContainer.querySelectorAll('.section-card').forEach(el => el.remove());
+
+      // Connect SSE
+      connectSSE(client);
+
+      // Wait for iframe to load, then extract sections
+      previewFrame.onload = () => {
+        try {
+          const doc = previewFrame.contentDocument;
+          if (doc) {
+            state.sections = extractSections(doc);
+            renderSections(state.sections);
+          }
+        } catch (err) {
+          console.error('Failed to extract sections:', err);
+          toast('Failed to extract sections from page', 'error');
+          editorLoading.classList.add('hidden');
+          editorEmpty.classList.remove('hidden');
+        }
+      };
+    });
+
+    // File uploads
+    brandInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      state.brandFile = file;
+      brandText.textContent = file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name;
+      brandLabel.classList.add('has-file');
+
+      if (state.activeClient) {
+        try {
+          await uploadFile(state.activeClient, 'brand', file);
+          toast(`Brand package uploaded: ${file.name}`, 'success');
+        } catch (err) {
+          toast('Upload failed', 'error');
+        }
+      }
+    });
+
+    copyInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      state.copyFile = file;
+      copyText.textContent = file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name;
+      copyLabel.classList.add('has-file');
+
+      if (state.activeClient) {
+        try {
+          await uploadFile(state.activeClient, 'copy', file);
+          toast(`Copy document uploaded: ${file.name}`, 'success');
+        } catch (err) {
+          toast('Upload failed', 'error');
+        }
+      }
+    });
+
+    // Refresh button
+    refreshBtn.addEventListener('click', () => {
+      refreshPreview();
+      toast('Preview refreshed', 'info');
+    });
+
+    // Build button
+    buildBtn.addEventListener('click', async () => {
+      if (!state.activeClient) {
+        toast('Select a client first', 'warning');
+        return;
+      }
+
+      buildBtn.disabled = true;
+      buildBtn.innerHTML = `
+        <svg class="w-4 h-4 spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" d="M12 2a10 10 0 0110 10"/>
+        </svg>
+        Building...
+      `;
+
+      try {
+        const result = await triggerBuild(state.activeClient);
+        toast(result.message || 'Build config saved', 'success');
+      } catch (err) {
+        toast('Build trigger failed', 'error');
+      } finally {
+        buildBtn.disabled = false;
+        buildBtn.innerHTML = `
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/>
+          </svg>
+          Build Page
+        `;
+      }
+    });
+
+    // Text editing — delegated
+    sectionsContainer.addEventListener('input', (e) => {
+      if (!e.target.classList.contains('edit-field')) return;
+      autoResize(e.target);
+      const id = e.target.dataset.id;
+      const original = decodeURIComponent(e.target.dataset.original);
+      const current = e.target.value;
+
+      if (current !== original) {
+        state.modified.set(id, { oldText: original, newText: current });
+        e.target.classList.add('modified');
+      } else {
+        state.modified.delete(id);
+        e.target.classList.remove('modified');
+      }
+      updateModifiedUI();
+    });
+
+    // Section collapse toggle — delegated
+    sectionsContainer.addEventListener('click', (e) => {
+      const toggle = e.target.closest('[data-toggle]');
+      if (!toggle) return;
+      const sectionId = toggle.dataset.toggle;
+      const card = document.getElementById(sectionId);
+      if (!card) return;
+
+      const body = card.querySelector('.section-body');
+      const chevron = card.querySelector('.section-chevron');
+      body.classList.toggle('collapsed');
+      chevron.style.transform = body.classList.contains('collapsed') ? 'rotate(-90deg)' : '';
+    });
+
+    // Apply all changes
+    applyBtn.addEventListener('click', applyChanges);
+
+    async function applyChanges() {
+      if (!state.activeClient || state.modified.size === 0) return;
+
+      const replacements = [...state.modified.values()];
+      applyBtn.textContent = 'Applying...';
+
+      try {
+        await updateTextOnServer(state.activeClient, replacements);
+        toast(`Applied ${replacements.length} change(s)`, 'success');
+
+        // Update originals
+        for (const [id, { newText }] of state.modified) {
+          state.originals.set(id, newText);
+          const field = sectionsContainer.querySelector(`[data-id="${id}"]`);
+          if (field) {
+            field.dataset.original = encodeURIComponent(newText);
+            field.classList.remove('modified');
+          }
+        }
+        state.modified.clear();
+        updateModifiedUI();
+
+        // Refresh preview (SSE will also trigger this, but do it immediately)
+        setTimeout(refreshPreview, 200);
+      } catch (err) {
+        toast('Failed to apply changes', 'error');
+      } finally {
+        applyBtn.textContent = 'Apply All';
+      }
+    }
+
+    // Reset all changes
+    resetBtn.addEventListener('click', () => {
+      for (const [id] of state.modified) {
+        const field = sectionsContainer.querySelector(`[data-id="${id}"]`);
+        if (field) {
+          const original = decodeURIComponent(field.dataset.original);
+          field.value = original;
+          field.classList.remove('modified');
+          autoResize(field);
+        }
+      }
+      state.modified.clear();
+      updateModifiedUI();
+      toast('Changes reset', 'info');
+    });
+
+    // Keyboard shortcut: Cmd/Ctrl+S to apply
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        if (state.modified.size > 0) {
+          applyChanges();
+        }
+      }
+    });
+
+    // ─── Export Functions ────────────────────────────────
+
+    const exportBtn = $('#export-btn');
+    const exportMenu = $('#export-menu');
+
+    function downloadFile(content, filename) {
+      const blob = new Blob([content], { type: 'text/html; charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function exportStandard() {
+      const html = await fetchPageContent(state.activeClient);
+      downloadFile(html, `${state.activeClient}.html`);
+      toast('Standard HTML exported', 'success');
+    }
+
+    async function exportElementor() {
+      const html = await fetchPageContent(state.activeClient);
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // Collect font links
+      const fontLinks = [...doc.querySelectorAll('link[rel="preconnect"], link[href*="fonts.googleapis"]')]
+        .map(l => l.outerHTML).join('\n');
+
+      // Collect Tailwind CDN + config
+      const tailwindTag = doc.querySelector('script[src*="tailwindcss"]');
+      const configScript = [...doc.querySelectorAll('script:not([src])')]
+        .find(s => s.textContent.includes('tailwind.config'));
+
+      // Collect all <style> content
+      const styles = [...doc.querySelectorAll('style')]
+        .map(s => s.textContent).join('\n\n');
+
+      // Body inner HTML
+      const bodyHTML = doc.body.innerHTML;
+
+      // Also capture body::after noise overlay — it references body so we scope it
+      const scopedStyles = styles
+        .replace(/\bbody\b/g, '.elementor-widget-html');
+
+      const output = `<!-- Web Designer Export: Elementor HTML Widget -->
+<!-- Paste this entire block into an Elementor HTML widget -->
+
+${fontLinks}
+${tailwindTag ? tailwindTag.outerHTML : '<script src="https://cdn.tailwindcss.com"><\/script>'}
+${configScript ? configScript.outerHTML : ''}
+
+<style>
+/* Reset to prevent Elementor style bleed */
+.elementor-widget-html {
+  all: initial;
+  display: block;
+  font-family: inherit;
+  -webkit-font-smoothing: antialiased;
+}
+.elementor-widget-html *,
+.elementor-widget-html *::before,
+.elementor-widget-html *::after {
+  box-sizing: border-box;
+}
+</style>
+
+<style>
+/* Original page styles — scoped */
+${scopedStyles}
+</style>
+
+<div class="elementor-widget-html">
+${bodyHTML}
+</div>
+`;
+
+      downloadFile(output, `${state.activeClient}-elementor.html`);
+      toast('Elementor widget exported', 'success');
+    }
+
+    async function exportSnippet() {
+      const html = await fetchPageContent(state.activeClient);
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // Tailwind CDN + config
+      const tailwindTag = doc.querySelector('script[src*="tailwindcss"]');
+      const configScript = [...doc.querySelectorAll('script:not([src])')]
+        .find(s => s.textContent.includes('tailwind.config'));
+
+      // Font links
+      const fontLinks = [...doc.querySelectorAll('link[rel="preconnect"], link[href*="fonts.googleapis"]')]
+        .map(l => l.outerHTML).join('\n');
+
+      // Styles
+      const styleBlocks = [...doc.querySelectorAll('style')]
+        .map(s => `<style>\n${s.textContent}\n</style>`).join('\n\n');
+
+      // Body content
+      const bodyHTML = doc.body.innerHTML;
+
+      const output = `<!-- Web Designer Export: HTML Snippet -->
+<!-- Paste into ClickFunnels / GoHighLevel / Kajabi custom HTML block -->
+
+${tailwindTag ? tailwindTag.outerHTML : '<script src="https://cdn.tailwindcss.com"><\/script>'}
+${configScript ? configScript.outerHTML : ''}
+${fontLinks}
+
+${styleBlocks}
+
+${bodyHTML}
+`;
+
+      downloadFile(output, `${state.activeClient}-snippet.html`);
+      toast('Snippet exported', 'success');
+    }
+
+    // Export dropdown toggle
+    exportBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportMenu.classList.toggle('open');
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#export-wrapper')) {
+        exportMenu.classList.remove('open');
+      }
+    });
+
+    // Export option clicks
+    exportMenu.addEventListener('click', async (e) => {
+      const option = e.target.closest('.export-option');
+      if (!option) return;
+
+      const format = option.dataset.format;
+      exportMenu.classList.remove('open');
+
+      if (!state.activeClient) {
+        toast('Select a client first', 'warning');
+        return;
+      }
+
+      try {
+        if (format === 'standard') await exportStandard();
+        else if (format === 'elementor') await exportElementor();
+        else if (format === 'snippet') await exportSnippet();
+        else if (format === 'publish-cdn') await publishToCdn();
+      } catch (err) {
+        console.error('Export failed:', err);
+        toast('Export failed', 'error');
+      }
+    });
+
+    // ─── Publish to CDN ─────────────────────────────────
+
+    async function publishToCdn() {
+      toast('Publishing assets to CDN — this may take a moment...', 'info');
+      statusText.textContent = 'Publishing assets to CDN...';
+
+      try {
+        const res = await fetch('/api/publish-assets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client: state.activeClient }),
+        });
+
+        const result = await res.json();
+
+        if (result.error) {
+          toast(result.error, 'error');
+          statusText.textContent = 'Publish failed';
+          return;
+        }
+
+        toast(`Published ${result.assetsCount} assets to CDN — ${result.htmlRewrites} paths rewritten`, 'success');
+        statusText.textContent = 'Assets published to CDN';
+
+        // Refresh preview since HTML paths were rewritten
+        refreshPreview();
+
+        // Re-extract sections after iframe reloads
+        previewFrame.onload = () => {
+          try {
+            const doc = previewFrame.contentDocument;
+            if (doc) {
+              state.sections = extractSections(doc);
+              renderSections(state.sections);
+            }
+          } catch (err) { /* ignore */ }
+        };
+      } catch (err) {
+        console.error('Publish failed:', err);
+        toast('CDN publish failed — check config/asset-cdn.json', 'error');
+        statusText.textContent = 'Publish failed';
+      }
+    }
+
+    // ─── Initialization ──────────────────────────────────
+    async function init() {
+      try {
+        const clients = await fetchClients();
+        state.clients = clients;
+        renderClientSelector(clients);
+
+        // Auto-select if only one client
+        if (clients.length === 1) {
+          clientSelect.value = clients[0];
+          clientSelect.dispatchEvent(new Event('change'));
+        }
+
+        setStatus('idle', 'Ready');
+      } catch (err) {
+        console.error('Initialization failed:', err);
+        toast('Failed to load clients', 'error');
+        setStatus('error', 'Initialization failed');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

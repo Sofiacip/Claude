@@ -205,8 +205,8 @@ Output ONLY the JSON array, no other text. Example format:
 
       const timeout = setTimeout(() => {
         proc.kill('SIGTERM');
-        reject(new Error('Planning timed out after 5 minutes'));
-      }, 5 * 60 * 1000);
+        reject(new Error('Planning timed out after 10 minutes'));
+      }, 10 * 60 * 1000);
 
       proc.on('close', code => {
         clearTimeout(timeout);

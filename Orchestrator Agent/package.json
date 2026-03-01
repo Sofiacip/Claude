@@ -1,0 +1,16 @@
+{
+  "name": "impact-os-agent",
+  "version": "1.0.0",
+  "description": "Autonomous agent orchestrator for Impact OS development — pulls tasks from ClickUp, executes via Claude Code, runs QA, and reports back.",
+  "main": "agent.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node agent.mjs",
+    "start:once": "node agent.mjs --once",
+    "start:dry": "node agent.mjs --dry-run",
+    "status": "node status.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

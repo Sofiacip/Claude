@@ -1,0 +1,130 @@
+// clickup.mjs — ClickUp API client for the Impact OS Agent
+// Handles all interactions with ClickUp: fetching tasks, updating statuses, posting comments
+
+const BASE_URL = 'https://api.clickup.com/api/v2';
+
+export class ClickUpClient {
+  constructor(apiToken, listId, workspaceId) {
+    this.apiToken = apiToken;
+    this.listId = listId;
+    this.workspaceId = workspaceId;
+  }
+
+  async request(endpoint, options = {}) {
+    const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        'Authorization': this.apiToken,
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`ClickUp API error ${res.status}: ${body}`);
+    }
+
+    return res.json();
+  }
+
+  // ─── Fetch Tasks ───────────────────────────────────────────────
+
+  /**
+   * Get all open tasks from the agent queue, ordered by priority then position.
+   * Statuses that count as "ready for agent":
+   *   - "to do" or "open" → ready to pick up
+   * Statuses the agent sets:
+   *   - "in progress" → agent is working on it
+   *   - "in review" → agent finished, needs human review
+   *   - "complete" / "done" → agent finished and QA passed
+   *   - "blocked" → agent failed after retries
+   */
+  async getNextTask() {
+    const tasks = await this.getTasks(['to do', 'open', 'not started']);
+    if (tasks.length === 0) return null;
+
+    // Sort by priority (1=urgent, 2=high, 3=normal, 4=low, null=none)
+    // Then by date_created (oldest first = FIFO)
+    tasks.sort((a, b) => {
+      const pa = a.priority?.orderindex ?? 99;
+      const pb = b.priority?.orderindex ?? 99;
+      if (pa !== pb) return pa - pb;
+      return parseInt(a.date_created) - parseInt(b.date_created);
+    });
+
+    return tasks[0];
+  }
+
+  async getTasks(statuses = []) {
+    const params = new URLSearchParams();
+    params.set('archived', 'false');
+    params.set('include_closed', 'false');
+    params.set('subtasks', 'true');
+    statuses.forEach(s => params.append('statuses[]', s));
+
+    const data = await this.request(`/list/${this.listId}/task?${params}`);
+    return data.tasks || [];
+  }
+
+  async getTask(taskId) {
+    return this.request(`/task/${taskId}`);
+  }
+
+  // ─── Update Tasks ──────────────────────────────────────────────
+
+  async updateTaskStatus(taskId, status) {
+    return this.request(`/task/${taskId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async addComment(taskId, text) {
+    return this.request(`/task/${taskId}/comment`, {
+      method: 'POST',
+      body: JSON.stringify({
+        comment_text: text,
+        notify_all: false,
+      }),
+    });
+  }
+
+  async addTagToTask(taskId, tagName) {
+    return this.request(`/task/${taskId}/tag/${tagName}`, {
+      method: 'POST',
+    });
+  }
+
+  // ─── Helpers ───────────────────────────────────────────────────
+
+  formatTaskForPrompt(task) {
+    const parts = [
+      `## Task: ${task.name}`,
+      `- **ID:** ${task.id}`,
+      `- **Priority:** ${task.priority?.priority || 'none'}`,
+    ];
+
+    if (task.description) {
+      parts.push(`\n### Description\n${task.description}`);
+    }
+
+    if (task.tags?.length) {
+      parts.push(`- **Tags:** ${task.tags.map(t => t.name).join(', ')}`);
+    }
+
+    // Include checklist items as sub-tasks / acceptance criteria
+    if (task.checklists?.length) {
+      parts.push('\n### Acceptance Criteria');
+      for (const cl of task.checklists) {
+        for (const item of cl.items) {
+          const check = item.resolved ? '✅' : '☐';
+          parts.push(`${check} ${item.name}`);
+        }
+      }
+    }
+
+    return parts.join('\n');
+  }
+}

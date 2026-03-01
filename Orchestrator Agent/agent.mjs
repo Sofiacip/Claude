@@ -20,6 +20,7 @@ import { Scheduler } from './scheduler.mjs';
 import { Memory } from './memory.mjs';
 import { SelfHealer } from './healer.mjs';
 import { Reporter } from './reporter.mjs';
+import { AutoPilot } from './autopilot.mjs';
 import { Logger } from './logger.mjs';
 
 config(); // Load .env
@@ -61,6 +62,7 @@ const ONCE     = args.includes('--once');
 const DRY_RUN  = args.includes('--dry-run');
 const PLAN_IDX = args.indexOf('--plan');
 const PLAN_VISION = PLAN_IDX >= 0 ? args[PLAN_IDX + 1] : null;
+const AUTOPILOT = args.includes('--autopilot');
 
 // ─── Initialize ──────────────────────────────────────────────────
 
@@ -80,6 +82,13 @@ const healer    = new SelfHealer(memory);
 const scheduler = new Scheduler({ maxParallel: CONFIG.maxParallel });
 const planner   = new Planner(clickup, CONFIG.visionDocPath, CONFIG.projectPath, memory);
 const reporter  = new Reporter(clickup, memory, CONFIG.projectPath);
+const autopilot = new AutoPilot({
+  planner,
+  memory,
+  clickup,
+  visionDocPath: CONFIG.visionDocPath,
+  projectPath: CONFIG.projectPath,
+});
 
 // ─── Crash Recovery ──────────────────────────────────────────────
 
@@ -272,6 +281,7 @@ async function reportResults(task, result, qaResults) {
 
 async function main() {
   const modeStr = PLAN_VISION ? 'Planning     '
+    : AUTOPILOT ? 'Auto-pilot   '
     : ONCE ? 'Single task  '
     : DRY_RUN ? 'Dry run      '
     : `Continuous | Parallel: ${CONFIG.maxParallel}`;
@@ -366,7 +376,20 @@ async function main() {
       }
 
       if (scheduler.activeCount === 0 && readyTasks?.length === 0) {
-        log.waiting('No tasks in queue. Waiting...');
+        if (AUTOPILOT) {
+          // Auto-pilot: decide and plan the next chunk
+          const hasMoreWork = await autopilot.checkAndPlan();
+
+          if (!hasMoreWork) {
+            log.info('🎉 Auto-pilot: All vision work complete. Agent stopping.');
+            break; // Exit the main loop
+          }
+
+          // New tasks were planned — continue the loop to pick them up
+          continue;
+        } else {
+          log.waiting('No tasks in queue. Waiting...');
+        }
       }
     } catch (err) {
       log.error(`Error in main loop: ${err.message}`);

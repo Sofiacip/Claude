@@ -8,6 +8,7 @@
     "start": "node agent.mjs",
     "start:once": "node agent.mjs --once",
     "start:dry": "node agent.mjs --dry-run",
+    "start:autopilot": "node agent.mjs --autopilot",
     "plan": "node agent.mjs --plan",
     "status": "node status.mjs"
   },

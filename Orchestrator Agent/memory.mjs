@@ -298,4 +298,58 @@ export class Memory {
   getPlanName(planId) {
     return this.data.phases?.[planId]?.name || planId;
   }
+
+  // ─── Auto-Pilot Tracking ──────────────────────────────────────
+
+  recordAutopilotDecision(decision) {
+    if (!this.data.autopilot) this.data.autopilot = { decisions: [] };
+    this.data.autopilot.decisions.push({
+      ...decision,
+      timestamp: new Date().toISOString(),
+    });
+    this.save();
+  }
+
+  getAutopilotHistory() {
+    return this.data.autopilot?.decisions || [];
+  }
+
+  getCompletedPlans() {
+    if (!this.data.phases) return [];
+
+    const completed = [];
+    for (const [planId, plan] of Object.entries(this.data.phases)) {
+      const allPhases = Object.values(plan.tasks || {});
+      const allDone = allPhases.length > 0 && allPhases.every(p =>
+        p.reported || (p.taskIds.length > 0 && p.taskIds.every(id => p.completed.includes(id)))
+      );
+
+      if (allDone) {
+        const totalTasks = allPhases.reduce((sum, p) => sum + p.taskIds.length, 0);
+        const totalCompleted = allPhases.reduce((sum, p) => sum + p.completed.length, 0);
+        completed.push({
+          name: plan.name || planId,
+          planId,
+          tasksCompleted: totalCompleted,
+          totalTasks,
+        });
+      }
+    }
+    return completed;
+  }
+
+  getAllModuleHealth() {
+    return this.data.modules || {};
+  }
+
+  getTaskStats() {
+    const history = this.data.taskHistory || {};
+    const tasks = Object.values(history);
+    return {
+      total: tasks.length,
+      completed: tasks.filter(t => t.status === 'completed').length,
+      failed: tasks.filter(t => t.status === 'failed').length,
+      blocked: tasks.filter(t => t.status === 'blocked').length,
+    };
+  }
 }

@@ -71,22 +71,25 @@ export class Reporter {
 
   /**
    * Extract phase number and plan context from a task.
+   * Looks up the task ID in memory's phase registry (set by the planner).
    */
   detectPhase(task) {
-    const text = `${task.name || ''} ${task.description || ''}`;
+    // Look up from memory's phase data (set by planner when tasks are created)
+    const allPlans = this.memory.data.phases || {};
+    for (const [planId, plan] of Object.entries(allPlans)) {
+      for (const [phaseNum, phaseData] of Object.entries(plan.tasks || {})) {
+        if (phaseData.taskIds.includes(task.id)) {
+          const planName = this.inferPlanName(
+            planId,
+            (task.tags || []).map(t => (t.name || t).toLowerCase()),
+            task.name
+          );
+          return { phase: parseInt(phaseNum), planId, planName };
+        }
+      }
+    }
 
-    // Look for "Phase X" or "phase: X" in text
-    const phaseMatch = text.match(/phase[:\s]*(\d+)/i);
-    if (!phaseMatch) return null;
-
-    const phase = parseInt(phaseMatch[1]);
-
-    // Try to identify which plan this belongs to by checking tags
-    const moduleTags = (task.tags || []).map(t => (t.name || t).toLowerCase());
-    const planId = moduleTags[0] || 'unknown';
-    const planName = this.inferPlanName(planId, moduleTags, task.name);
-
-    return { phase, planId, planName };
+    return null;
   }
 
   /**

@@ -2,7 +2,7 @@
 // Runs build, lint, tests, and reports results
 
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import path from 'path';
 
 export class QARunner {
@@ -20,8 +20,8 @@ export class QARunner {
       timestamp: new Date().toISOString(),
     };
 
-    // 1. Check if project builds
-    const buildResult = this.runCheck('build', 'npm run build', checkPath);
+    // 1. Check if project builds (skip if no build script)
+    const buildResult = this.runCheck('build', 'npm run build --if-present', checkPath);
     results.checks.push(buildResult);
     if (!buildResult.passed) results.passed = false;
 
@@ -91,37 +91,49 @@ export class QARunner {
     if (existsSync(pkgPath)) {
       try {
         JSON.parse(readFileSync(pkgPath, 'utf-8'));
+      } catch (err) {
+        issues.push(`${pkgPath} is invalid JSON: ${err.message}`);
+      }
+    }
+
+    // Git checks — only run if checkPath is inside a git repo
+    const isGitRepo = existsSync(path.join(checkPath, '.git')) || (() => {
+      try {
+        execSync('git rev-parse --git-dir', { cwd: checkPath, stdio: 'pipe' });
+        return true;
       } catch {
-        issues.push('package.json is invalid JSON');
+        return false;
       }
-    }
+    })();
 
-    // Check no .env files were modified
-    try {
-      const gitStatus = execSync('git diff --name-only', {
-        cwd: checkPath,
-        stdio: 'pipe',
-      }).toString();
+    if (isGitRepo) {
+      // Check no .env files were modified (scoped to this module only)
+      try {
+        const gitStatus = execSync(`git diff --name-only -- "${checkPath}"`, {
+          cwd: checkPath,
+          stdio: 'pipe',
+        }).toString();
 
-      if (gitStatus.includes('.env')) {
-        issues.push('.env file was modified — this must not be committed');
+        if (gitStatus.includes('.env')) {
+          issues.push('.env file was modified — this must not be committed');
+        }
+      } catch {
+        // git command failed — skip
       }
-    } catch {
-      // Not a git repo or git not available — skip
-    }
 
-    // Check no node_modules were committed
-    try {
-      const gitStatus = execSync('git diff --cached --name-only', {
-        cwd: checkPath,
-        stdio: 'pipe',
-      }).toString();
+      // Check no node_modules were staged (scoped to this module only)
+      try {
+        const gitStatus = execSync(`git diff --cached --name-only -- "${checkPath}"`, {
+          cwd: checkPath,
+          stdio: 'pipe',
+        }).toString();
 
-      if (gitStatus.includes('node_modules')) {
-        issues.push('node_modules changes staged for commit');
+        if (gitStatus.includes('node_modules')) {
+          issues.push('node_modules changes staged for commit');
+        }
+      } catch {
+        // skip
       }
-    } catch {
-      // skip
     }
 
     return {
@@ -133,9 +145,22 @@ export class QARunner {
   }
 
   verifyFilesExist(checkPath, filesChanged) {
-    const missing = [];
+    // Filter out non-path entries (e.g. "(none — already handled)" or empty strings)
+    const realFiles = filesChanged.filter(f =>
+      f && !f.startsWith('(') && !f.toLowerCase().includes('none') && !f.toLowerCase().includes('n/a')
+    );
 
-    for (const file of filesChanged) {
+    if (realFiles.length === 0) {
+      return {
+        name: 'files_exist',
+        passed: true,
+        exitCode: 0,
+        output: 'No files to verify (none reported changed)',
+      };
+    }
+
+    const missing = [];
+    for (const file of realFiles) {
       const fullPath = path.isAbsolute(file) ? file : path.join(checkPath, file);
       if (!existsSync(fullPath)) {
         missing.push(file);
@@ -148,7 +173,7 @@ export class QARunner {
       exitCode: missing.length > 0 ? 1 : 0,
       output: missing.length > 0
         ? `Missing files: ${missing.join(', ')}`
-        : `All ${filesChanged.length} reported files verified`,
+        : `All ${realFiles.length} reported files verified`,
     };
   }
 

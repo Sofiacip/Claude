@@ -4,10 +4,11 @@
 import { spawn } from 'child_process';
 
 export class Reporter {
-  constructor(clickup, memory, projectPath) {
+  constructor(clickup, memory, projectPath, slack = null) {
     this.clickup = clickup;
     this.memory = memory;
     this.projectPath = projectPath;
+    this.slack = slack;
   }
 
   /**
@@ -51,6 +52,15 @@ export class Reporter {
       this.memory.markPhaseReported(phaseInfo.planId, phaseInfo.phase, summaryTask.id);
 
       console.log(`✅ Summary report posted to ClickUp: "${summaryTask.name}"`);
+
+      // Post to Slack
+      if (this.slack) {
+        await this.slack.postReport({
+          title: `Phase ${phaseInfo.phase} Summary: ${phaseInfo.planName}`,
+          body: report,
+          type: 'phase',
+        });
+      }
 
       // Step 7: Check if ALL phases are done → generate final report
       await this.checkAllPhasesComplete(phaseInfo.planId);
@@ -250,6 +260,15 @@ OUTPUT ONLY THE REPORT. No preamble, just the markdown.
       });
 
       console.log('✅ Final completion report posted to ClickUp.');
+
+      // Post to Slack
+      if (this.slack) {
+        await this.slack.postReport({
+          title: `COMPLETE: ${planName} — All Phases Done`,
+          body: finalReport,
+          type: 'milestone',
+        });
+      }
     } catch (err) {
       console.error(`❌ Failed to generate final report: ${err.message}`);
     }

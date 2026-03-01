@@ -21,6 +21,7 @@ import { Memory } from './memory.mjs';
 import { SelfHealer } from './healer.mjs';
 import { Reporter } from './reporter.mjs';
 import { AutoPilot } from './autopilot.mjs';
+import { SlackClient } from './slack.mjs';
 import { Logger } from './logger.mjs';
 
 config(); // Load .env
@@ -69,6 +70,7 @@ const AUTOPILOT = args.includes('--autopilot');
 validateConfig();
 
 const log       = new Logger(CONFIG.logLevel);
+const slack     = new SlackClient(process.env.SLACK_BOT_TOKEN, process.env.SLACK_CHANNEL_ID);
 const memory    = new Memory();
 const clickup   = new ClickUpClient(CONFIG.clickupToken, CONFIG.clickupListId, CONFIG.clickupWorkspace);
 const executor  = new ClaudeExecutor({
@@ -81,11 +83,12 @@ const qa        = new QARunner(CONFIG.projectPath);
 const healer    = new SelfHealer(memory);
 const scheduler = new Scheduler({ maxParallel: CONFIG.maxParallel });
 const planner   = new Planner(clickup, CONFIG.visionDocPath, CONFIG.projectPath, memory);
-const reporter  = new Reporter(clickup, memory, CONFIG.projectPath);
+const reporter  = new Reporter(clickup, memory, CONFIG.projectPath, slack);
 const autopilot = new AutoPilot({
   planner,
   memory,
   clickup,
+  slack,
   visionDocPath: CONFIG.visionDocPath,
   projectPath: CONFIG.projectPath,
 });
@@ -126,6 +129,9 @@ async function processTask(task) {
   if (!DRY_RUN) {
     await clickup.updateTaskStatus(task.id, 'in progress');
     await clickup.addComment(task.id, '🤖 **Agent picked up this task.** Starting work now...');
+    if (slack.enabled) {
+      await slack.postStatus(`🤖 Working on: *${task.name}* (${moduleName})`);
+    }
   }
 
   const taskPrompt = clickup.formatTaskForPrompt(task);
@@ -217,6 +223,15 @@ async function processTask(task) {
   // Report to ClickUp
   await reportResults(task, result, qaResults);
 
+  // Notify Slack of task outcome
+  if (slack.enabled) {
+    if (result.success) {
+      await slack.postStatus(`✅ Completed: *${task.name}*`);
+    } else {
+      await slack.postStatus(`❌ Blocked: *${task.name}*\n_${result.summary?.slice(0, 200)}_`);
+    }
+  }
+
   // Check if this completes a phase → trigger summary report
   if (result.success) {
     try {
@@ -300,6 +315,7 @@ async function main() {
 
   const taskCount = Object.keys(memory.data.taskHistory).length;
   log.info(`Memory loaded (${taskCount} tasks in history)`);
+  if (slack.enabled) log.info('📡 Slack notifications enabled');
 
   // Planning mode
   if (PLAN_VISION) {

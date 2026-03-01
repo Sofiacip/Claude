@@ -4,12 +4,13 @@ import { readFileSync, existsSync } from 'fs';
 import { spawn } from 'child_process';
 
 export class AutoPilot {
-  constructor({ planner, memory, clickup, visionDocPath, projectPath }) {
+  constructor({ planner, memory, clickup, visionDocPath, projectPath, slack = null }) {
     this.planner = planner;
     this.memory = memory;
     this.clickup = clickup;
     this.visionDocPath = visionDocPath;
     this.projectPath = projectPath;
+    this.slack = slack;
   }
 
   /**
@@ -50,6 +51,15 @@ export class AutoPilot {
         status: 'ready for review',
       });
 
+      // Notify Slack
+      if (this.slack) {
+        await this.slack.postReport({
+          title: 'AUTO-PILOT: All Vision Work Complete',
+          body: decision.summary,
+          type: 'milestone',
+        });
+      }
+
       return false; // Signal to stop the agent
     }
 
@@ -72,6 +82,14 @@ export class AutoPilot {
     }
 
     console.log(`\n✅ Auto-pilot planned ${result.tasksCreated} tasks for: "${decision.next}"\n`);
+
+    // Notify Slack
+    if (this.slack) {
+      await this.slack.postStatus(
+        `🧭 *Auto-pilot decision:* ${decision.next}\n_Reason: ${decision.reason}_\n_Module: ${decision.module}_\n\n${result.tasksCreated} tasks created in ClickUp.`
+      );
+    }
+
     return true;
   }
 

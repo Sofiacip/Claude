@@ -4,10 +4,11 @@ import { readFileSync, existsSync } from 'fs';
 import { spawn } from 'child_process';
 
 export class Planner {
-  constructor(clickup, visionDocPath, projectPath) {
+  constructor(clickup, visionDocPath, projectPath, memory = null) {
     this.clickup = clickup;
     this.visionDocPath = visionDocPath;
     this.projectPath = projectPath;
+    this.memory = memory;
   }
 
   /**
@@ -60,6 +61,25 @@ export class Planner {
     }
 
     console.log(`\n✅ Created ${createdIds.length}/${tasks.length} tasks in ClickUp.`);
+
+    // Register phases in memory for the reporter
+    if (this.memory && createdIds.length > 0) {
+      const phases = {};
+      for (let i = 0; i < tasks.length; i++) {
+        if (!createdIds[i]) continue; // skip tasks that failed to create
+        const phase = tasks[i].phase || 1;
+        if (!phases[phase]) phases[phase] = [];
+        phases[phase].push(createdIds[i]);
+      }
+
+      // Derive planId from the first tag or the vision text
+      const firstTag = tasks[0]?.tags?.[0]?.toLowerCase?.() || tasks[0]?.tags?.[0] || 'unknown';
+      const planId = typeof firstTag === 'string' ? firstTag : 'unknown';
+
+      this.memory.initPlan(planId, vision, phases);
+      console.log(`📊 Registered ${Object.keys(phases).length} phases in memory for reporter tracking.`);
+    }
+
     return { tasksCreated: createdIds.length, taskIds: createdIds };
   }
 

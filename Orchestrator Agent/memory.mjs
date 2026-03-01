@@ -210,4 +210,92 @@ export class Memory {
   getModuleHealth(moduleName) {
     return this.data.modules[moduleName] || null;
   }
+
+  // ─── Phase Tracking ────────────────────────────────────────────
+
+  /**
+   * Initialize phase tracking for a plan (called by planner after creating tasks).
+   */
+  initPlan(planId, planName, phases) {
+    if (!this.data.phases) this.data.phases = {};
+
+    this.data.phases[planId] = {
+      name: planName,
+      totalPhases: Object.keys(phases).length,
+      createdAt: new Date().toISOString(),
+      tasks: {},
+    };
+
+    for (const [phaseNum, taskIds] of Object.entries(phases)) {
+      this.data.phases[planId].tasks[phaseNum] = {
+        taskIds,
+        completed: [],
+        reported: false,
+        reportTaskId: null,
+      };
+    }
+
+    this.save();
+  }
+
+  /**
+   * Register a task as belonging to a phase (auto-creates structure if needed).
+   */
+  registerPhaseTask(planId, phase, taskId) {
+    if (!this.data.phases) this.data.phases = {};
+    if (!this.data.phases[planId]) {
+      this.data.phases[planId] = {
+        name: planId,
+        totalPhases: 0,
+        createdAt: new Date().toISOString(),
+        tasks: {},
+      };
+    }
+    if (!this.data.phases[planId].tasks[phase]) {
+      this.data.phases[planId].tasks[phase] = {
+        taskIds: [],
+        completed: [],
+        reported: false,
+        reportTaskId: null,
+      };
+      this.data.phases[planId].totalPhases = Object.keys(this.data.phases[planId].tasks).length;
+    }
+
+    const phaseData = this.data.phases[planId].tasks[phase];
+    if (!phaseData.taskIds.includes(taskId)) {
+      phaseData.taskIds.push(taskId);
+      this.save();
+    }
+  }
+
+  markPhaseTaskComplete(planId, phase, taskId) {
+    const phaseData = this.data.phases?.[planId]?.tasks?.[phase];
+    if (!phaseData) return;
+
+    if (!phaseData.completed.includes(taskId)) {
+      phaseData.completed.push(taskId);
+      this.save();
+    }
+  }
+
+  markPhaseReported(planId, phase, reportTaskId) {
+    const phaseData = this.data.phases?.[planId]?.tasks?.[phase];
+    if (!phaseData) return;
+
+    phaseData.reported = true;
+    phaseData.reportTaskId = reportTaskId;
+    this.save();
+  }
+
+  getPhaseData(planId, phase) {
+    return this.data.phases?.[planId]?.tasks?.[phase] || null;
+  }
+
+  getAllPhases(planId) {
+    return this.data.phases?.[planId]?.tasks || null;
+  }
+
+  getPlanName(planId) {
+    return this.data.phases?.[planId]?.name || planId;
+  }
 }

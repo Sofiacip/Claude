@@ -19,6 +19,7 @@ import { Planner } from './planner.mjs';
 import { Scheduler } from './scheduler.mjs';
 import { Memory } from './memory.mjs';
 import { SelfHealer } from './healer.mjs';
+import { Reporter } from './reporter.mjs';
 import { Logger } from './logger.mjs';
 
 config(); // Load .env
@@ -77,7 +78,8 @@ const executor  = new ClaudeExecutor({
 const qa        = new QARunner(CONFIG.projectPath);
 const healer    = new SelfHealer(memory);
 const scheduler = new Scheduler({ maxParallel: CONFIG.maxParallel });
-const planner   = new Planner(clickup, CONFIG.visionDocPath, CONFIG.projectPath);
+const planner   = new Planner(clickup, CONFIG.visionDocPath, CONFIG.projectPath, memory);
+const reporter  = new Reporter(clickup, memory, CONFIG.projectPath);
 
 // ─── Crash Recovery ──────────────────────────────────────────────
 
@@ -205,6 +207,15 @@ async function processTask(task) {
 
   // Report to ClickUp
   await reportResults(task, result, qaResults);
+
+  // Check if this completes a phase → trigger summary report
+  if (result.success) {
+    try {
+      await reporter.onTaskComplete(task, result);
+    } catch (err) {
+      log.warn(`Phase reporter error (non-fatal): ${err.message}`);
+    }
+  }
 
   return { task, result, qaResults };
 }

@@ -129,9 +129,6 @@ async function processTask(task) {
   if (!DRY_RUN) {
     await clickup.updateTaskStatus(task.id, 'in progress');
     await clickup.addComment(task.id, '🤖 **Agent picked up this task.** Starting work now...');
-    if (slack.enabled) {
-      await slack.postStatus(`🤖 Working on: *${task.name}* (${moduleName})`);
-    }
   }
 
   const taskPrompt = clickup.formatTaskForPrompt(task);
@@ -222,15 +219,6 @@ async function processTask(task) {
 
   // Report to ClickUp
   await reportResults(task, result, qaResults);
-
-  // Notify Slack of task outcome
-  if (slack.enabled) {
-    if (result.success) {
-      await slack.postStatus(`✅ Completed: *${task.name}*`);
-    } else {
-      await slack.postStatus(`❌ Blocked: *${task.name}*\n_${result.summary?.slice(0, 200)}_`);
-    }
-  }
 
   // Check if this completes a phase → trigger summary report
   if (result.success) {

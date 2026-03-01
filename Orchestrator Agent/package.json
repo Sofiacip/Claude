@@ -1,13 +1,14 @@
 {
   "name": "impact-os-agent",
-  "version": "1.0.0",
-  "description": "Autonomous agent orchestrator for Impact OS development — pulls tasks from ClickUp, executes via Claude Code, runs QA, and reports back.",
+  "version": "2.0.0",
+  "description": "Autonomous agent orchestrator for Impact OS — plans, executes, QAs, self-heals, and reports. Supports parallel execution and persistent memory.",
   "main": "agent.mjs",
   "type": "module",
   "scripts": {
     "start": "node agent.mjs",
     "start:once": "node agent.mjs --once",
     "start:dry": "node agent.mjs --dry-run",
+    "plan": "node agent.mjs --plan",
     "status": "node status.mjs"
   },
   "dependencies": {

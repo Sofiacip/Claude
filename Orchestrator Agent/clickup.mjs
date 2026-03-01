@@ -97,6 +97,59 @@ export class ClickUpClient {
     });
   }
 
+  // ─── Get Ready Tasks (all tasks ready for the agent) ───────────
+
+  async getReadyTasks() {
+    const tasks = await this.getTasks(['to do', 'open', 'not started']);
+
+    // Sort by priority, then by date_created (FIFO within priority)
+    tasks.sort((a, b) => {
+      const pa = a.priority?.orderindex ?? 99;
+      const pb = b.priority?.orderindex ?? 99;
+      if (pa !== pb) return pa - pb;
+      return parseInt(a.date_created) - parseInt(b.date_created);
+    });
+
+    return tasks;
+  }
+
+  // ─── Create Task (for the planning agent) ──────────────────────
+
+  async createTask({ name, description, priority = 3, tags = [], status = 'not started' }) {
+    const body = {
+      name,
+      description,
+      status,
+      priority,
+    };
+
+    if (tags.length > 0) {
+      body.tags = tags;
+    }
+
+    return this.request(`/list/${this.listId}/task`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  // ─── Bulk operations ──────────────────────────────────────────
+
+  async createTasks(taskList) {
+    const results = [];
+    for (const task of taskList) {
+      try {
+        const created = await this.createTask(task);
+        results.push({ success: true, task: created });
+        // Rate limiting: 300ms between requests
+        await new Promise(r => setTimeout(r, 300));
+      } catch (err) {
+        results.push({ success: false, error: err.message, taskName: task.name });
+      }
+    }
+    return results;
+  }
+
   // ─── Helpers ───────────────────────────────────────────────────
 
   formatTaskForPrompt(task) {

@@ -22,10 +22,11 @@ const MODULE_MAP = {
 };
 
 export class ClaudeExecutor {
-  constructor({ projectPath, visionDocPath, maxRetries = 2 }) {
+  constructor({ projectPath, visionDocPath, maxRetries = 2, memory = null }) {
     this.projectPath = projectPath;  // Parent folder: /Users/Administrator/Claude
     this.visionDocPath = visionDocPath;
     this.maxRetries = maxRetries;
+    this.memory = memory;
 
     // Verify Claude Code is installed
     try {
@@ -66,7 +67,7 @@ export class ClaudeExecutor {
 
   // ─── Build the prompt ──────────────────────────────────────────
 
-  buildPrompt(taskMarkdown, attempt = 1, previousError = null) {
+  buildPrompt(taskMarkdown, { attempt = 1, previousError = null, memoryContext = '', healingPrompt = '' } = {}) {
     let prompt = '';
 
     // Load vision document for persistent context
@@ -75,11 +76,18 @@ export class ClaudeExecutor {
       prompt += `<vision_context>\n${vision}\n</vision_context>\n\n`;
     }
 
+    // Add memory context if available
+    if (memoryContext) {
+      prompt += `${memoryContext}\n\n`;
+    }
+
     // Add the task
     prompt += `<task>\n${taskMarkdown}\n</task>\n\n`;
 
-    // Add retry context if this is a retry
-    if (attempt > 1 && previousError) {
+    // Add healing prompt if this is a retry with specific guidance
+    if (attempt > 1 && healingPrompt) {
+      prompt += `<previous_attempt>\nThis is attempt ${attempt}.\n\n${healingPrompt}\n</previous_attempt>\n\n`;
+    } else if (attempt > 1 && previousError) {
       prompt += `<previous_attempt>\nThis is attempt ${attempt}. The previous attempt failed with:\n${previousError}\n\nPlease fix the issues and try again.\n</previous_attempt>\n\n`;
     }
 
@@ -113,7 +121,7 @@ TESTS: passed | failed | none
   /**
    * Execute a task. Accepts the raw task object so it can detect the right module.
    */
-  async execute(task, taskMarkdown) {
+  async execute(task, taskMarkdown, { attempt = 1, previousErrors = [], memoryContext = '', healingPrompt = '' } = {}) {
     // Figure out which module folder to work in
     const modulePath = this.detectModulePath(task);
     const moduleName = path.basename(modulePath);
@@ -124,56 +132,45 @@ TESTS: passed | failed | none
         success: false,
         status: 'blocked',
         summary: `Module folder not found: ${modulePath}`,
+        modulePath,
         rawOutput: '',
         attempts: 0,
       };
     }
 
-    let lastError = null;
+    const prompt = this.buildPrompt(taskMarkdown, {
+      attempt,
+      previousError: previousErrors[previousErrors.length - 1] || null,
+      memoryContext,
+      healingPrompt,
+    });
 
-    for (let attempt = 1; attempt <= this.maxRetries + 1; attempt++) {
-      const prompt = this.buildPrompt(taskMarkdown, attempt, lastError);
-      
-      console.log(`\n🤖 Executing task (attempt ${attempt}/${this.maxRetries + 1})...`);
-      
-      try {
-        const result = await this.runClaudeCode(prompt, modulePath);
-        const parsed = this.parseResult(result);
+    console.log(`\n🤖 Executing task (attempt ${attempt})...`);
 
-        if (parsed.status === 'success' || parsed.status === 'partial') {
-          return {
-            success: true,
-            ...parsed,
-            module: moduleName,
-            rawOutput: result,
-            attempts: attempt,
-          };
-        }
+    try {
+      const result = await this.runClaudeCode(prompt, modulePath);
+      const parsed = this.parseResult(result);
 
-        if (parsed.status === 'blocked') {
-          return {
-            success: false,
-            ...parsed,
-            module: moduleName,
-            rawOutput: result,
-            attempts: attempt,
-          };
-        }
-
-        lastError = `Could not parse result. Raw output tail:\n${result.slice(-500)}`;
-      } catch (err) {
-        lastError = err.message;
-        console.log(`  ❌ Attempt ${attempt} failed: ${err.message.slice(0, 200)}`);
-      }
+      return {
+        success: parsed.status === 'success' || parsed.status === 'partial',
+        ...parsed,
+        module: moduleName,
+        modulePath,
+        rawOutput: result,
+        attempts: attempt,
+      };
+    } catch (err) {
+      console.log(`  ❌ Attempt ${attempt} failed: ${err.message.slice(0, 200)}`);
+      return {
+        success: false,
+        status: 'blocked',
+        summary: err.message,
+        module: moduleName,
+        modulePath,
+        rawOutput: err.message,
+        attempts: attempt,
+      };
     }
-
-    return {
-      success: false,
-      status: 'blocked',
-      summary: `Failed after ${this.maxRetries + 1} attempts. Last error: ${lastError}`,
-      rawOutput: lastError,
-      attempts: this.maxRetries + 1,
-    };
   }
 
   // ─── Run Claude Code CLI ───────────────────────────────────────

@@ -150,6 +150,40 @@ export class ClickUpClient {
     return results;
   }
 
+  // ─── Get All Tasks (any status, for reporter) ─────────────────
+
+  async getAllTasks() {
+    const params = new URLSearchParams();
+    params.set('archived', 'false');
+    params.set('include_closed', 'true');
+    params.set('subtasks', 'true');
+
+    const data = await this.request(`/list/${this.listId}/task?${params}`);
+    return data.tasks || [];
+  }
+
+  // ─── Attachments ─────────────────────────────────────────────
+
+  async uploadAttachment(taskId, fileBuffer, fileName) {
+    const form = new FormData();
+    form.append('attachment', new Blob([fileBuffer]), fileName);
+
+    const res = await fetch(`${BASE_URL}/task/${taskId}/attachment`, {
+      method: 'POST',
+      headers: {
+        'Authorization': this.apiToken,
+      },
+      body: form,
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`ClickUp attachment upload failed ${res.status}: ${body}`);
+    }
+
+    return res.json();
+  }
+
   // ─── Helpers ───────────────────────────────────────────────────
 
   formatTaskForPrompt(task) {

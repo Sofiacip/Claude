@@ -342,6 +342,10 @@ export class Memory {
     return this.data.modules || {};
   }
 
+  isTagReported(tag) {
+    return !!(this.data.reportedTags?.[tag]);
+  }
+
   getTaskStats() {
     const history = this.data.taskHistory || {};
     const tasks = Object.values(history);

@@ -138,11 +138,12 @@ async function reportResults(task, result, qaResults) {
       await clickup.updateTaskStatus(task.id, 'completed');
       log.success(`Task "${task.name}" completed and auto-closed.`);
     } else {
-      await clickup.updateTaskStatus(task.id, 'completed');
+      await clickup.updateTaskStatus(task.id, 'ready for review');
       log.success(`Task "${task.name}" completed — moved to review.`);
     }
   } else if (result.success && !qaResults?.passed) {
-    await clickup.updateTaskStatus(task.id, 'completed');
+    await clickup.updateTaskStatus(task.id, 'ready for review');
+    await clickup.addComment(task.id, '⚠️ **Note:** Task completed successfully but QA checks failed. Please review the QA report above.');
     log.warn(`Task "${task.name}" completed but QA failed — needs human review.`);
   } else {
     await clickup.updateTaskStatus(task.id, 'not started');

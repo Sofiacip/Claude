@@ -3,6 +3,9 @@
 // Drives a list of modules through the full lifecycle:
 //   pending → aligning → awaiting_answers → awaiting_approval → executing → completed
 //
+// Every task created by the chain is tagged with a plan ID (e.g. plan-1709337600000).
+// The scoped autopilot ONLY picks up tasks matching the current plan — old tasks are invisible.
+//
 // State persists to data/chain-state.json for crash recovery.
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
@@ -21,6 +24,13 @@ const MODULE_TAG_MAP = {
   'brand-creator':   'brand creator',
   'pageforge':       'pageforge',
 };
+
+/** Check if a task has a specific tag (handles both object and string tag formats) */
+function taskHasTag(task, tag) {
+  return (task.tags || []).some(tg =>
+    (tg.name || tg).toLowerCase() === tag.toLowerCase()
+  );
+}
 
 export class ModuleChain {
   constructor({
@@ -69,10 +79,8 @@ export class ModuleChain {
     const startedAt = new Date();
 
     console.log(`\n🔗 Module Chain: ${total} module(s) — ${this.modules.join(', ')}`);
-    console.log(`   Instruction: "${this.instruction}"\n`);
-
-    // Phase 0: Drain any existing tasks already in the ClickUp queue
-    await this._drainExistingTasks();
+    console.log(`   Instruction: "${this.instruction}"`);
+    console.log(`   Old tasks in queue will be IGNORED (no plan tag match).\n`);
 
     for (let i = 0; i < total; i++) {
       const moduleName = this.modules[i];
@@ -99,11 +107,12 @@ export class ModuleChain {
         // Step 1: Alignment (questions → answers → plan summary → approval)
         await this._runModuleAlignment(moduleName, moduleTag, i, total);
 
-        // Step 2: Create tasks
-        const tasksCreated = await this._createModuleTasks(moduleName, moduleTag);
+        // Step 2: Create tasks (tagged with plan ID)
+        await this._createModuleTasks(moduleName, moduleTag);
 
-        // Step 3: Scoped autopilot execution
-        await this._runScopedAutopilot(moduleName, moduleTag);
+        // Step 3: Scoped autopilot execution (filtered by plan ID + module tag)
+        const planTag = moduleState.planId;
+        await this._runScopedAutopilot(moduleName, moduleTag, planTag);
 
         // Step 4: Mark complete
         moduleState.status = 'completed';
@@ -129,51 +138,6 @@ export class ModuleChain {
     this.state.status = 'completed';
     this.state.updatedAt = new Date().toISOString();
     this._saveState();
-  }
-
-  // ─── Drain Existing Tasks ─────────────────────────────────────────
-
-  /**
-   * Process all tasks already sitting in the ClickUp queue before starting
-   * per-module alignment. This handles recovered/orphaned tasks and any
-   * work left over from a previous run.
-   */
-  async _drainExistingTasks() {
-    const readyTasks = await this.clickup.getReadyTasks();
-    const inProgress = await this.clickup.getTasks(['in progress']);
-    const pending = readyTasks.length + inProgress.length;
-
-    if (pending === 0) {
-      console.log('📭 No existing tasks in queue. Starting module alignment.\n');
-      return;
-    }
-
-    console.log(`📥 Draining ${pending} existing task(s) before starting module chain...\n`);
-    await this.slack.postStatus(`📥 *Draining ${pending} existing task(s)* before starting module chain.`);
-
-    while (true) {
-      const ready = await this.clickup.getReadyTasks();
-      if (ready.length > 0) {
-        for (const task of ready) {
-          console.log(`  📌 [drain] Processing: "${task.name}"`);
-          await this.processTask(task);
-        }
-        continue;
-      }
-
-      const stillRunning = await this.clickup.getTasks(['in progress']);
-      if (stillRunning.length > 0) {
-        console.log(`  ⏳ [drain] ${stillRunning.length} task(s) still in progress...`);
-        await new Promise(r => setTimeout(r, this.config.pollInterval));
-        continue;
-      }
-
-      // Queue empty — done draining
-      break;
-    }
-
-    console.log('✅ Existing tasks drained. Starting module alignment.\n');
-    await this.slack.postStatus('✅ *Existing tasks drained.* Starting per-module alignment.');
   }
 
   // ─── Alignment Phase ────────────────────────────────────────────
@@ -307,39 +271,39 @@ export class ModuleChain {
     console.log(`  Creating tasks for ${moduleName}...`);
     const result = await this.planner.plan(planInstruction, { forceTags: [moduleTag] });
 
+    // Store plan ID — this is the tag that links tasks to this specific alignment
+    moduleState.planId = result.planId;
     moduleState.tasksCreated = result.tasksCreated;
     moduleState.status = 'executing';
     this._saveState();
 
     await this.slack.postThreadReply(
       moduleState.slackThreadTs,
-      `✅ *Approved.* Created ${result.tasksCreated} tasks for ${moduleName}. Starting execution.`
+      `✅ *Approved.* Created ${result.tasksCreated} tasks for ${moduleName}. Plan ID: \`${result.planId}\`. Starting execution.`
     );
 
-    console.log(`  Created ${result.tasksCreated} tasks for ${moduleName}.`);
+    console.log(`  Created ${result.tasksCreated} tasks for ${moduleName} [${result.planId}].`);
     return result.tasksCreated;
   }
 
   // ─── Scoped Autopilot Phase ─────────────────────────────────────
 
-  async _runScopedAutopilot(moduleName, moduleTag) {
-    console.log(`  🚀 Running scoped autopilot for ${moduleName} [tag: ${moduleTag}]...`);
+  async _runScopedAutopilot(moduleName, moduleTag, planTag) {
+    console.log(`  🚀 Running scoped autopilot for ${moduleName} [tag: ${moduleTag}, plan: ${planTag}]...`);
 
     while (true) {
-      // Get tasks tagged with this module only
+      // Get tasks tagged with BOTH the module tag AND the plan tag
       const readyTasks = await this.clickup.getReadyTasks();
       const scopedTasks = readyTasks.filter(t =>
-        (t.tags || []).some(tg => (tg.name || tg).toLowerCase() === moduleTag.toLowerCase())
+        taskHasTag(t, moduleTag) && taskHasTag(t, planTag)
       );
 
-      // Also check in-progress tasks for this module
       const inProgress = await this.clickup.getTasks(['in progress']);
       const scopedInProgress = inProgress.filter(t =>
-        (t.tags || []).some(tg => (tg.name || tg).toLowerCase() === moduleTag.toLowerCase())
+        taskHasTag(t, moduleTag) && taskHasTag(t, planTag)
       );
 
       if (scopedTasks.length > 0) {
-        // Dispatch tasks sequentially
         for (const task of scopedTasks) {
           console.log(`    📌 [${moduleName}] Processing: "${task.name}"`);
           await this.processTask(task);
@@ -348,20 +312,19 @@ export class ModuleChain {
       }
 
       if (scopedInProgress.length > 0) {
-        // Wait for in-progress tasks to finish
         console.log(`    ⏳ [${moduleName}] ${scopedInProgress.length} task(s) still in progress...`);
         await new Promise(r => setTimeout(r, this.config.pollInterval));
         continue;
       }
 
-      // Queue empty for this module — ask scoped autopilot if more work needed
-      const hasMore = await this.autopilot.checkAndPlan({ scopeTag: moduleTag });
+      // Queue empty for this module+plan — ask scoped autopilot if more work needed
+      const hasMore = await this.autopilot.checkAndPlan({ scopeTag: moduleTag, planTag });
       if (!hasMore) {
         console.log(`    🎉 [${moduleName}] All scoped work complete.`);
         break;
       }
 
-      // New tasks were planned — loop around to pick them up
+      // New tasks were planned (with the same planTag) — loop around to pick them up
     }
   }
 

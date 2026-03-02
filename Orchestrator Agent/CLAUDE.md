@@ -84,6 +84,23 @@ process before creating any tasks or making any changes.
 - `--dry-run` — Show what would be dispatched without executing
 - `--report` — Scan tags and generate missing reports
 
+## Plan ID Tagging (HARD RULE)
+
+**The orchestrator must NEVER execute a task that was not created by an approved
+alignment plan.** Every task created by the planner is tagged with a unique plan
+ID (e.g. `plan-1709337600000`). The autopilot loop ONLY picks up tasks whose
+tags include the active plan ID — everything else in the ClickUp queue is invisible.
+
+Rules:
+- Every call to `planner.plan()` generates a `plan-<timestamp>` tag
+- This tag is added to EVERY task created in that planning session
+- The main autopilot loop filters `getReadyTasks()` by `ACTIVE_PLAN_TAG`
+- Module chain scoped autopilot filters by BOTH module tag AND plan tag
+- Old tasks from previous sessions are never picked up automatically
+- If `autopilot.checkAndPlan()` creates follow-up tasks, they inherit the same plan tag
+
+This prevents the orchestrator from executing stale, unaligned, or orphaned tasks.
+
 ## Commit & Deploy (HARD RULE)
 
 **Every task that passes output QA MUST be committed and deployed before being

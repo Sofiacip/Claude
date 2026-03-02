@@ -17,17 +17,22 @@ export class AutoPilot {
    * Check if the task queue is empty and if so, plan the next chunk of work.
    * Returns true if new work was planned, false if everything is done.
    */
-  async checkAndPlan({ scopeTag } = {}) {
+  async checkAndPlan({ scopeTag, planTag } = {}) {
     // Step 1: Check if there are any tasks still in the queue
     let readyTasks = await this.clickup.getReadyTasks();
     let inProgressTasks = await this.clickup.getTasks(['in progress']);
 
-    // Filter to scoped module if running inside a chain
+    // Filter to scoped module and/or plan
+    const hasTag = (t, tag) =>
+      (t.tags || []).some(tg => (tg.name || tg).toLowerCase() === tag.toLowerCase());
+
+    if (planTag) {
+      readyTasks = readyTasks.filter(t => hasTag(t, planTag));
+      inProgressTasks = inProgressTasks.filter(t => hasTag(t, planTag));
+    }
     if (scopeTag) {
-      const matchTag = (t) =>
-        (t.tags || []).some(tg => (tg.name || tg).toLowerCase() === scopeTag.toLowerCase());
-      readyTasks = readyTasks.filter(matchTag);
-      inProgressTasks = inProgressTasks.filter(matchTag);
+      readyTasks = readyTasks.filter(t => hasTag(t, scopeTag));
+      inProgressTasks = inProgressTasks.filter(t => hasTag(t, scopeTag));
     }
 
     if (readyTasks.length > 0 || inProgressTasks.length > 0) {
@@ -79,8 +84,9 @@ export class AutoPilot {
     // Record this decision in memory
     this.memory.recordAutopilotDecision(decision);
 
-    // Step 5: Run the planner with this chunk (with forced tags if scoped)
-    const planOpts = scopeTag ? { forceTags: [scopeTag] } : {};
+    // Step 5: Run the planner with this chunk (with forced tags + plan tag if scoped)
+    const forceTags = scopeTag ? [scopeTag] : [];
+    const planOpts = { forceTags: forceTags.length > 0 ? forceTags : undefined, planId: planTag };
     const result = await this.planner.plan(decision.next, planOpts);
 
     if (result.tasksCreated === 0) {

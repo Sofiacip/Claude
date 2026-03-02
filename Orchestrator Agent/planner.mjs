@@ -16,8 +16,12 @@ export class Planner {
    * @param {string} vision — Natural language description of what to build
    * @returns {object} — { tasksCreated: number, taskIds: string[] }
    */
-  async plan(vision, { forceTags } = {}) {
-    console.log(`\n🧠 Planning: "${vision}"\n`);
+  async plan(vision, { forceTags, planId } = {}) {
+    // Generate a plan ID if none was provided — every task gets tagged with it
+    const activePlanId = planId || `plan-${Date.now()}`;
+
+    console.log(`\n🧠 Planning: "${vision}"`);
+    console.log(`   Plan ID: ${activePlanId}\n`);
 
     // Step 1: Build the planning prompt
     const prompt = this.buildPlanningPrompt(vision, forceTags);
@@ -35,11 +39,10 @@ export class Planner {
       return { tasksCreated: 0, taskIds: [] };
     }
 
-    // Ensure forced tags are present on every task
-    if (forceTags) {
-      for (const task of tasks) {
-        task.tags = [...new Set([...(task.tags || []), ...forceTags])];
-      }
+    // Stamp every task with the plan ID tag + any forced tags
+    for (const task of tasks) {
+      const extra = [activePlanId, ...(forceTags || [])];
+      task.tags = [...new Set([...(task.tags || []), ...extra])];
     }
 
     console.log(`\n📋 Generated ${tasks.length} tasks. Creating in ClickUp...\n`);
@@ -79,15 +82,11 @@ export class Planner {
         phases[phase].push(createdIds[i]);
       }
 
-      // Derive planId from the first tag or the vision text
-      const firstTag = tasks[0]?.tags?.[0]?.toLowerCase?.() || tasks[0]?.tags?.[0] || 'unknown';
-      const planId = typeof firstTag === 'string' ? firstTag : 'unknown';
-
-      this.memory.initPlan(planId, vision, phases);
+      this.memory.initPlan(activePlanId, vision, phases);
       console.log(`📊 Registered ${Object.keys(phases).length} phases in memory for reporter tracking.`);
     }
 
-    return { tasksCreated: createdIds.length, taskIds: createdIds };
+    return { tasksCreated: createdIds.length, taskIds: createdIds, planId: activePlanId };
   }
 
   buildPlanningPrompt(vision, forceTags = null) {

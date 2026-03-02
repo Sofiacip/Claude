@@ -79,6 +79,9 @@ const APPROVE       = args.includes('--approve');
 const MODULES_IDX   = args.indexOf('--modules');
 const MODULES       = MODULES_IDX >= 0 ? args[MODULES_IDX + 1]?.split(',').map(s => s.trim()) : null;
 
+// Active plan tag — set after alignment creates tasks, used to filter the main loop
+let ACTIVE_PLAN_TAG = null;
+
 // ─── Initialize ──────────────────────────────────────────────────
 
 validateConfig();
@@ -580,16 +583,18 @@ async function main() {
     alignment.saveState(state);
 
     const result = await planner.plan(planInstruction);
-    console.log(`\nCreated ${result.tasksCreated} tasks from approved alignment.`);
+    console.log(`\nCreated ${result.tasksCreated} tasks from approved alignment. Plan ID: ${result.planId}`);
 
-    await slack.postThreadReply(threadTs, `✅ *Approved.* Created ${result.tasksCreated} tasks. Entering autopilot.`);
+    await slack.postThreadReply(threadTs, `✅ *Approved.* Created ${result.tasksCreated} tasks. Plan ID: \`${result.planId}\`. Entering autopilot.`);
 
     state.state = 'executed';
     state.tasksCreated = result.tasksCreated;
+    state.planId = result.planId;
     alignment.saveState(state);
 
-    AUTOPILOT = true; // Enable autopilot for the continuous loop
-    log.info('Entering autopilot mode...');
+    AUTOPILOT = true;
+    ACTIVE_PLAN_TAG = result.planId; // Filter main loop to this plan only
+    log.info(`Entering autopilot mode (plan: ${result.planId})...`);
     // Fall through to the continuous loop below (don't return)
   }
 
@@ -669,19 +674,21 @@ async function main() {
 
     log.info('Plan approved. Generating ClickUp tasks...');
     const result = await planner.plan(planInstruction);
-    console.log(`\nDone. Created ${result.tasksCreated} tasks from approved alignment.`);
+    console.log(`\nDone. Created ${result.tasksCreated} tasks from approved alignment. Plan ID: ${result.planId}`);
 
     if (slack.enabled) {
-      await slack.postStatus(`✅ *Alignment approved.* Created ${result.tasksCreated} tasks from: "${state.instruction}"`);
+      await slack.postStatus(`✅ *Alignment approved.* Created ${result.tasksCreated} tasks. Plan ID: \`${result.planId}\``);
     }
 
     state.state = 'executed';
     state.tasksCreated = result.tasksCreated;
+    state.planId = result.planId;
     alignment.saveState(state);
 
     // If --autopilot was also passed, fall through to the continuous loop
     if (!AUTOPILOT) return;
-    log.info('Entering autopilot mode after approval...');
+    ACTIVE_PLAN_TAG = result.planId;
+    log.info(`Entering autopilot mode after approval (plan: ${result.planId})...`);
   }
 
   // Planning mode (now alignment-aware)
@@ -788,8 +795,13 @@ async function main() {
 
   while (true) {
     try {
-      // Get all ready tasks
-      const readyTasks = await clickup.getReadyTasks();
+      // Get all ready tasks — filter by active plan tag if set
+      let readyTasks = await clickup.getReadyTasks();
+      if (ACTIVE_PLAN_TAG) {
+        readyTasks = readyTasks.filter(t =>
+          (t.tags || []).some(tg => (tg.name || tg).toLowerCase() === ACTIVE_PLAN_TAG.toLowerCase())
+        );
+      }
 
       if (readyTasks.length > 0) {
         // Ask scheduler which ones we can dispatch now
@@ -825,8 +837,8 @@ async function main() {
 
       if (scheduler.activeCount === 0 && readyTasks?.length === 0) {
         if (AUTOPILOT) {
-          // Auto-pilot: decide and plan the next chunk
-          const hasMoreWork = await autopilot.checkAndPlan();
+          // Auto-pilot: decide and plan the next chunk (scoped to active plan)
+          const hasMoreWork = await autopilot.checkAndPlan({ planTag: ACTIVE_PLAN_TAG });
 
           if (!hasMoreWork) {
             log.info('🎉 Auto-pilot: All vision work complete. Agent stopping.');

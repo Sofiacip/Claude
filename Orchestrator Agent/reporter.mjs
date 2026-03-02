@@ -89,8 +89,11 @@ export class Reporter {
     );
 
     console.log(`📊 Reporter: tag "${tag}" — ${doneTasks.length} done, ${blockedTasks.length} blocked, ${openTasks.length} open (of ${taggedTasks.length} total)`);
+    if (openTasks.length > 0) {
+      console.log(`📊 Reporter: open tasks blocking report for "${tag}": ${openTasks.map(t => `"${t.name}" [${t.status?.status}]`).join(', ')}`);
+    }
 
-    // Only report when NO open tasks remain (blocked tasks are OK — we report those)
+    // Only report when NO open tasks remain (blocked tasks count as terminal)
     if (openTasks.length > 0) return;
 
     // All tasks are either done or blocked — generate report
@@ -160,6 +163,131 @@ export class Reporter {
     } catch (err) {
       console.error(`❌ Failed to generate summary for "${tag}": ${err.message}`);
     }
+  }
+
+  /**
+   * Scan all tags in ClickUp and generate reports for any that have all tasks
+   * in terminal states (completed/ready for review/blocked) and haven't been reported yet.
+   * Used by the --report CLI command.
+   */
+  async scanAndReport() {
+    console.log('\n📊 Scanning all tags for unreported completions...\n');
+
+    const allTasks = await this.clickup.getAllTasks();
+
+    // Collect all unique tags (excluding meta tags)
+    const skipTags = ['summary', 'milestone', 'bug', 'feature'];
+    const tagSet = new Set();
+    for (const t of allTasks) {
+      for (const tg of (t.tags || [])) {
+        const name = (tg.name || tg).toLowerCase();
+        if (!skipTags.includes(name)) tagSet.add(name);
+      }
+    }
+
+    console.log(`📊 Found ${tagSet.size} tags: ${[...tagSet].join(', ')}`);
+
+    const terminalStatuses = ['ready for review', 'completed', 'closed', 'complete', 'done', 'blocked'];
+    let reportsGenerated = 0;
+
+    for (const tag of tagSet) {
+      // Skip already reported
+      if (!this.memory.data.reportedTags) this.memory.data.reportedTags = {};
+      if (this.memory.data.reportedTags[tag]) {
+        console.log(`  ✓ "${tag}" — already reported`);
+        continue;
+      }
+
+      // Filter tasks for this tag
+      const taggedTasks = allTasks.filter(t => {
+        const taskTags = (t.tags || []).map(tg => (tg.name || tg).toLowerCase());
+        return taskTags.includes(tag);
+      });
+
+      const doneStatuses = ['ready for review', 'completed', 'closed', 'complete', 'done'];
+      const doneTasks = taggedTasks.filter(t => doneStatuses.includes(t.status?.status?.toLowerCase()));
+      const blockedTasks = taggedTasks.filter(t => t.status?.status?.toLowerCase() === 'blocked');
+      const openTasks = taggedTasks.filter(t => !terminalStatuses.includes(t.status?.status?.toLowerCase()));
+
+      console.log(`  "${tag}" — ${doneTasks.length} done, ${blockedTasks.length} blocked, ${openTasks.length} open (of ${taggedTasks.length} total)`);
+
+      if (openTasks.length > 0) {
+        console.log(`    ⏳ Skipping — ${openTasks.length} tasks still open: ${openTasks.map(t => `"${t.name}" [${t.status?.status}]`).join(', ')}`);
+        continue;
+      }
+
+      if (taggedTasks.length === 0) continue;
+
+      // All terminal — generate report
+      console.log(`\n📋 Generating report for "${tag}"...\n`);
+
+      const planName = this.inferPlanName(tag);
+
+      const taskDetails = doneTasks.map(t => {
+        const history = this.memory.getTaskHistory(t.id);
+        return {
+          name: t.name,
+          status: history?.status || 'completed',
+          summary: history?.approach || history?.summary || 'Completed successfully',
+          filesChanged: history?.filesChanged || [],
+          attempts: history?.attempts || 1,
+          errors: history?.errors || [],
+        };
+      });
+
+      const blockedDetails = blockedTasks.map(t => {
+        const history = this.memory.getTaskHistory(t.id);
+        return {
+          name: t.name,
+          blockedReason: history?.blockedReason || history?.summary || 'Unknown reason',
+        };
+      });
+
+      try {
+        const report = await this.generateReport(
+          { planName, tag, totalTasks: taggedTasks.length, doneTasks: doneTasks.length, blockedTasks: blockedTasks.length },
+          taskDetails,
+          blockedDetails
+        );
+
+        // Post to ClickUp
+        const summaryTask = await this.clickup.createTask({
+          name: `📋 Summary: ${planName}`,
+          description: report,
+          priority: 2,
+          tags: ['summary'],
+          status: 'ready for review',
+        });
+
+        console.log(`✅ Summary report posted to ClickUp: "${summaryTask.name}"`);
+
+        // Post to Slack
+        if (this.slack) {
+          await this.slack.postReport({
+            title: `Summary: ${planName}`,
+            body: report,
+            type: 'phase',
+          });
+          console.log('✅ Summary report posted to Slack.');
+        }
+
+        // Mark as reported
+        this.memory.data.reportedTags[tag] = {
+          reportedAt: new Date().toISOString(),
+          reportTaskId: summaryTask.id,
+          totalTasks: taggedTasks.length,
+          completed: doneTasks.length,
+          blocked: blockedTasks.length,
+        };
+        this.memory.save();
+        reportsGenerated++;
+      } catch (err) {
+        console.error(`❌ Failed to generate report for "${tag}": ${err.message}`);
+      }
+    }
+
+    console.log(`\n📊 Scan complete. Generated ${reportsGenerated} report(s).\n`);
+    return reportsGenerated;
   }
 
   /**

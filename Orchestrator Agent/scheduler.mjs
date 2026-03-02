@@ -13,6 +13,10 @@ const MODULE_MAP = {
   'doc factory':     'doc factory',
   'docs':            'doc factory',
   'pageforge':       'pageforge',
+  'bug-reporter':    'bug-reporter',
+  'bug':             'bug-reporter',
+  'platform':        'bug-reporter',
+  'ux/ui':           'bug-reporter',
 };
 
 export class Scheduler {

@@ -64,6 +64,7 @@ const DRY_RUN  = args.includes('--dry-run');
 const PLAN_IDX = args.indexOf('--plan');
 const PLAN_VISION = PLAN_IDX >= 0 ? args[PLAN_IDX + 1] : null;
 const AUTOPILOT = args.includes('--autopilot');
+const REPORT    = args.includes('--report');
 
 // ─── Initialize ──────────────────────────────────────────────────
 
@@ -285,6 +286,7 @@ async function reportResults(task, result, qaResults) {
 
 async function main() {
   const modeStr = PLAN_VISION ? 'Planning     '
+    : REPORT ? 'Report scan  '
     : AUTOPILOT ? 'Auto-pilot   '
     : ONCE ? 'Single task  '
     : DRY_RUN ? 'Dry run      '
@@ -311,6 +313,14 @@ async function main() {
     log.info('🧠 PLANNING MODE');
     const result = await planner.plan(PLAN_VISION);
     console.log(`\nDone. Created ${result.tasksCreated} tasks.`);
+    return;
+  }
+
+  // Report mode — scan all tags and generate missing reports
+  if (REPORT) {
+    log.info('📊 REPORT MODE');
+    const count = await reporter.scanAndReport();
+    console.log(`\nDone. Generated ${count} report(s).`);
     return;
   }
 

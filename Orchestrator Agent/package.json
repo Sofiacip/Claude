@@ -10,9 +10,14 @@
     "start:dry": "node agent.mjs --dry-run",
     "start:autopilot": "node agent.mjs --autopilot",
     "plan": "node agent.mjs --plan",
-    "status": "node status.mjs"
+    "report": "node agent.mjs --report",
+    "status": "node status.mjs",
+    "start:api": "node api-server.mjs"
   },
   "dependencies": {
-    "dotenv": "^16.4.5"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "multer": "^2.1.0"
   }
 }

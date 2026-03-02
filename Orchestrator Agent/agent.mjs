@@ -72,7 +72,8 @@ const REPORT    = args.includes('--report');
 const ALIGN_IDX     = args.indexOf('--align');
 const ALIGN_INSTR   = ALIGN_IDX >= 0 ? args[ALIGN_IDX + 1] : null;
 const RESPOND_IDX   = args.indexOf('--respond');
-const RESPOND_FILE  = RESPOND_IDX >= 0 ? args[RESPOND_IDX + 1] : null;
+const RESPOND_FLAG  = RESPOND_IDX >= 0;
+const RESPOND_FILE  = RESPOND_FLAG ? (args[RESPOND_IDX + 1] || null) : null;
 const APPROVE       = args.includes('--approve');
 
 // ─── Initialize ──────────────────────────────────────────────────
@@ -302,7 +303,7 @@ async function reportResults(task, result, qaResults) {
 
 async function main() {
   const modeStr = ALIGN_INSTR ? 'Alignment    '
-    : RESPOND_FILE ? 'Respond      '
+    : RESPOND_FLAG ? 'Respond      '
     : APPROVE ? 'Approve plan '
     : PLAN_VISION ? 'Planning     '
     : REPORT ? 'Report scan  '
@@ -400,8 +401,13 @@ async function main() {
   }
 
   // ─── Alignment: Step 2 — Process answers, generate plan summary
-  if (RESPOND_FILE) {
+  if (RESPOND_FLAG) {
     log.info('📝 RESPOND MODE — Processing answers...');
+
+    if (!RESPOND_FILE) {
+      log.error('Missing answers file. Usage: node agent.mjs --respond answers.txt');
+      return;
+    }
 
     const state = alignment.loadState();
     if (!state || state.state !== 'questions_pending') {

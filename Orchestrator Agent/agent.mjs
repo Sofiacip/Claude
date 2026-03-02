@@ -389,13 +389,20 @@ async function main() {
     console.log(`\nInstruction: "${ALIGN_INSTR}"\n`);
     questions.forEach((q, i) => console.log(`${i + 1}. ${q}`));
     console.log(`\n${'─'.repeat(60)}`);
-    console.log('Answer all questions in a text file, then run:');
-    console.log('  node agent.mjs --respond answers.txt');
+    console.log('Answer in the Slack thread, then run:');
+    console.log('  node agent.mjs --respond                  (reads from Slack thread)');
+    console.log('  node agent.mjs --respond answers.txt      (reads from file)');
     console.log('─'.repeat(60));
 
     if (slack.enabled) {
       const qList = questions.map((q, i) => `${i + 1}. ${q}`).join('\n');
-      await slack.postStatus(`🎯 *Alignment Questions*\nInstruction: "${ALIGN_INSTR}"\n\n${qList}\n\n_Please answer all questions._`);
+      const slackMsg = await slack.postStatus(`🎯 *Alignment Questions*\nInstruction: "${ALIGN_INSTR}"\n\n${qList}\n\n_Answer in this thread, then run:_ \`node agent.mjs --respond\``);
+      if (slackMsg?.ts) {
+        const state = alignment.loadState();
+        state.slackThreadTs = slackMsg.ts;
+        state.slackChannelId = slackMsg.channel;
+        alignment.saveState(state);
+      }
     }
     return;
   }
@@ -404,28 +411,36 @@ async function main() {
   if (RESPOND_FLAG) {
     log.info('📝 RESPOND MODE — Processing answers...');
 
-    if (!RESPOND_FILE) {
-      log.error('Missing answers file. Usage: node agent.mjs --respond answers.txt');
-      return;
-    }
-
     const state = alignment.loadState();
     if (!state || state.state !== 'questions_pending') {
       log.error('No pending alignment found. Start with: node agent.mjs --align "instruction"');
       return;
     }
 
-    // Read answers file
+    // Read answers: from file if provided, otherwise from Slack thread
     let answers;
-    try {
-      answers = readFileSync(RESPOND_FILE, 'utf-8').trim();
-    } catch (err) {
-      log.error(`Cannot read answers file "${RESPOND_FILE}": ${err.message}`);
+    if (RESPOND_FILE) {
+      try {
+        answers = readFileSync(RESPOND_FILE, 'utf-8').trim();
+      } catch (err) {
+        log.error(`Cannot read answers file "${RESPOND_FILE}": ${err.message}`);
+        return;
+      }
+    } else if (state.slackThreadTs && slack.enabled) {
+      log.info('Reading answers from Slack thread...');
+      answers = await slack.readThreadReplies(state.slackThreadTs);
+      if (!answers) {
+        log.error('No replies found in the Slack thread yet. Answer the questions in the thread first, then re-run --respond.');
+        return;
+      }
+      log.info(`Got answers from Slack (${answers.split('\n').length} lines).`);
+    } else {
+      log.error('No answers file provided and no Slack thread to read from.\nUsage: node agent.mjs --respond answers.txt');
       return;
     }
 
     if (!answers) {
-      log.error('Answers file is empty.');
+      log.error('Answers are empty.');
       return;
     }
 

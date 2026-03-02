@@ -16,11 +16,11 @@ export class Planner {
    * @param {string} vision — Natural language description of what to build
    * @returns {object} — { tasksCreated: number, taskIds: string[] }
    */
-  async plan(vision) {
+  async plan(vision, { forceTags } = {}) {
     console.log(`\n🧠 Planning: "${vision}"\n`);
 
     // Step 1: Build the planning prompt
-    const prompt = this.buildPlanningPrompt(vision);
+    const prompt = this.buildPlanningPrompt(vision, forceTags);
 
     // Step 2: Send to Claude Code for task decomposition
     console.log('📋 Generating task breakdown via Claude Code...');
@@ -33,6 +33,13 @@ export class Planner {
       console.error('❌ No tasks could be parsed from Claude Code output.');
       console.log('Raw output tail:', rawOutput.slice(-1000));
       return { tasksCreated: 0, taskIds: [] };
+    }
+
+    // Ensure forced tags are present on every task
+    if (forceTags) {
+      for (const task of tasks) {
+        task.tags = [...new Set([...(task.tags || []), ...forceTags])];
+      }
     }
 
     console.log(`\n📋 Generated ${tasks.length} tasks. Creating in ClickUp...\n`);
@@ -83,7 +90,7 @@ export class Planner {
     return { tasksCreated: createdIds.length, taskIds: createdIds };
   }
 
-  buildPlanningPrompt(vision) {
+  buildPlanningPrompt(vision, forceTags = null) {
     let prompt = '';
 
     // Load vision document
@@ -95,9 +102,13 @@ export class Planner {
     // Scan current directory structure for additional context
     prompt += `<project_path>${this.projectPath}</project_path>\n\n`;
 
+    const forceTagNote = forceTags
+      ? `\nIMPORTANT: Tag ALL tasks with these tags: ${forceTags.join(', ')}\nThese tasks are part of a module chain and MUST be tagged correctly for routing.\n`
+      : '';
+
     prompt += `<planning_request>
 You are a senior technical project manager decomposing a feature vision into implementable development tasks.
-
+${forceTagNote}
 VISION TO IMPLEMENT:
 "${vision}"
 

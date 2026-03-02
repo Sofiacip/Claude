@@ -17,20 +17,28 @@ export class AutoPilot {
    * Check if the task queue is empty and if so, plan the next chunk of work.
    * Returns true if new work was planned, false if everything is done.
    */
-  async checkAndPlan() {
+  async checkAndPlan({ scopeTag } = {}) {
     // Step 1: Check if there are any tasks still in the queue
-    const readyTasks = await this.clickup.getReadyTasks();
-    const inProgressTasks = await this.clickup.getTasks(['in progress']);
+    let readyTasks = await this.clickup.getReadyTasks();
+    let inProgressTasks = await this.clickup.getTasks(['in progress']);
+
+    // Filter to scoped module if running inside a chain
+    if (scopeTag) {
+      const matchTag = (t) =>
+        (t.tags || []).some(tg => (tg.name || tg).toLowerCase() === scopeTag.toLowerCase());
+      readyTasks = readyTasks.filter(matchTag);
+      inProgressTasks = inProgressTasks.filter(matchTag);
+    }
 
     if (readyTasks.length > 0 || inProgressTasks.length > 0) {
       // Still work to do — don't plan yet
       return true;
     }
 
-    console.log('\n🧭 Task queue is empty. Auto-pilot deciding next priority...\n');
+    console.log(`\n🧭 Task queue is empty${scopeTag ? ` for [${scopeTag}]` : ''}. Auto-pilot deciding next priority...\n`);
 
     // Step 2: Build context from memory and vision
-    const decision = await this.decideNext();
+    const decision = await this.decideNext(scopeTag);
 
     if (!decision) {
       console.error('❌ Auto-pilot could not determine next action. Will retry next cycle.');
@@ -71,13 +79,14 @@ export class AutoPilot {
     // Record this decision in memory
     this.memory.recordAutopilotDecision(decision);
 
-    // Step 5: Run the planner with this chunk
-    const result = await this.planner.plan(decision.next);
+    // Step 5: Run the planner with this chunk (with forced tags if scoped)
+    const planOpts = scopeTag ? { forceTags: [scopeTag] } : {};
+    const result = await this.planner.plan(decision.next, planOpts);
 
     if (result.tasksCreated === 0) {
       console.error('❌ Planner generated 0 tasks. Retrying with more specific prompt...');
       // Try once more with the reason included
-      const retryResult = await this.planner.plan(`${decision.next}. Context: ${decision.reason}`);
+      const retryResult = await this.planner.plan(`${decision.next}. Context: ${decision.reason}`, planOpts);
       if (retryResult.tasksCreated === 0) {
         console.error('❌ Planner retry also produced 0 tasks. Will retry next cycle.');
       }
@@ -99,8 +108,8 @@ export class AutoPilot {
   /**
    * Ask Claude Code what the next priority should be.
    */
-  async decideNext() {
-    const prompt = this.buildDecisionPrompt();
+  async decideNext(scopeTag = null) {
+    const prompt = this.buildDecisionPrompt(scopeTag);
 
     try {
       const output = await this.runClaudeCode(prompt);
@@ -111,7 +120,7 @@ export class AutoPilot {
     }
   }
 
-  buildDecisionPrompt() {
+  buildDecisionPrompt(scopeTag = null) {
     // Load vision document
     let visionContent = '';
     if (this.visionDocPath && existsSync(this.visionDocPath)) {
@@ -155,8 +164,13 @@ export class AutoPilot {
       decisionHistory = `\nPrevious auto-pilot decisions (do NOT repeat these):\n${previousDecisions.map(d => `  - "${d.next}" (${d.timestamp})`).join('\n')}`;
     }
 
+    const scopeBlock = scopeTag
+      ? `\nSCOPE: You are planning for the "${scopeTag}" module ONLY.\nOnly consider work relevant to this module. When all work for this module is done, respond with DONE.\n`
+      : '';
+
     return `<autopilot_decision>
 You are the technical director for Impact OS, a marketing automation platform for course creators. The platform lives at app.scaleforimpact.co.
+${scopeBlock}
 
 PROJECT VISION:
 ${visionContent || 'No vision document found. Focus on fixing broken modules first.'}

@@ -161,7 +161,7 @@ export class SlackClient {
     if (!this.enabled || !threadTs) return null;
 
     while (true) {
-      if (onPoll) onPoll();
+      if (onPoll) await onPoll();
 
       const text = await this.readThreadReplies(threadTs, afterTs);
       if (text) {

@@ -47,8 +47,8 @@ export class IntakeAlignment {
    * Generate 5-15 targeted questions for a high-level instruction.
    * Returns string[] of questions.
    */
-  async generateQuestions(instruction) {
-    const prompt = this._buildQuestionPrompt(instruction);
+  async generateQuestions(instruction, { moduleName } = {}) {
+    const prompt = this._buildQuestionPrompt(instruction, moduleName);
     const output = await this._runClaudeCode(prompt, 5);
     return this._parseQuestions(output);
   }
@@ -57,8 +57,8 @@ export class IntakeAlignment {
    * Generate a brief plan summary for a narrow instruction (skipping full Q&A).
    * Returns the formatted plan summary string.
    */
-  async generateBriefSummary(instruction) {
-    const prompt = this._buildBriefSummaryPrompt(instruction);
+  async generateBriefSummary(instruction, { moduleName } = {}) {
+    const prompt = this._buildBriefSummaryPrompt(instruction, moduleName);
     return await this._runClaudeCode(prompt, 5);
   }
 
@@ -66,8 +66,8 @@ export class IntakeAlignment {
    * Generate the full plan summary from instruction + questions + answers.
    * Returns the formatted plan summary string.
    */
-  async generatePlanSummary(instruction, questions, answers) {
-    const prompt = this._buildSummaryPrompt(instruction, questions, answers);
+  async generatePlanSummary(instruction, questions, answers, { moduleName } = {}) {
+    const prompt = this._buildSummaryPrompt(instruction, questions, answers, moduleName);
     return await this._runClaudeCode(prompt, 5);
   }
 
@@ -116,7 +116,7 @@ NEEDS_ALIGNMENT: [one sentence explaining what's ambiguous]
 </alignment_assessment>`;
   }
 
-  _buildQuestionPrompt(instruction) {
+  _buildQuestionPrompt(instruction, moduleName = null) {
     // Gather project context
     let visionContext = '';
     if (this.visionDocPath && existsSync(this.visionDocPath)) {
@@ -133,9 +133,13 @@ NEEDS_ALIGNMENT: [one sentence explaining what's ambiguous]
       }
     }
 
+    const moduleScope = moduleName
+      ? `\nFOCUS MODULE: ${moduleName}\nGenerate questions ONLY about this module's implementation of the instruction.\n`
+      : '';
+
     return `<alignment_questions>
 You are a senior technical PM generating alignment questions for an autonomous development agent. The agent will execute tasks without further human check-ins, so these questions MUST surface every ambiguity now.
-
+${moduleScope}
 INSTRUCTION FROM HUMAN:
 "${instruction}"
 
@@ -176,15 +180,19 @@ Example format:
 </alignment_questions>`;
   }
 
-  _buildBriefSummaryPrompt(instruction) {
+  _buildBriefSummaryPrompt(instruction, moduleName = null) {
     let visionContext = '';
     if (this.visionDocPath && existsSync(this.visionDocPath)) {
       visionContext = readFileSync(this.visionDocPath, 'utf-8').slice(0, 2000);
     }
 
+    const moduleScope = moduleName
+      ? `\nFOCUS MODULE: ${moduleName}\nScope this summary to this module's implementation only.\n`
+      : '';
+
     return `<brief_alignment>
 You are generating a brief alignment summary for a narrow, specific development instruction.
-
+${moduleScope}
 INSTRUCTION:
 "${instruction}"
 
@@ -208,7 +216,7 @@ Output ONLY the formatted summary, no other text.
 </brief_alignment>`;
   }
 
-  _buildSummaryPrompt(instruction, questions, answers) {
+  _buildSummaryPrompt(instruction, questions, answers, moduleName = null) {
     let visionContext = '';
     if (this.visionDocPath && existsSync(this.visionDocPath)) {
       visionContext = readFileSync(this.visionDocPath, 'utf-8').slice(0, 3000);
@@ -216,9 +224,13 @@ Output ONLY the formatted summary, no other text.
 
     const qaBlock = questions.map((q, i) => `Q${i + 1}: ${q}`).join('\n');
 
+    const moduleScope = moduleName
+      ? `\nFOCUS MODULE: ${moduleName}\nScope this plan summary to this module's implementation only.\n`
+      : '';
+
     return `<plan_summary>
 You are generating a Plan Summary based on alignment Q&A between a human and an autonomous development agent.
-
+${moduleScope}
 ORIGINAL INSTRUCTION:
 "${instruction}"
 

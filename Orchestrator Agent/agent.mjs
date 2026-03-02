@@ -75,6 +75,8 @@ const RESPOND_IDX   = args.indexOf('--respond');
 const RESPOND_FLAG  = RESPOND_IDX >= 0;
 const RESPOND_FILE  = RESPOND_FLAG ? (args[RESPOND_IDX + 1] || null) : null;
 const APPROVE       = args.includes('--approve');
+const MODULES_IDX   = args.indexOf('--modules');
+const MODULES       = MODULES_IDX >= 0 ? args[MODULES_IDX + 1]?.split(',').map(s => s.trim()) : null;
 
 // ─── Initialize ──────────────────────────────────────────────────
 
@@ -302,7 +304,8 @@ async function reportResults(task, result, qaResults) {
 // ─── Main Loop ───────────────────────────────────────────────────
 
 async function main() {
-  const modeStr = ALIGN_INSTR ? 'Alignment    '
+  const modeStr = (ALIGN_INSTR && MODULES) ? `Chain: ${MODULES.join(',')}`.slice(0, 13).padEnd(13)
+    : ALIGN_INSTR ? 'Alignment    '
     : RESPOND_FLAG ? 'Respond      '
     : APPROVE ? 'Approve plan '
     : PLAN_VISION ? 'Planning     '
@@ -337,6 +340,29 @@ async function main() {
   //   4. Poll thread for approval
   //   5. Create ClickUp tasks → enter autopilot
   //
+  if (ALIGN_INSTR && MODULES) {
+    // ─── Module chaining mode ─────────────────────────────────────
+    log.info(`🔗 MODULE CHAIN MODE — ${MODULES.length} module(s): ${MODULES.join(', ')}`);
+
+    if (!slack.enabled) {
+      log.error('Slack is not configured. --modules requires Slack for per-module alignment.');
+      log.error('Set SLACK_BOT_TOKEN and SLACK_CHANNEL_ID in .env.');
+      return;
+    }
+
+    const { ModuleChain } = await import('./chain.mjs');
+    const chain = new ModuleChain({
+      instruction: ALIGN_INSTR,
+      modules: MODULES,
+      alignment, planner, autopilot, clickup, slack, memory,
+      scheduler, qa, executor, healer, reporter,
+      config: CONFIG,
+      processTask,
+    });
+    await chain.run();
+    return; // chain.run() handles everything including autopilot
+  }
+
   if (ALIGN_INSTR) {
     log.info('🎯 ALIGNMENT MODE');
 

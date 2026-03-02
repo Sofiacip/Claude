@@ -11,6 +11,7 @@
 // 6. Reports back to ClickUp
 // 7. Supports planning mode: vision → ClickUp tasks
 
+import { readFileSync } from 'fs';
 import { config } from 'dotenv';
 import { ClickUpClient } from './clickup.mjs';
 import { ClaudeExecutor } from './executor.mjs';
@@ -21,6 +22,7 @@ import { Memory } from './memory.mjs';
 import { SelfHealer } from './healer.mjs';
 import { Reporter } from './reporter.mjs';
 import { AutoPilot } from './autopilot.mjs';
+import { IntakeAlignment } from './alignment.mjs';
 import { SlackClient } from './slack.mjs';
 import { Logger } from './logger.mjs';
 
@@ -66,6 +68,13 @@ const PLAN_VISION = PLAN_IDX >= 0 ? args[PLAN_IDX + 1] : null;
 const AUTOPILOT = args.includes('--autopilot');
 const REPORT    = args.includes('--report');
 
+// Alignment CLI flags
+const ALIGN_IDX     = args.indexOf('--align');
+const ALIGN_INSTR   = ALIGN_IDX >= 0 ? args[ALIGN_IDX + 1] : null;
+const RESPOND_IDX   = args.indexOf('--respond');
+const RESPOND_FILE  = RESPOND_IDX >= 0 ? args[RESPOND_IDX + 1] : null;
+const APPROVE       = args.includes('--approve');
+
 // ─── Initialize ──────────────────────────────────────────────────
 
 validateConfig();
@@ -92,6 +101,12 @@ const autopilot = new AutoPilot({
   slack,
   visionDocPath: CONFIG.visionDocPath,
   projectPath: CONFIG.projectPath,
+});
+const alignment = new IntakeAlignment({
+  projectPath: CONFIG.projectPath,
+  visionDocPath: CONFIG.visionDocPath,
+  memory,
+  slack,
 });
 
 // ─── Crash Recovery ──────────────────────────────────────────────
@@ -286,7 +301,10 @@ async function reportResults(task, result, qaResults) {
 // ─── Main Loop ───────────────────────────────────────────────────
 
 async function main() {
-  const modeStr = PLAN_VISION ? 'Planning     '
+  const modeStr = ALIGN_INSTR ? 'Alignment    '
+    : RESPOND_FILE ? 'Respond      '
+    : APPROVE ? 'Approve plan '
+    : PLAN_VISION ? 'Planning     '
     : REPORT ? 'Report scan  '
     : AUTOPILOT ? 'Auto-pilot   '
     : ONCE ? 'Single task  '
@@ -309,11 +327,218 @@ async function main() {
   log.info(`Memory loaded (${taskCount} tasks in history)`);
   if (slack.enabled) log.info('📡 Slack notifications enabled');
 
-  // Planning mode
+  // ─── Alignment: Step 1 — Generate questions ──────────────────
+  if (ALIGN_INSTR) {
+    log.info('🎯 ALIGNMENT MODE — Generating questions...');
+
+    const assessment = await alignment.assess(ALIGN_INSTR);
+
+    if (!assessment.needsFull) {
+      // Narrow instruction — generate brief summary directly
+      log.info(`Instruction is specific enough to skip full Q&A: ${assessment.reason}`);
+      const summary = await alignment.generateBriefSummary(ALIGN_INSTR);
+
+      alignment.saveState({
+        id: `align-${Date.now()}`,
+        instruction: ALIGN_INSTR,
+        state: 'summary_pending',
+        needsFullAlignment: false,
+        questions: [],
+        answers: null,
+        planSummary: summary,
+        createdAt: new Date().toISOString(),
+      });
+
+      console.log(`\n${summary}\n`);
+      console.log('─'.repeat(60));
+      console.log('To approve this plan and create tasks:');
+      console.log('  node agent.mjs --approve');
+      console.log('  node agent.mjs --approve --autopilot   (approve + start autopilot)');
+      console.log('─'.repeat(60));
+
+      if (slack.enabled) {
+        await slack.postStatus(`🎯 *Alignment — Brief Plan Summary*\nInstruction: "${ALIGN_INSTR}"\n\n${summary}\n\n_Reply with approval or adjustments._`);
+      }
+      return;
+    }
+
+    // Full alignment needed
+    log.info(`Full alignment needed: ${assessment.reason}`);
+    const questions = await alignment.generateQuestions(ALIGN_INSTR);
+
+    if (questions.length === 0) {
+      log.error('Failed to generate alignment questions. Try again or use --plan for direct planning.');
+      return;
+    }
+
+    alignment.saveState({
+      id: `align-${Date.now()}`,
+      instruction: ALIGN_INSTR,
+      state: 'questions_pending',
+      needsFullAlignment: true,
+      questions,
+      answers: null,
+      planSummary: null,
+      createdAt: new Date().toISOString(),
+    });
+
+    console.log(`\n${'═'.repeat(60)}`);
+    console.log('  ALIGNMENT QUESTIONS');
+    console.log('═'.repeat(60));
+    console.log(`\nInstruction: "${ALIGN_INSTR}"\n`);
+    questions.forEach((q, i) => console.log(`${i + 1}. ${q}`));
+    console.log(`\n${'─'.repeat(60)}`);
+    console.log('Answer all questions in a text file, then run:');
+    console.log('  node agent.mjs --respond answers.txt');
+    console.log('─'.repeat(60));
+
+    if (slack.enabled) {
+      const qList = questions.map((q, i) => `${i + 1}. ${q}`).join('\n');
+      await slack.postStatus(`🎯 *Alignment Questions*\nInstruction: "${ALIGN_INSTR}"\n\n${qList}\n\n_Please answer all questions._`);
+    }
+    return;
+  }
+
+  // ─── Alignment: Step 2 — Process answers, generate plan summary
+  if (RESPOND_FILE) {
+    log.info('📝 RESPOND MODE — Processing answers...');
+
+    const state = alignment.loadState();
+    if (!state || state.state !== 'questions_pending') {
+      log.error('No pending alignment found. Start with: node agent.mjs --align "instruction"');
+      return;
+    }
+
+    // Read answers file
+    let answers;
+    try {
+      answers = readFileSync(RESPOND_FILE, 'utf-8').trim();
+    } catch (err) {
+      log.error(`Cannot read answers file "${RESPOND_FILE}": ${err.message}`);
+      return;
+    }
+
+    if (!answers) {
+      log.error('Answers file is empty.');
+      return;
+    }
+
+    log.info(`Read ${answers.split('\n').length} lines of answers. Generating plan summary...`);
+    const summary = await alignment.generatePlanSummary(state.instruction, state.questions, answers);
+
+    state.state = 'summary_pending';
+    state.answers = answers;
+    state.planSummary = summary;
+    alignment.saveState(state);
+
+    console.log(`\n${summary}\n`);
+    console.log('─'.repeat(60));
+    console.log('To approve this plan and create tasks:');
+    console.log('  node agent.mjs --approve');
+    console.log('  node agent.mjs --approve --autopilot   (approve + start autopilot)');
+    console.log('─'.repeat(60));
+
+    if (slack.enabled) {
+      await slack.postStatus(`🎯 *Alignment — Plan Summary*\nInstruction: "${state.instruction}"\n\n${summary}\n\n_Reply with approval or adjustments._`);
+    }
+    return;
+  }
+
+  // ─── Alignment: Step 3 — Approve and create tasks ─────────────
+  if (APPROVE) {
+    log.info('✅ APPROVE MODE — Creating tasks from approved plan...');
+
+    const state = alignment.loadState();
+    if (!state || state.state !== 'summary_pending') {
+      log.error('No plan summary pending approval. Current state: ' + (state?.state || 'none'));
+      return;
+    }
+
+    // Build a planning instruction that includes the alignment context
+    const planInstruction = `${state.instruction}\n\n--- APPROVED ALIGNMENT ---\n${state.planSummary}`;
+
+    state.state = 'approved';
+    alignment.saveState(state);
+
+    log.info('Plan approved. Generating ClickUp tasks...');
+    const result = await planner.plan(planInstruction);
+    console.log(`\nDone. Created ${result.tasksCreated} tasks from approved alignment.`);
+
+    if (slack.enabled) {
+      await slack.postStatus(`✅ *Alignment approved.* Created ${result.tasksCreated} tasks from: "${state.instruction}"`);
+    }
+
+    state.state = 'executed';
+    state.tasksCreated = result.tasksCreated;
+    alignment.saveState(state);
+
+    // If --autopilot was also passed, fall through to the continuous loop
+    if (!AUTOPILOT) return;
+    log.info('Entering autopilot mode after approval...');
+  }
+
+  // Planning mode (now alignment-aware)
   if (PLAN_VISION) {
-    log.info('🧠 PLANNING MODE');
-    const result = await planner.plan(PLAN_VISION);
-    console.log(`\nDone. Created ${result.tasksCreated} tasks.`);
+    log.info('🧠 PLANNING MODE (with alignment check)');
+
+    // Check if this instruction needs alignment
+    const assessment = await alignment.assess(PLAN_VISION);
+
+    if (assessment.needsFull) {
+      log.info(`Instruction needs alignment: ${assessment.reason}`);
+      log.info('Redirecting to alignment flow. Use --align instead for full control.');
+      // Auto-redirect to alignment
+      const questions = await alignment.generateQuestions(PLAN_VISION);
+      if (questions.length > 0) {
+        alignment.saveState({
+          id: `align-${Date.now()}`,
+          instruction: PLAN_VISION,
+          state: 'questions_pending',
+          needsFullAlignment: true,
+          questions,
+          answers: null,
+          planSummary: null,
+          createdAt: new Date().toISOString(),
+        });
+
+        console.log(`\n${'═'.repeat(60)}`);
+        console.log('  ALIGNMENT REQUIRED — Questions:');
+        console.log('═'.repeat(60));
+        console.log(`\nInstruction: "${PLAN_VISION}"\n`);
+        questions.forEach((q, i) => console.log(`${i + 1}. ${q}`));
+        console.log(`\n${'─'.repeat(60)}`);
+        console.log('Answer all questions in a text file, then run:');
+        console.log('  node agent.mjs --respond answers.txt');
+        console.log('─'.repeat(60));
+      } else {
+        log.error('Failed to generate questions. Falling back to direct planning.');
+        const result = await planner.plan(PLAN_VISION);
+        console.log(`\nDone. Created ${result.tasksCreated} tasks.`);
+      }
+      return;
+    }
+
+    // Narrow instruction — generate brief summary for quick approval
+    log.info(`Instruction is specific: ${assessment.reason}`);
+    const summary = await alignment.generateBriefSummary(PLAN_VISION);
+
+    alignment.saveState({
+      id: `align-${Date.now()}`,
+      instruction: PLAN_VISION,
+      state: 'summary_pending',
+      needsFullAlignment: false,
+      questions: [],
+      answers: null,
+      planSummary: summary,
+      createdAt: new Date().toISOString(),
+    });
+
+    console.log(`\n${summary}\n`);
+    console.log('─'.repeat(60));
+    console.log('To approve and create tasks:');
+    console.log('  node agent.mjs --approve');
+    console.log('  node agent.mjs --approve --autopilot');
+    console.log('─'.repeat(60));
     return;
   }
 

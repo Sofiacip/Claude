@@ -66,6 +66,14 @@ process before creating any tasks or making any changes.
 - `--align "instruction"` — Full Slack-driven alignment: posts questions, polls for answers,
   generates plan summary, polls for approval ("approved"/"yes"), creates tasks, enters autopilot.
   One command, no terminal interaction after launch.
+- `--align "instruction" --modules mod1,mod2,...` — Module chaining: runs the full alignment
+  lifecycle sequentially for each module. Each module gets its own Slack thread, scoped questions,
+  separate approval, and scoped autopilot (only executes tasks tagged for that module). 24-hour
+  reminders are posted if answers or approval are pending. State persists to `data/chain-state.json`
+  for crash recovery. Posts a final summary when all modules complete.
+  Valid module names: `web-designer`, `funnel-designer`, `doc-factory`, `copywriter`,
+  `copywriter-ui`, `brand-creator`, `pageforge`.
+  Example: `node agent.mjs --align "Improve output quality" --modules web-designer,funnel-designer`
 - `--respond` — Manual fallback: read answers from Slack thread, generate plan summary
 - `--respond answers.txt` — Manual fallback: read answers from file
 - `--approve` — Manual fallback: approve pending plan summary, create ClickUp tasks

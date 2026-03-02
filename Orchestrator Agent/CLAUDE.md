@@ -84,6 +84,31 @@ process before creating any tasks or making any changes.
 - `--dry-run` — Show what would be dispatched without executing
 - `--report` — Scan tags and generate missing reports
 
+## Commit & Deploy (HARD RULE)
+
+**Every task that passes output QA MUST be committed and deployed before being
+marked as done.** No exceptions. The autopilot must never leave changes sitting
+on the filesystem uncommitted.
+
+The sequence after QA passes is:
+1. `git add` all changed files in the module directory
+2. `git commit` with the task name and ID
+3. `git push` to remote
+4. If the module has a Vercel deployment target, deploy to production
+5. Post a Commit & Deploy comment to the ClickUp task
+6. Only THEN mark the task as completed/ready for review
+
+Modules with Vercel deployment targets:
+- **Web Designer** → `vercel-deploy-test-client` (deploys `clients/test-client/output/`)
+- **funnel-designer** → `vercel-deploy-pattie-ehsaei-funnel` (deploys `public/`)
+- **copywriter-ui** → `copywriter-ui` (deploys `.`)
+
+Modules without Vercel targets (commit + push only):
+- Copywriter, brand creator, doc factory, pageforge, bug-reporter
+
+If commit or deploy fails, the task still proceeds to review — but the failure
+is logged in a ClickUp comment so it can be resolved manually.
+
 ## Output QA
 
 Output QA runs automatically after every funnel-designer task completes.

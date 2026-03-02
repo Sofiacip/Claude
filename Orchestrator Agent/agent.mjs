@@ -11,7 +11,8 @@
 // 6. Reports back to ClickUp
 // 7. Supports planning mode: vision → ClickUp tasks
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync, cpSync, rmSync } from 'fs';
+import { execSync } from 'child_process';
 import { config } from 'dotenv';
 import { ClickUpClient } from './clickup.mjs';
 import { ClaudeExecutor } from './executor.mjs';
@@ -253,6 +254,87 @@ async function processTask(task) {
   return { task, result, qaResults };
 }
 
+// ─── Commit & Deploy ────────────────────────────────────────────
+
+// Module → Vercel deploy config (only modules with Vercel deployments)
+const DEPLOY_MAP = {
+  'Web Designer':    { project: 'vercel-deploy-test-client', outputDir: 'clients/test-client/output' },
+  'funnel-designer': { project: 'vercel-deploy-pattie-ehsaei-funnel', outputDir: 'public' },
+  'copywriter-ui':   { project: 'copywriter-ui', outputDir: '.' },
+};
+
+/**
+ * After a task passes QA, commit its changes and deploy if applicable.
+ * Returns { committed: boolean, deployed: boolean, error?: string }
+ */
+async function commitAndDeploy(task, result) {
+  const modulePath = executor.detectModulePath(task);
+  const moduleName = modulePath.split('/').pop();
+  const gitRoot = CONFIG.projectPath; // /Users/Administrator/Claude
+
+  const outcome = { committed: false, deployed: false };
+
+  // Step 1: git add all changes in the module directory
+  try {
+    execSync(`git add "${moduleName}/"`, { cwd: gitRoot, stdio: 'pipe' });
+
+    // Check if there's anything staged
+    const staged = execSync('git diff --cached --stat', { cwd: gitRoot, encoding: 'utf-8' }).trim();
+    if (!staged) {
+      log.info(`  No changes to commit for ${moduleName}.`);
+      return outcome;
+    }
+
+    // Step 2: git commit
+    const commitMsg = `auto: ${task.name}\n\nTask ID: ${task.id}\nModule: ${moduleName}\nFiles changed: ${(result.filesChanged || []).length}`;
+    execSync(`git commit -m "${commitMsg.replace(/"/g, '\\"')}"`, { cwd: gitRoot, stdio: 'pipe' });
+    outcome.committed = true;
+    log.success(`  Committed changes for "${task.name}" in ${moduleName}`);
+
+    // Step 3: git push
+    execSync('git push', { cwd: gitRoot, stdio: 'pipe', timeout: 60_000 });
+    log.info(`  Pushed to remote.`);
+  } catch (err) {
+    outcome.error = `Commit failed: ${err.message}`;
+    log.warn(`  Commit/push failed for ${moduleName}: ${err.message}`);
+    return outcome;
+  }
+
+  // Step 4: Deploy to Vercel if this module has a deployment target
+  const deployConfig = DEPLOY_MAP[moduleName];
+  if (!deployConfig) {
+    log.info(`  No Vercel deployment configured for ${moduleName}.`);
+    return outcome;
+  }
+
+  try {
+    const sourceDir = `${modulePath}/${deployConfig.outputDir}`;
+    const tempDir = `/tmp/vercel-deploy-${deployConfig.project}`;
+
+    // Copy output to temp dir
+    if (existsSync(tempDir)) rmSync(tempDir, { recursive: true });
+    mkdirSync(tempDir, { recursive: true });
+    cpSync(sourceDir, tempDir, { recursive: true });
+
+    // Deploy
+    log.working(`  Deploying ${moduleName} to Vercel...`);
+    const deployOutput = execSync(
+      `npx vercel deploy --prod --yes "${tempDir}"`,
+      { encoding: 'utf-8', timeout: 120_000 }
+    );
+    outcome.deployed = true;
+    log.success(`  Deployed ${moduleName} to Vercel.`);
+
+    // Cleanup
+    rmSync(tempDir, { recursive: true, force: true });
+  } catch (err) {
+    outcome.error = `Deploy failed: ${err.message}`;
+    log.warn(`  Vercel deploy failed for ${moduleName}: ${err.message}`);
+  }
+
+  return outcome;
+}
+
 // ─── Report Results to ClickUp ───────────────────────────────────
 
 async function reportResults(task, result, qaResults) {
@@ -284,6 +366,18 @@ async function reportResults(task, result, qaResults) {
 
   // Set final status
   if (result.success && qaResults?.passed) {
+    // Auto-commit and deploy — HARD RULE: never mark done without committing
+    if (!DRY_RUN) {
+      const cdResult = await commitAndDeploy(task, result);
+      if (cdResult.committed || cdResult.deployed) {
+        const cdLines = [];
+        if (cdResult.committed) cdLines.push('✅ Changes committed and pushed');
+        if (cdResult.deployed) cdLines.push('🚀 Deployed to Vercel');
+        if (cdResult.error) cdLines.push(`⚠️ ${cdResult.error}`);
+        await clickup.addComment(task.id, `### Commit & Deploy\n${cdLines.join('\n')}`);
+      }
+    }
+
     if (CONFIG.autoCommit) {
       await clickup.updateTaskStatus(task.id, 'completed');
       log.success(`Task "${task.name}" completed and auto-closed.`);

@@ -63,11 +63,13 @@ process before creating any tasks or making any changes.
 
 ## CLI Modes
 
-- `--align "instruction"` — Start alignment: generates questions, posts to Slack, saves state
-- `--respond` — Read answers from Slack thread, generate plan summary for approval
-- `--respond answers.txt` — Read answers from file instead of Slack
-- `--approve` — Approve plan summary: creates ClickUp tasks
-- `--approve --autopilot` — Approve and enter full autopilot mode
+- `--align "instruction"` — Full Slack-driven alignment: posts questions, polls for answers,
+  generates plan summary, polls for approval ("approved"/"yes"), creates tasks, enters autopilot.
+  One command, no terminal interaction after launch.
+- `--respond` — Manual fallback: read answers from Slack thread, generate plan summary
+- `--respond answers.txt` — Manual fallback: read answers from file
+- `--approve` — Manual fallback: approve pending plan summary, create ClickUp tasks
+- `--approve --autopilot` — Manual fallback: approve + start autopilot
 - `--plan "vision"` — Legacy shortcut: runs alignment first, or skips if instruction is narrow
 - `--autopilot` — Continuous autonomous mode (requires prior approval)
 - `--once` — Process one task from the queue

@@ -65,7 +65,7 @@ const ONCE     = args.includes('--once');
 const DRY_RUN  = args.includes('--dry-run');
 const PLAN_IDX = args.indexOf('--plan');
 const PLAN_VISION = PLAN_IDX >= 0 ? args[PLAN_IDX + 1] : null;
-const AUTOPILOT = args.includes('--autopilot');
+let   AUTOPILOT = args.includes('--autopilot');
 const REPORT    = args.includes('--report');
 
 // Alignment CLI flags
@@ -328,17 +328,104 @@ async function main() {
   log.info(`Memory loaded (${taskCount} tasks in history)`);
   if (slack.enabled) log.info('📡 Slack notifications enabled');
 
-  // ─── Alignment: Step 1 — Generate questions ──────────────────
+  // ─── Alignment: full Slack-driven flow ──────────────────────
+  //
+  // --align "instruction" runs the entire alignment lifecycle:
+  //   1. Assess → generate questions (or brief summary)
+  //   2. Post to Slack → poll thread for answers
+  //   3. Generate plan summary → post to Slack
+  //   4. Poll thread for approval
+  //   5. Create ClickUp tasks → enter autopilot
+  //
   if (ALIGN_INSTR) {
-    log.info('🎯 ALIGNMENT MODE — Generating questions...');
+    log.info('🎯 ALIGNMENT MODE');
+
+    if (!slack.enabled) {
+      log.error('Slack is not configured. --align requires Slack for the interactive flow.');
+      log.error('Set SLACK_BOT_TOKEN and SLACK_CHANNEL_ID in .env, or use --plan with --respond/--approve manually.');
+      return;
+    }
 
     const assessment = await alignment.assess(ALIGN_INSTR);
+    let threadTs = null;
+    let questions = [];
+    let summary = null;
 
+    // ── Step 1: Generate questions or brief summary ────────────
     if (!assessment.needsFull) {
-      // Narrow instruction — generate brief summary directly
-      log.info(`Instruction is specific enough to skip full Q&A: ${assessment.reason}`);
-      const summary = await alignment.generateBriefSummary(ALIGN_INSTR);
+      log.info(`Instruction is specific — skipping full Q&A: ${assessment.reason}`);
+      summary = await alignment.generateBriefSummary(ALIGN_INSTR);
+    } else {
+      log.info(`Full alignment needed: ${assessment.reason}`);
+      questions = await alignment.generateQuestions(ALIGN_INSTR);
+      if (questions.length === 0) {
+        log.error('Failed to generate alignment questions.');
+        return;
+      }
+    }
 
+    // ── Step 2: Post questions (or brief summary) to Slack ─────
+    if (questions.length > 0) {
+      // Post questions
+      console.log(`\n${'═'.repeat(60)}`);
+      console.log('  ALIGNMENT QUESTIONS');
+      console.log('═'.repeat(60));
+      console.log(`\nInstruction: "${ALIGN_INSTR}"\n`);
+      questions.forEach((q, i) => console.log(`${i + 1}. ${q}`));
+      console.log('═'.repeat(60));
+
+      const qList = questions.map((q, i) => `${i + 1}. ${q}`).join('\n');
+      const slackMsg = await slack.postStatus(
+        `🎯 *Alignment Questions*\nInstruction: "${ALIGN_INSTR}"\n\n${qList}\n\n_Answer all questions in this thread._`
+      );
+      threadTs = slackMsg?.ts;
+
+      if (!threadTs) {
+        log.error('Failed to post questions to Slack.');
+        return;
+      }
+
+      alignment.saveState({
+        id: `align-${Date.now()}`,
+        instruction: ALIGN_INSTR,
+        state: 'questions_pending',
+        needsFullAlignment: true,
+        questions,
+        answers: null,
+        planSummary: null,
+        slackThreadTs: threadTs,
+        slackChannelId: slackMsg.channel,
+        createdAt: new Date().toISOString(),
+      });
+
+      // ── Step 3: Poll for answers ──────────────────────────────
+      log.waiting('Waiting for answers in Slack thread (polling every 30s)...');
+      const answers = await slack.pollThreadReplies(threadTs, {
+        intervalMs: 30_000,
+        onPoll: () => log.waiting('Still waiting for answers in Slack thread...'),
+      });
+
+      log.info(`Got answers (${answers.split('\n').length} lines). Generating plan summary...`);
+      summary = await alignment.generatePlanSummary(ALIGN_INSTR, questions, answers);
+
+      const state = alignment.loadState();
+      state.state = 'summary_pending';
+      state.answers = answers;
+      state.planSummary = summary;
+      alignment.saveState(state);
+    }
+
+    // ── Step 4: Post plan summary to Slack, poll for approval ──
+    console.log(`\n${summary}\n`);
+
+    const summaryMsg = await slack.postThreadReply(
+      threadTs || null,
+      `📋 *Plan Summary*\n\n${summary}\n\n_Reply "approved" in this thread to start autopilot._`
+    );
+
+    // If no thread yet (brief summary, no questions), use the summary message as the thread
+    if (!threadTs && summaryMsg?.ts) {
+      threadTs = summaryMsg.ts;
       alignment.saveState({
         id: `align-${Date.now()}`,
         instruction: ALIGN_INSTR,
@@ -347,64 +434,43 @@ async function main() {
         questions: [],
         answers: null,
         planSummary: summary,
+        slackThreadTs: threadTs,
+        slackChannelId: summaryMsg.channel,
         createdAt: new Date().toISOString(),
       });
-
-      console.log(`\n${summary}\n`);
-      console.log('─'.repeat(60));
-      console.log('To approve this plan and create tasks:');
-      console.log('  node agent.mjs --approve');
-      console.log('  node agent.mjs --approve --autopilot   (approve + start autopilot)');
-      console.log('─'.repeat(60));
-
-      if (slack.enabled) {
-        await slack.postStatus(`🎯 *Alignment — Brief Plan Summary*\nInstruction: "${ALIGN_INSTR}"\n\n${summary}\n\n_Reply with approval or adjustments._`);
-      }
-      return;
     }
 
-    // Full alignment needed
-    log.info(`Full alignment needed: ${assessment.reason}`);
-    const questions = await alignment.generateQuestions(ALIGN_INSTR);
+    const summaryTs = summaryMsg?.ts || null;
 
-    if (questions.length === 0) {
-      log.error('Failed to generate alignment questions. Try again or use --plan for direct planning.');
-      return;
-    }
-
-    alignment.saveState({
-      id: `align-${Date.now()}`,
-      instruction: ALIGN_INSTR,
-      state: 'questions_pending',
-      needsFullAlignment: true,
-      questions,
-      answers: null,
-      planSummary: null,
-      createdAt: new Date().toISOString(),
+    log.waiting('Waiting for approval in Slack thread (polling every 30s)...');
+    await slack.pollThreadReplies(threadTs, {
+      afterTs: summaryTs,
+      intervalMs: 30_000,
+      onPoll: () => log.waiting('Still waiting for approval...'),
+      filter: (text) => SlackClient.isApproval(text),
     });
 
-    console.log(`\n${'═'.repeat(60)}`);
-    console.log('  ALIGNMENT QUESTIONS');
-    console.log('═'.repeat(60));
-    console.log(`\nInstruction: "${ALIGN_INSTR}"\n`);
-    questions.forEach((q, i) => console.log(`${i + 1}. ${q}`));
-    console.log(`\n${'─'.repeat(60)}`);
-    console.log('Answer in the Slack thread, then run:');
-    console.log('  node agent.mjs --respond                  (reads from Slack thread)');
-    console.log('  node agent.mjs --respond answers.txt      (reads from file)');
-    console.log('─'.repeat(60));
+    // ── Step 5: Approved — create tasks and enter autopilot ────
+    log.info('✅ Plan approved via Slack. Creating ClickUp tasks...');
 
-    if (slack.enabled) {
-      const qList = questions.map((q, i) => `${i + 1}. ${q}`).join('\n');
-      const slackMsg = await slack.postStatus(`🎯 *Alignment Questions*\nInstruction: "${ALIGN_INSTR}"\n\n${qList}\n\n_Answer in this thread, then run:_ \`node agent.mjs --respond\``);
-      if (slackMsg?.ts) {
-        const state = alignment.loadState();
-        state.slackThreadTs = slackMsg.ts;
-        state.slackChannelId = slackMsg.channel;
-        alignment.saveState(state);
-      }
-    }
-    return;
+    const state = alignment.loadState();
+    const planInstruction = `${ALIGN_INSTR}\n\n--- APPROVED ALIGNMENT ---\n${summary}`;
+
+    state.state = 'approved';
+    alignment.saveState(state);
+
+    const result = await planner.plan(planInstruction);
+    console.log(`\nCreated ${result.tasksCreated} tasks from approved alignment.`);
+
+    await slack.postThreadReply(threadTs, `✅ *Approved.* Created ${result.tasksCreated} tasks. Entering autopilot.`);
+
+    state.state = 'executed';
+    state.tasksCreated = result.tasksCreated;
+    alignment.saveState(state);
+
+    AUTOPILOT = true; // Enable autopilot for the continuous loop
+    log.info('Entering autopilot mode...');
+    // Fall through to the continuous loop below (don't return)
   }
 
   // ─── Alignment: Step 2 — Process answers, generate plan summary

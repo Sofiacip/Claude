@@ -107,24 +107,57 @@ This prevents the orchestrator from executing stale, unaligned, or orphaned task
 marked as done.** No exceptions. The autopilot must never leave changes sitting
 on the filesystem uncommitted.
 
-The sequence after QA passes is:
+### Production environment
+
+All modules are deployed to the **Hetzner VPS** at `app.scaleforimpact.co`.
+SSH access: `ssh root@app.scaleforimpact.co` (key-based, no password).
+Nginx reverse-proxies each module path to a local port on the VPS.
+
+**Do NOT deploy to Vercel.** Vercel is no longer used. All deployments go
+to the Hetzner VPS via SCP + PM2 restart.
+
+### VPS module layout
+
+| Module | Local path | VPS path | VPS port | Nginx route | PM2 name |
+|--------|-----------|----------|----------|-------------|----------|
+| Web Designer | `Web Designer/` | `/opt/for-impact-os/modules/web-designer/` | 3003 | `/web-designer/` | `web-designer` |
+| Brand Creator | `brand creator/` | `/opt/for-impact-os/modules/brand-creator/` | 3001 | `/brand-creator/` | `brand-creator` |
+| Copywriter | `Copywriter/` | `/opt/for-impact-os/modules/copywriter/` | 3002 | `/copywriter/` | `copywriter` |
+| Funnel Designer | `funnel-designer/` | `/opt/for-impact-os/modules/funnel-designer/` | 3004 | `/funnel-designer/` | `funnel-designer` |
+| Market Researcher | `market researcher/` | `/opt/for-impact-os/modules/market-researcher/` | 3005 | `/market-researcher/` | `market-researcher` |
+| Doc Factory | `doc factory/` | `/opt/for-impact-os/modules/doc-factory/` | 3006 | `/doc-factory/` | `doc-factory` |
+
+The Next.js dashboard runs on port 3000 at `/opt/for-impact-os/` and serves
+the root `/` route.
+
+### Deploy sequence (after QA passes)
+
 1. `git add` all changed files in the module directory
 2. `git commit` with the task name and ID
 3. `git push` to remote
-4. If the module has a Vercel deployment target, deploy to production
-5. Post a Commit & Deploy comment to the ClickUp task
-6. Only THEN mark the task as completed/ready for review
+4. **SCP changed files to the VPS:**
+   `scp <files> root@app.scaleforimpact.co:<vps-module-path>/`
+   - For multi-file changes, use `scp -r` or tar + pipe
+   - If `package.json` changed, also run `npm install` on the VPS
+5. **Restart the PM2 service on the VPS:**
+   `ssh root@app.scaleforimpact.co "pm2 restart <pm2-name>"`
+6. **Verify** the module is online:
+   `curl -s https://app.scaleforimpact.co/<nginx-route>/api/health` (or equivalent)
+7. Post a Commit & Deploy comment to the ClickUp task
+8. Only THEN mark the task as completed/ready for review
 
-Modules with Vercel deployment targets:
-- **Web Designer** → `vercel-deploy-test-client` (deploys `clients/test-client/output/`)
-- **funnel-designer** → `vercel-deploy-pattie-ehsaei-funnel` (deploys `public/`)
-- **copywriter-ui** → `copywriter-ui` (deploys `.`)
+### Important notes
 
-Modules without Vercel targets (commit + push only):
-- Copywriter, brand creator, doc factory, pageforge, bug-reporter
-
-If commit or deploy fails, the task still proceeds to review — but the failure
-is logged in a ClickUp comment so it can be resolved manually.
+- The VPS code at `/opt/for-impact-os/modules/` may differ from the local
+  repo (different `server.js`, `public/` dir, etc.). When deploying, always
+  patch or update the **VPS files directly** — do not blindly overwrite them
+  with the local version.
+- After deploying, run `pm2 save` on the VPS to persist the process list
+  across reboots.
+- If a PM2 process errors on startup (e.g. port conflict), check for orphaned
+  node processes: `lsof -ti :<port>` and kill them before restarting.
+- If commit or deploy fails, the task still proceeds to review — but the
+  failure is logged in a ClickUp comment so it can be resolved manually.
 
 ## Output QA
 

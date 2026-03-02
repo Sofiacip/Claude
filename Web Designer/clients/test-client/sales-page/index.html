@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AccompliSHE — Be Your Own Prince Charming | Pattie Ehsaei</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            burgundy: { DEFAULT: '#8B1A3A', dark: '#5C1128', darker: '#34161B', light: '#A82050' },
+            gold: { DEFAULT: '#C9963A', light: '#D4AB5E', faint: 'rgba(201,150,58,0.15)' },
+            champagne: '#F5E6D0',
+            blush: { DEFAULT: '#E8C4B0', light: '#F5D8D0', lighter: '#F8E8E0' },
+            ivory: '#FAF5EE',
+            charcoal: '#2C2C2C',
+          },
+          fontFamily: {
+            display: ['"Cormorant Garamond"', 'serif'],
+            body: ['Montserrat', 'sans-serif'],
+          },
+          letterSpacing: {
+            label: '0.12em',
+            button: '0.1em',
+          },
+          lineHeight: {
+            body: '1.7',
+            tight: '0.9',
+            snug: '1.1',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Montserrat', sans-serif; color: #2C2C2C; background: #FAF5EE; -webkit-font-smoothing: antialiased; }
+
+    /* SVG Noise Texture Filter */
+    .noise-overlay::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 128px 128px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Reveal Animations */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.08s; }
+    .reveal-delay-2 { transition-delay: 0.16s; }
+    .reveal-delay-3 { transition-delay: 0.24s; }
+    .reveal-delay-4 { transition-delay: 0.32s; }
+    /* Prefers-reduced-motion: disable animations */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* Button hover/focus/active states */
+    .cta-primary {
+      background: #8B1A3A; color: #fff;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, opacity 0.3s ease;
+      box-shadow: 0 4px 15px rgba(139,26,58,0.25), 0 2px 6px rgba(139,26,58,0.15);
+    }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(139,26,58,0.35), 0 4px 10px rgba(139,26,58,0.2); }
+    .cta-primary:focus-visible { outline: 2px solid #C9963A; outline-offset: 3px; }
+    .cta-primary:active { transform: translateY(0); opacity: 0.9; }
+
+    .cta-secondary {
+      background: transparent; color: #8B1A3A; border: 2px solid #8B1A3A;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .cta-secondary:hover { background: #8B1A3A; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(139,26,58,0.25); }
+    .cta-secondary:focus-visible { outline: 2px solid #C9963A; outline-offset: 3px; }
+    .cta-secondary:active { transform: translateY(0); }
+
+    .cta-light {
+      background: #F5E6D0; color: #8B1A3A;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, opacity 0.3s ease;
+      box-shadow: 0 4px 15px rgba(201,150,58,0.2), 0 2px 6px rgba(201,150,58,0.1);
+    }
+    .cta-light:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(201,150,58,0.3); }
+    .cta-light:focus-visible { outline: 2px solid #C9963A; outline-offset: 3px; }
+    .cta-light:active { transform: translateY(0); opacity: 0.9; }
+
+    /* Accordion */
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+    .accordion-content.open { max-height: 600px; }
+    .accordion-icon { transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+    .accordion-icon.rotated { transform: rotate(45deg); }
+
+    /* Diamond decorative element */
+    .diamond-deco {
+      position: absolute;
+      width: 200px; height: 200px;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+
+    /* TBD Placeholder styling */
+    .tbd {
+      background: linear-gradient(to right, rgba(201,150,58,0.12), rgba(201,150,58,0.06));
+      border-bottom: 2px dashed #C9963A;
+      padding: 0 4px;
+    }
+
+    /* Countdown timer */
+    .countdown-num { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 2rem; line-height: 1; }
+    .countdown-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
+
+    /* Logo grid */
+    .logo-grid img {
+      filter: brightness(0) invert(1);
+      opacity: 0.7;
+      transition: opacity 0.3s ease;
+      max-height: 36px;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo-grid img:hover { opacity: 1; }
+
+    /* Sticky nav */
+    .sticky-nav {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    .sticky-nav.scrolled {
+      background: rgba(250,245,238,0.95);
+      box-shadow: 0 2px 20px rgba(44,44,44,0.08);
+    }
+    .sticky-nav:not(.scrolled) img { filter: brightness(0) invert(1); opacity: 0.85; transition: filter 0.3s ease, opacity 0.3s ease; }
+    .sticky-nav.scrolled img { filter: none; opacity: 1; }
+    .sticky-nav:not(.scrolled) .cta-primary { background: rgba(245,230,208,0.9); color: #8B1A3A; }
+    @media (max-width: 480px) {
+      .sticky-nav img { max-height: 28px; }
+    }
+
+    /* Module cards */
+    .module-card {
+      border: 1px solid #E8C4B0;
+      border-radius: 15px;
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+    }
+    .module-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(139,26,58,0.08), 0 4px 12px rgba(139,26,58,0.04);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #FAF5EE; }
+    ::-webkit-scrollbar-thumb { background: #E8C4B0; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #C9963A; }
+
+    /* Hero parallax-like gradient */
+    .hero-gradient {
+      background: linear-gradient(180deg, rgba(52,22,27,0.82) 0%, rgba(92,17,40,0.75) 40%, rgba(139,26,58,0.6) 100%);
+    }
+
+    /* Check icon for lists */
+    .check-list li::before {
+      content: '◆';
+      color: #8B1A3A;
+      font-size: 0.65em;
+      margin-right: 14px;
+      flex-shrink: 0;
+      margin-top: 0.35em;
+    }
+
+    /* Sticky mobile CTA */
+    .sticky-cta {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 49;
+      padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom));
+      background: rgba(250,245,238,0.92);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(232,196,176,0.4);
+      box-shadow: 0 -4px 20px rgba(44,44,44,0.08);
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .sticky-cta.show { transform: translateY(0); }
+    @media (min-width: 768px) { .sticky-cta { display: none; } }
+
+    @media (max-width: 767px) {
+      .countdown-num { font-size: 1.5rem; }
+      .logo-grid img { max-height: 24px; }
+    }
+  </style>
+</head>
+<body class="bg-ivory">
+
+  <!-- ============================================ -->
+  <!-- STICKY NAVIGATION -->
+  <!-- ============================================ -->
+  <nav class="sticky-nav fixed top-0 left-0 right-0 z-50 bg-transparent" id="mainNav">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="#top">
+        <img src="/clients/test-client/brand/assets/logos/57cb982d_Header-Logo.png" alt="Pattie Ehsaei" class="h-8 md:h-10 w-auto">
+      </a>
+      <a href="#enroll" class="cta-primary font-body font-bold text-[10px] md:text-sm uppercase tracking-button px-4 md:px-6 py-2.5 md:py-3 rounded inline-block flex-shrink-0">
+        Enroll Now
+      </a>
+    </div>
+  </nav>
+
+  <!-- ============================================ -->
+  <!-- SECTION 1: HERO -->
+  <!-- ============================================ -->
+  <section id="top" class="relative min-h-screen flex items-center justify-center overflow-hidden noise-overlay">
+    <!-- Background Image -->
+    <div class="absolute inset-0">
+      <img src="/clients/test-client/brand/assets/photos/add41254_DSC_9143.jpg" alt="Pattie Ehsaei" class="w-full h-full object-cover object-top">
+      <div class="hero-gradient absolute inset-0"></div>
+    </div>
+
+    <!-- Diamond Decoration -->
+    <svg class="diamond-deco right-[15%] top-[20%] opacity-[0.06]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#F5E6D0" stroke-width="0.5"/></svg>
+
+    <!-- Content -->
+    <div class="relative z-10 text-center px-6 max-w-4xl mx-auto pt-24 pb-16">
+      <!-- Pre-headline -->
+      <p class="font-body text-xs md:text-sm font-bold uppercase tracking-label text-champagne/80 mb-6 reveal">
+        For women who are done waiting to be rescued
+      </p>
+
+      <!-- Main Headline -->
+      <h1 class="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-8 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        It's Time to Stop Financing<br class="hidden md:block"> Other People's Futures
+      </h1>
+
+      <!-- Sub-headline -->
+      <p class="font-body text-base md:text-lg lg:text-xl font-light text-champagne/90 max-w-2xl mx-auto mb-10 leading-relaxed reveal reveal-delay-2">
+        AccompliSHE is the financial empowerment program for women who are ready to build real wealth, break free from financial dependence, and finally become the most powerful person in their own story.
+      </p>
+
+      <!-- CTA Button -->
+      <div class="reveal reveal-delay-3">
+        <a href="#enroll" class="cta-light font-body font-bold text-sm uppercase tracking-button px-10 py-4 rounded inline-block">
+          Join AccompliSHE Today
+        </a>
+      </div>
+
+      <!-- Countdown Timer -->
+      <div class="mt-12 reveal reveal-delay-4">
+        <div class="inline-flex items-center bg-burgundy-darker/80 backdrop-blur-sm rounded-full px-6 md:px-10 py-4 gap-6 md:gap-8 border border-champagne/10">
+          <p class="font-body text-[10px] md:text-xs font-bold uppercase tracking-label text-champagne/70 hidden md:block">
+            Enrollment Closing
+          </p>
+          <div class="flex gap-5 md:gap-7 text-champagne">
+            <div class="text-center"><div class="countdown-num" id="cd-days">03</div><div class="countdown-label">Days</div></div>
+            <div class="text-champagne/30 countdown-num">:</div>
+            <div class="text-center"><div class="countdown-num" id="cd-hours">12</div><div class="countdown-label">Hours</div></div>
+            <div class="text-champagne/30 countdown-num">:</div>
+            <div class="text-center"><div class="countdown-num" id="cd-mins">45</div><div class="countdown-label">Min</div></div>
+            <div class="text-champagne/30 countdown-num">:</div>
+            <div class="text-center"><div class="countdown-num" id="cd-secs">00</div><div class="countdown-label">Sec</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 2: THE PROBLEM -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-20 md:py-28 lg:py-36 overflow-hidden">
+    <!-- Diamond Decoration -->
+    <svg class="diamond-deco left-[-3%] top-[10%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#E8C4B0" stroke-width="0.3"/></svg>
+
+    <div class="max-w-3xl mx-auto px-6 relative z-10">
+      <!-- Label -->
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 text-center reveal">
+        The Reality
+      </p>
+
+      <!-- Heading -->
+      <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-charcoal text-center mb-8 leading-snug reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        You've Been Doing Everything Right. So Why Does Financial Freedom Still Feel So Far Away?
+      </h2>
+
+      <!-- Gold divider -->
+      <div class="w-16 h-[2px] bg-gold mx-auto mb-10 reveal reveal-delay-2"></div>
+
+      <!-- Body -->
+      <div class="font-body text-base md:text-[17px] text-charcoal leading-body space-y-6 reveal reveal-delay-2">
+        <p>You're educated. You're driven. You work hard. And yet every time you look at your bank account, your debt balance, or your retirement savings, something feels off.</p>
+        <p>You were never taught the rules of money. You were handed a narrative instead: find a partner, share expenses, and everything will work out. But no one told you what happens when it doesn't.</p>
+      </div>
+
+      <!-- Pain Points -->
+      <p class="font-body text-sm font-bold uppercase tracking-label text-burgundy mt-10 mb-6 reveal">Sound familiar?</p>
+      <ul class="check-list space-y-4 font-body text-base md:text-[17px] text-charcoal leading-body reveal">
+        <li class="flex items-start"><span class="mt-0.5">You're carrying debt you can't seem to shake, no matter how many budgets you make</span></li>
+        <li class="flex items-start"><span class="mt-0.5">You've stayed in relationships longer than you should have because you couldn't afford to leave</span></li>
+        <li class="flex items-start"><span class="mt-0.5">You earn good money but never feel financially secure</span></li>
+        <li class="flex items-start"><span class="mt-0.5">You don't fully understand how to invest, protect your assets, or plan for your future</span></li>
+        <li class="flex items-start"><span class="mt-0.5">You secretly wonder if you're already too behind to catch up</span></li>
+      </ul>
+
+      <!-- Empowerment -->
+      <div class="mt-10 bg-champagne/50 rounded-xl p-6 md:p-8 border border-blush/40 reveal">
+        <p class="font-display text-xl md:text-2xl font-semibold text-burgundy leading-snug text-center italic">
+          You are not bad with money. You were never taught how it actually works. And that is not your fault.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 3: AGITATE -->
+  <!-- ============================================ -->
+  <section class="relative py-20 md:py-28 lg:py-36 overflow-hidden noise-overlay" style="background: linear-gradient(135deg, #34161B 0%, #5C1128 50%, #8B1A3A 100%);">
+    <!-- Diamond Decoration -->
+    <svg class="diamond-deco right-[5%] bottom-[10%] opacity-[0.04]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#F5E6D0" stroke-width="0.5"/></svg>
+
+    <div class="max-w-3xl mx-auto px-6 text-center relative z-10">
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">
+        The Cost of Waiting
+      </p>
+
+      <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-white leading-tight mb-8 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        Here's What Staying Stuck Is Really Costing You
+      </h2>
+
+      <div class="w-16 h-[2px] bg-gold mx-auto mb-10 reveal reveal-delay-2"></div>
+
+      <div class="font-body text-base md:text-lg text-champagne/90 leading-relaxed space-y-6 text-left reveal reveal-delay-2">
+        <p>The financial dependence story is not new. It's been running for generations. Women are taught to defer, to wait, to hope someone else will handle it.</p>
+        <p>But every year you stay in that story costs you. It costs you in compound interest you're not earning. It costs you in relationships you tolerate because you need them. It costs you in confidence, in options, in freedom.</p>
+        <p class="text-white font-medium">The average woman retires with significantly less wealth than her male counterparts — not because she earned less, but because no one showed her how to make it grow.</p>
+        <p>Think about what another year of the same looks like. Still anxious about the future. Still unsure if you could handle a financial emergency alone. Still watching your money move but not understanding where it goes.</p>
+      </div>
+
+      <div class="mt-10 reveal reveal-delay-3">
+        <p class="font-display text-xl md:text-2xl font-medium text-champagne italic leading-snug">
+          You don't have to keep living in that story.<br>There is a smarter, more empowered way forward. And it starts here.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 4: SOLUTION — INTRODUCING ACCOMPLISHE -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-20 md:py-28 lg:py-36 overflow-hidden">
+    <svg class="diamond-deco left-[8%] top-[5%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#E8C4B0" stroke-width="0.3"/></svg>
+
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+      <div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <!-- Left: Text -->
+        <div>
+          <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">Introducing</p>
+
+          <!-- AccompliSHE Logo -->
+          <div class="mb-8 reveal reveal-delay-1">
+            <img src="/clients/test-client/brand/assets/logos/80ba6d71_accomplishe-logo.svg" alt="AccompliSHE" class="h-12 md:h-14 w-auto">
+          </div>
+
+          <div class="font-body text-base md:text-[17px] text-charcoal leading-body space-y-5 reveal reveal-delay-2">
+            <p>What if the solution to financial insecurity wasn't a better budget app or another online course that collects dust?</p>
+            <p>What if it was a full transformation in how you see yourself, your money, and your worth?</p>
+            <p><strong>AccompliSHE</strong> is a comprehensive financial empowerment program designed specifically for women who are ready to stop surviving financially and start building real, lasting wealth.</p>
+            <p>Created by <strong>Pattie Ehsaei</strong> — attorney, self-made millionaire, and one of the most trusted voices in women's financial empowerment — AccompliSHE gives you the knowledge, the mindset, and the tools to finally take control.</p>
+            <p class="text-burgundy font-medium">This is not theory. This is not generic advice. This is a proven system that works because it was built by someone who lived the exact journey you're on — and figured out the code.</p>
+          </div>
+
+          <div class="mt-8 reveal reveal-delay-3">
+            <a href="#enroll" class="cta-primary font-body font-bold text-sm uppercase tracking-button px-8 py-4 rounded inline-block">
+              I'm Ready to Become My Own Prince Charming
+            </a>
+          </div>
+        </div>
+
+        <!-- Right: Image -->
+        <div class="reveal reveal-delay-2">
+          <div class="relative rounded-2xl overflow-hidden" style="box-shadow: 0 25px 60px rgba(139,26,58,0.12), 0 8px 24px rgba(139,26,58,0.08);">
+            <img src="/clients/test-client/brand/assets/photos/829d825e_Pattie-Collage-1-1411x1536.png" alt="Pattie Ehsaei — Wealth, Career, Worth, Relationships" class="w-full h-auto">
+            <div class="absolute inset-0 bg-gradient-to-t from-burgundy-dark/20 to-transparent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 5: ABOUT THE INSTRUCTOR -->
+  <!-- ============================================ -->
+  <section class="relative bg-champagne py-20 md:py-28 lg:py-36 overflow-hidden noise-overlay">
+    <svg class="diamond-deco right-[3%] top-[15%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#C9963A" stroke-width="0.3"/></svg>
+
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+      <div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <!-- Left: Image -->
+        <div class="reveal order-2 md:order-1">
+          <div class="relative rounded-2xl overflow-hidden border border-blush/50" style="box-shadow: 0 25px 60px rgba(139,26,58,0.1), 0 8px 20px rgba(139,26,58,0.06);">
+            <img src="/clients/test-client/brand/assets/photos/13b51eb4_Pattie-x-PE-1432x1536.png" alt="Pattie Ehsaei" class="w-full h-auto">
+            <div class="absolute inset-0 bg-gradient-to-t from-burgundy-dark/15 to-transparent mix-blend-multiply"></div>
+          </div>
+        </div>
+
+        <!-- Right: Bio -->
+        <div class="order-1 md:order-2">
+          <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">Your Instructor</p>
+
+          <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-charcoal leading-tight mb-8 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+            Meet Pattie Ehsaei
+          </h2>
+
+          <div class="font-body text-base md:text-[17px] text-charcoal leading-body space-y-5 reveal reveal-delay-2">
+            <p>Pattie Ehsaei is an attorney, a self-made millionaire, and a senior professional in the financial industry with over two decades of experience helping people protect, grow, and own their financial future.</p>
+            <p>She's also the author of <em>Never Date a Broke Dude</em>, the Amazon bestseller that went viral because it told the truth no one else was willing to say: your romantic choices and your financial outcomes are deeply connected.</p>
+            <p>With over one million followers on TikTok and a reputation for translating complex financial concepts into language women can actually use, Pattie has become one of the most trusted voices in the women's money space.</p>
+            <p>But Pattie's credibility isn't just in her resume. It's in her story. She built her wealth from scratch. She navigated financial systems that weren't designed for women. She learned the rules of the game — and she's spent her career teaching other women how to play to win.</p>
+            <p class="text-burgundy font-semibold">AccompliSHE is the most direct path to everything she knows.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 6: FEATURED IN / SOCIAL PROOF -->
+  <!-- ============================================ -->
+  <section class="relative py-16 md:py-24 lg:py-32 overflow-hidden noise-overlay" style="background: linear-gradient(180deg, #34161B 0%, #3D1A22 100%);">
+    <div class="max-w-5xl mx-auto px-6 text-center relative z-10">
+      <!-- AccompliSHE Logo decorative -->
+      <div class="mb-10 reveal">
+        <img src="/clients/test-client/brand/assets/logos/80ba6d71_accomplishe-logo.svg" alt="AccompliSHE" class="h-10 w-auto mx-auto" style="filter: brightness(0) invert(1); opacity: 0.3;">
+      </div>
+
+      <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-10 reveal">
+        Pattie's Work Has Been Featured In
+      </p>
+
+      <!-- Logo Grid -->
+      <div class="logo-grid grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 md:gap-10 items-center justify-items-center mb-16 reveal reveal-delay-1">
+        <img src="/clients/test-client/brand/assets/logos/8e6c2cef_gma.png" alt="Good Morning America">
+        <img src="/clients/test-client/brand/assets/logos/35fd96af_forbes.png" alt="Forbes">
+        <img src="/clients/test-client/brand/assets/logos/99818327_abc-logo.png" alt="ABC">
+        <img src="/clients/test-client/brand/assets/logos/4671c69e_BBC-1.png" alt="BBC">
+        <img src="/clients/test-client/brand/assets/logos/35e8c5b3_msnbc.png" alt="MSNBC">
+        <img src="/clients/test-client/brand/assets/logos/22290bc4_newsweek-1.png" alt="Newsweek">
+        <img src="/clients/test-client/brand/assets/logos/a63ea60a_huffpost.png" alt="HuffPost">
+        <img src="/clients/test-client/brand/assets/logos/f3d076fd_yahoo-1.png" alt="Yahoo">
+        <img src="/clients/test-client/brand/assets/logos/1cb7c067_katiecouricmedia.png" alt="Katie Couric Media">
+        <img src="/clients/test-client/brand/assets/logos/e8abd1ab_daily-mail.png" alt="Daily Mail">
+        <img src="/clients/test-client/brand/assets/logos/d5b6f2a4_good-day-la.png" alt="Good Day LA">
+        <img src="/clients/test-client/brand/assets/logos/19ece404_news-nation.png" alt="News Nation">
+      </div>
+
+      <!-- Testimonial Quote -->
+      <div class="max-w-2xl mx-auto reveal reveal-delay-2">
+        <div class="w-12 h-[2px] bg-gold mx-auto mb-8"></div>
+        <blockquote class="font-display text-xl md:text-2xl lg:text-3xl font-medium text-white leading-snug italic mb-6">
+          "Working with Pattie changed how I see every financial decision I make. I finally feel like I belong in the room."
+        </blockquote>
+        <cite class="font-body text-sm text-champagne/70 not-italic">
+          — <span class="tbd">Sarah Mitchell, Financial Advisor</span>
+        </cite>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 7: WHAT'S INSIDE (Accordion Pills) -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-20 md:py-28 lg:py-36 overflow-hidden">
+    <svg class="diamond-deco right-[-2%] top-[20%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#E8C4B0" stroke-width="0.3"/></svg>
+
+    <div class="max-w-4xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-14">
+        <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">What's Included</p>
+        <h2 class="font-display text-3xl md:text-5xl lg:text-6xl font-bold text-charcoal leading-tight reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+          What's Inside AccompliSHE
+        </h2>
+        <p class="font-body text-base md:text-lg text-charcoal/70 max-w-2xl mx-auto mt-6 leading-relaxed reveal reveal-delay-2">
+          Everything inside AccompliSHE is designed to do one thing: help you build the financial confidence, clarity, and independence to never have to depend on anyone else for your security again.
+        </p>
+      </div>
+
+      <!-- Accordion Items -->
+      <div class="space-y-4 reveal reveal-delay-2">
+        <!-- Item 1 -->
+        <div class="border border-blush rounded-2xl md:rounded-[60px] overflow-hidden accordion-wrap cursor-pointer" onclick="toggleAccordion(this)">
+          <div class="flex items-center justify-between px-6 md:px-10 py-5 md:py-6">
+            <div>
+              <h3 class="font-body text-sm md:text-base font-bold uppercase tracking-wide text-charcoal">The Core Curriculum</h3>
+            </div>
+            <span class="accordion-icon text-burgundy text-2xl font-light ml-4 flex-shrink-0">+</span>
+          </div>
+          <div class="accordion-content px-6 md:px-10 pb-0">
+            <div class="pb-6 pt-0 border-t border-blush/40 -mt-1 pt-4">
+              <p class="font-body text-[15px] text-charcoal/80 leading-relaxed">A step-by-step journey through the five phases of financial empowerment, each building on the last. Structured to take you from financially reactive to financially intentional. Includes frameworks you can apply immediately to your real numbers.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="border border-blush rounded-2xl md:rounded-[60px] overflow-hidden accordion-wrap cursor-pointer" onclick="toggleAccordion(this)">
+          <div class="flex items-center justify-between px-6 md:px-10 py-5 md:py-6">
+            <div>
+              <h3 class="font-body text-sm md:text-base font-bold uppercase tracking-wide text-charcoal">Direct Access to Pattie's System</h3>
+            </div>
+            <span class="accordion-icon text-burgundy text-2xl font-light ml-4 flex-shrink-0">+</span>
+          </div>
+          <div class="accordion-content px-6 md:px-10 pb-0">
+            <div class="pb-6 pt-0 border-t border-blush/40 -mt-1 pt-4">
+              <p class="font-body text-[15px] text-charcoal/80 leading-relaxed">The same strategies Pattie used to build her own wealth, broken down clearly for every stage. Real legal and financial guidance — not just motivation. Actionable steps grounded in Pattie's decades of professional experience.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="border border-blush rounded-2xl md:rounded-[60px] overflow-hidden accordion-wrap cursor-pointer" onclick="toggleAccordion(this)">
+          <div class="flex items-center justify-between px-6 md:px-10 py-5 md:py-6">
+            <div>
+              <h3 class="font-body text-sm md:text-base font-bold uppercase tracking-wide text-charcoal">Tools, Templates & Implementation Guides</h3>
+            </div>
+            <span class="accordion-icon text-burgundy text-2xl font-light ml-4 flex-shrink-0">+</span>
+          </div>
+          <div class="accordion-content px-6 md:px-10 pb-0">
+            <div class="pb-6 pt-0 border-t border-blush/40 -mt-1 pt-4">
+              <p class="font-body text-[15px] text-charcoal/80 leading-relaxed">Everything you need to go from learning to doing, without spending hours figuring out the next step. Ready-to-use worksheets, trackers, and decision frameworks designed to fit into your life — not require a total reinvention.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 4 -->
+        <div class="border border-blush rounded-2xl md:rounded-[60px] overflow-hidden accordion-wrap cursor-pointer" onclick="toggleAccordion(this)">
+          <div class="flex items-center justify-between px-6 md:px-10 py-5 md:py-6">
+            <div>
+              <h3 class="font-body text-sm md:text-base font-bold uppercase tracking-wide text-charcoal">Community & Accountability</h3>
+            </div>
+            <span class="accordion-icon text-burgundy text-2xl font-light ml-4 flex-shrink-0">+</span>
+          </div>
+          <div class="accordion-content px-6 md:px-10 pb-0">
+            <div class="pb-6 pt-0 border-t border-blush/40 -mt-1 pt-4">
+              <p class="font-body text-[15px] text-charcoal/80 leading-relaxed">A private space to learn alongside other women on the same journey. Support from peers who understand exactly where you are. Accountability to keep you moving even when life gets in the way.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="font-body text-base text-charcoal/70 text-center mt-10 leading-relaxed reveal">
+        Every element of AccompliSHE is designed to ensure your transformation is real, lasting, and entirely yours.
+      </p>
+
+      <div class="text-center mt-8 reveal">
+        <a href="#enroll" class="cta-primary font-body font-bold text-sm uppercase tracking-button px-10 py-4 rounded inline-block">
+          Join AccompliSHE Today
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 8: WHAT YOU'LL LEARN -->
+  <!-- ============================================ -->
+  <section class="relative bg-champagne py-20 md:py-28 lg:py-36 overflow-hidden noise-overlay">
+    <div class="max-w-5xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-14">
+        <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">The Transformation</p>
+        <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-charcoal leading-tight mb-6 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+          What You'll Learn Inside AccompliSHE
+        </h2>
+        <p class="font-body text-base md:text-lg text-charcoal/70 max-w-2xl mx-auto leading-relaxed reveal reveal-delay-2">
+          By the end of this program, you won't just understand money better. You'll have a completely new relationship with it.
+        </p>
+      </div>
+
+      <!-- Learning Outcomes Grid -->
+      <div class="grid md:grid-cols-2 gap-6 reveal reveal-delay-2">
+        <div class="bg-ivory/80 rounded-2xl p-6 md:p-8 border border-blush/30" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-10 h-10 rounded-full bg-burgundy/10 flex items-center justify-center mb-4">
+            <span class="text-burgundy font-display text-lg font-bold">01</span>
+          </div>
+          <p class="font-body text-[15px] text-charcoal leading-body">Understand how money actually works — including investing, asset protection, and wealth-building strategies most women were never taught</p>
+        </div>
+
+        <div class="bg-ivory/80 rounded-2xl p-6 md:p-8 border border-blush/30" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-10 h-10 rounded-full bg-burgundy/10 flex items-center justify-center mb-4">
+            <span class="text-burgundy font-display text-lg font-bold">02</span>
+          </div>
+          <p class="font-body text-[15px] text-charcoal leading-body">Break the cycle of financial dependence and create security that belongs to you alone</p>
+        </div>
+
+        <div class="bg-ivory/80 rounded-2xl p-6 md:p-8 border border-blush/30" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-10 h-10 rounded-full bg-burgundy/10 flex items-center justify-center mb-4">
+            <span class="text-burgundy font-display text-lg font-bold">03</span>
+          </div>
+          <p class="font-body text-[15px] text-charcoal leading-body">Identify and rewrite the money beliefs that have been keeping you stuck — often since childhood</p>
+        </div>
+
+        <div class="bg-ivory/80 rounded-2xl p-6 md:p-8 border border-blush/30" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-10 h-10 rounded-full bg-burgundy/10 flex items-center justify-center mb-4">
+            <span class="text-burgundy font-display text-lg font-bold">04</span>
+          </div>
+          <p class="font-body text-[15px] text-charcoal leading-body">Evaluate romantic and financial decisions through the same clear-eyed lens — so you stop subsidizing the wrong people</p>
+        </div>
+
+        <div class="bg-ivory/80 rounded-2xl p-6 md:p-8 border border-blush/30" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-10 h-10 rounded-full bg-burgundy/10 flex items-center justify-center mb-4">
+            <span class="text-burgundy font-display text-lg font-bold">05</span>
+          </div>
+          <p class="font-body text-[15px] text-charcoal leading-body">Build a financial plan that accounts for your actual life — not a hypothetical partner, inheritance, or lottery win</p>
+        </div>
+
+        <div class="bg-ivory/80 rounded-2xl p-6 md:p-8 border border-blush/30" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="w-10 h-10 rounded-full bg-burgundy/10 flex items-center justify-center mb-4">
+            <span class="text-burgundy font-display text-lg font-bold">06</span>
+          </div>
+          <p class="font-body text-[15px] text-charcoal leading-body">Handle a financial emergency, negotiate your worth, and protect your assets with confidence</p>
+        </div>
+      </div>
+
+      <p class="font-body text-base text-charcoal/70 text-center mt-10 italic reveal">
+        These are not quick tips. These are the foundations of a financially empowered life.
+      </p>
+
+      <div class="text-center mt-8 reveal">
+        <a href="#enroll" class="cta-primary font-body font-bold text-sm uppercase tracking-button px-10 py-4 rounded inline-block">
+          Start Building Your Financial Future Today
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 9: CURRICULUM / MODULES -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-20 md:py-28 lg:py-36 overflow-hidden">
+    <svg class="diamond-deco left-[5%] bottom-[10%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#E8C4B0" stroke-width="0.3"/></svg>
+
+    <div class="max-w-5xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-14">
+        <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">The Curriculum</p>
+        <h2 class="font-display text-3xl md:text-5xl lg:text-6xl font-bold text-charcoal leading-tight reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+          Your Path Through AccompliSHE
+        </h2>
+        <p class="font-body text-base md:text-lg text-charcoal/70 max-w-3xl mx-auto mt-6 leading-relaxed reveal reveal-delay-2">
+          The AccompliSHE curriculum is built to take you from financially uncertain to financially unstoppable — through a clear, sequenced five-module journey designed by Pattie Ehsaei.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 lg:gap-8">
+        <!-- Left: Intro card -->
+        <div class="module-card bg-ivory p-6 md:p-8 reveal" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <img src="/clients/test-client/brand/assets/photos/45811dd4_phone-cta-1-941x1024.png" alt="AccompliSHE Lifestyle" class="w-full rounded-xl mb-6 border border-blush/20">
+          <p class="font-body text-[15px] text-charcoal leading-body">
+            Each module builds on the last, giving you the knowledge, the confidence, and the practical tools to create real change in your financial life. From understanding the system to owning your identity — this is your complete roadmap.
+          </p>
+        </div>
+
+        <!-- Right: Module cards stacked -->
+        <div class="space-y-4">
+          <!-- Module 1 -->
+          <div class="module-card bg-ivory p-5 md:p-6 cursor-pointer reveal reveal-delay-1" onclick="toggleAccordion(this)">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <span class="font-display text-2xl md:text-3xl font-bold text-burgundy/20 leading-none">01</span>
+                <h3 class="font-body text-sm md:text-base font-bold uppercase tracking-wide text-burgundy mt-1">See the System</h3>
+              </div>
+              <span class="accordion-icon text-burgundy text-xl font-light ml-3 mt-1 flex-shrink-0">+</span>
+            </div>
+            <div class="accordion-content">
+              <p class="font-body text-[14px] text-charcoal/80 leading-relaxed pt-3">You can't change a game you don't understand. In Module 1, you'll finally learn how money, wealth, and financial systems actually work — including the rules that were designed without women in mind. This module builds the foundational knowledge that makes everything else in the program possible.</p>
+            </div>
+          </div>
+
+          <!-- Module 2 -->
+          <div class="module-card bg-ivory p-5 md:p-6 cursor-pointer reveal reveal-delay-2" onclick="toggleAccordion(this)">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <span class="font-display text-2xl md:text-3xl font-bold text-burgundy/20 leading-none">02</span>
+                <h3 class="font-body text-sm md:text-base font-bold uppercase tracking-wide text-burgundy mt-1">Break the Pattern</h3>
+              </div>
+              <span class="accordion-icon text-burgundy text-xl font-light ml-3 mt-1 flex-shrink-0">+</span>
+            </div>
+            <div class="accordion-content">
+              <p class="font-body text-[14px] text-charcoal/80 leading-relaxed pt-3">Every financial decision you make is shaped by a story. In Module 2, you'll identify the beliefs, habits, and patterns that have been running silently in the background of your financial life. You'll learn where they came from, why they persist, and exactly how to interrupt them.</p>
+            </div>
+          </div>
+
+          <!-- Module 3 -->
+          <div class="module-card bg-ivory p-5 md:p-6 cursor-pointer reveal reveal-delay-3" onclick="toggleAccordion(this)">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <span class="font-display text-2xl md:text-3xl font-bold text-burgundy/20 leading-none">03</span>
+                <h3 class="font-body text-sm md:text-base font-bold uppercase tracking-wide text-burgundy mt-1">Protect Your Future</h3>
+              </div>
+              <span class="accordion-icon text-burgundy text-xl font-light ml-3 mt-1 flex-shrink-0">+</span>
+            </div>
+            <div class="accordion-content">
+              <p class="font-body text-[14px] text-charcoal/80 leading-relaxed pt-3">Your financial security cannot depend on another person. In Module 3, you'll learn how to assess risk, protect your assets, and make legal and financial decisions that safeguard your future — no matter what happens in your personal life. This is the module where knowledge becomes armor.</p>
+            </div>
+          </div>
+
+          <!-- Module 4 -->
+          <div class="module-card bg-ivory p-5 md:p-6 cursor-pointer reveal reveal-delay-3" onclick="toggleAccordion(this)">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <span class="font-display text-2xl md:text-3xl font-bold text-burgundy/20 leading-none">04</span>
+                <h3 class="font-body text-sm md:text-base font-bold uppercase tracking-wide text-burgundy mt-1">Build Your Foundation</h3>
+              </div>
+              <span class="accordion-icon text-burgundy text-xl font-light ml-3 mt-1 flex-shrink-0">+</span>
+            </div>
+            <div class="accordion-content">
+              <p class="font-body text-[14px] text-charcoal/80 leading-relaxed pt-3">Now it's time to build. In Module 4, you'll create a personalized financial plan grounded in your actual income, your real goals, and your long-term vision. From investing to debt elimination to retirement planning — you'll walk away with a clear, customized roadmap.</p>
+            </div>
+          </div>
+
+          <!-- Module 5 -->
+          <div class="module-card bg-ivory p-5 md:p-6 cursor-pointer reveal reveal-delay-4" onclick="toggleAccordion(this)">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <span class="font-display text-2xl md:text-3xl font-bold text-burgundy/20 leading-none">05</span>
+                <h3 class="font-body text-sm md:text-base font-bold uppercase tracking-wide text-burgundy mt-1">Own Your AccompliSHE</h3>
+              </div>
+              <span class="accordion-icon text-burgundy text-xl font-light ml-3 mt-1 flex-shrink-0">+</span>
+            </div>
+            <div class="accordion-content">
+              <p class="font-body text-[14px] text-charcoal/80 leading-relaxed pt-3">The final module is about integration and identity. You don't just have the knowledge now — you have a new way of moving through the world. In Module 5, you'll anchor your new financial identity, build the habits that will sustain your growth, and step fully into the role of someone who is her own Prince Charming.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-12 reveal">
+        <a href="#enroll" class="cta-primary font-body font-bold text-sm uppercase tracking-button px-10 py-4 rounded inline-block">
+          Join AccompliSHE Today
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 10: STUDENT TESTIMONIALS -->
+  <!-- ============================================ -->
+  <section class="relative bg-champagne py-20 md:py-28 lg:py-36 overflow-hidden noise-overlay">
+    <div class="max-w-5xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-14">
+        <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">Real Results</p>
+        <h2 class="font-display text-3xl md:text-5xl lg:text-6xl font-bold text-charcoal leading-tight reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+          What Students Are Saying
+        </h2>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Testimonial 1 -->
+        <div class="bg-ivory rounded-3xl p-6 md:p-8 lg:p-10 border border-blush/30 reveal" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="flex items-start gap-2 mb-4">
+            <span class="text-gold text-lg">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+          </div>
+          <blockquote class="font-body text-base md:text-lg text-charcoal leading-relaxed mb-6">
+            "Before AccompliSHE, I had no idea what I was doing with my money. I was making decent income and still felt broke. Now I have a savings plan, I understand my investments, and I stopped tolerating a relationship that was literally costing me."
+          </blockquote>
+          <cite class="font-body text-sm font-semibold text-burgundy not-italic">
+            — <span class="tbd">Jessica Torres, Entrepreneur</span>
+          </cite>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="bg-ivory rounded-3xl p-6 md:p-8 lg:p-10 border border-blush/30 reveal reveal-delay-1" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="flex items-start gap-2 mb-4">
+            <span class="text-gold text-lg">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+          </div>
+          <blockquote class="font-body text-base md:text-lg text-charcoal leading-relaxed mb-6">
+            "Pattie does not sugarcoat anything. She gives you the truth and then the tools to act on it. I wish I had found this five years ago."
+          </blockquote>
+          <cite class="font-body text-sm font-semibold text-burgundy not-italic">
+            — <span class="tbd">Maria Rodriguez, Marketing Director</span>
+          </cite>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="bg-ivory rounded-3xl p-6 md:p-8 lg:p-10 border border-blush/30 reveal reveal-delay-2" style="box-shadow: 0 8px 30px rgba(139,26,58,0.04);">
+          <div class="flex items-start gap-2 mb-4">
+            <span class="text-gold text-lg">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+          </div>
+          <blockquote class="font-body text-base md:text-lg text-charcoal leading-relaxed mb-6">
+            "This program made me realize how much money I had given away — in relationships, in bad decisions, in fear. AccompliSHE gave me it back."
+          </blockquote>
+          <cite class="font-body text-sm font-semibold text-burgundy not-italic">
+            — <span class="tbd">Amanda Kim, Real Estate Agent</span>
+          </cite>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 11: BONUSES -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-20 md:py-28 lg:py-36 overflow-hidden">
+    <svg class="diamond-deco right-[8%] top-[5%]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#C9963A" stroke-width="0.3"/></svg>
+
+    <div class="max-w-4xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-14">
+        <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">Exclusive Bonuses</p>
+        <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-charcoal leading-tight reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+          Bonuses Included When You Join Today
+        </h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 lg:gap-8">
+        <!-- Bonus 1 -->
+        <div class="bg-champagne/60 rounded-2xl p-6 md:p-8 border border-gold/20 reveal" style="box-shadow: 0 12px 35px rgba(201,150,58,0.08);">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="font-display text-3xl font-bold text-gold/40">01</span>
+            <span class="font-body text-xs font-bold uppercase tracking-label text-gold">Value: $97</span>
+          </div>
+          <h3 class="font-body text-base md:text-lg font-bold uppercase tracking-wide text-charcoal mb-4">The Broke Dude Detection Checklist</h3>
+          <p class="font-body text-[15px] text-charcoal/80 leading-body">A practical, no-nonsense checklist to help you identify the financial red flags that too often get mistaken for personality quirks. Stop overlooking what matters most before it costs you.</p>
+        </div>
+
+        <!-- Bonus 2 -->
+        <div class="bg-champagne/60 rounded-2xl p-6 md:p-8 border border-gold/20 reveal reveal-delay-1" style="box-shadow: 0 12px 35px rgba(201,150,58,0.08);">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="font-display text-3xl font-bold text-gold/40">02</span>
+            <span class="font-body text-xs font-bold uppercase tracking-label text-gold">Value: $97</span>
+          </div>
+          <h3 class="font-body text-base md:text-lg font-bold uppercase tracking-wide text-charcoal mb-4">The Pre-Wedding Money Talk Checklist</h3>
+          <p class="font-body text-[15px] text-charcoal/80 leading-body">The conversation most couples avoid — broken down into the questions you absolutely need to ask before merging your financial life with someone else's. Whether you're engaged, partnered, or planning ahead.</p>
+        </div>
+      </div>
+
+      <div class="text-center mt-10 reveal">
+        <p class="font-body text-base text-charcoal">
+          Total Bonus Value: <span class="line-through text-charcoal/50">$194</span> <span class="text-burgundy font-bold">Yours Free When You Join Today</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 12: GUARANTEE -->
+  <!-- ============================================ -->
+  <section class="relative bg-champagne py-20 md:py-28 lg:py-36 overflow-hidden noise-overlay">
+    <div class="max-w-3xl mx-auto px-6 relative z-10">
+      <div class="bg-ivory rounded-2xl p-8 md:p-12 lg:p-16 border border-gold/30 text-center reveal" style="box-shadow: 0 15px 50px rgba(201,150,58,0.1), 0 5px 20px rgba(201,150,58,0.06);">
+        <!-- Gold border accent at top -->
+        <div class="w-20 h-[3px] bg-gold mx-auto mb-8"></div>
+
+        <!-- Shield icon -->
+        <div class="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-6">
+          <svg class="w-8 h-8 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V13H5V8.26l7-3.89v8.63z"/></svg>
+        </div>
+
+        <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5">Your Investment Is Protected</p>
+        <h2 class="font-display text-2xl md:text-3xl lg:text-4xl font-semibold text-charcoal leading-tight mb-6" style="letter-spacing: -0.02em;">
+          14-Day Clarity Guarantee
+        </h2>
+
+        <div class="font-body text-base text-charcoal/80 leading-body space-y-4 text-left max-w-xl mx-auto mb-8">
+          <p>We believe in AccompliSHE because we've seen what it does for women who commit to it. That's why your investment is protected.</p>
+          <p>Here's how it works:</p>
+          <ol class="list-decimal list-inside space-y-3 pl-2">
+            <li>Enroll today and get full access to all modules, tools, and bonuses.</li>
+            <li>Complete the first module and begin applying the framework to your real financial situation.</li>
+            <li>If you don't feel clearer, more empowered, and more in control of your financial future — email our team within 14 days and show your completed first module work. We will refund your investment in full.</li>
+          </ol>
+          <p class="text-burgundy font-medium text-center">No hassle. No guilt. We stand behind every lesson.</p>
+        </div>
+
+        <a href="#enroll" class="cta-primary font-body font-bold text-sm uppercase tracking-button px-10 py-4 rounded inline-block">
+          Join AccompliSHE — 100% Risk-Free
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 13: PRICING / ORDER MENU -->
+  <!-- ============================================ -->
+  <section id="enroll" class="relative py-20 md:py-28 lg:py-36 overflow-hidden noise-overlay" style="background: linear-gradient(135deg, #F5E6D0 0%, #E8C4B0 50%, #F5D8D0 100%);">
+    <svg class="diamond-deco left-[10%] top-[10%] opacity-[0.06]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#8B1A3A" stroke-width="0.5"/></svg>
+
+    <div class="max-w-3xl mx-auto px-6 relative z-10 text-center">
+      <!-- Gold divider -->
+      <div class="w-24 h-[3px] bg-gold mx-auto mb-10 reveal"></div>
+
+      <p class="font-body text-xs font-bold uppercase tracking-label text-burgundy mb-5 reveal">Limited Enrollment</p>
+      <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-charcoal leading-tight mb-6 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+        What You Get When You Join Today
+      </h2>
+
+      <!-- Value Stack -->
+      <div class="bg-ivory rounded-2xl p-8 md:p-10 lg:p-12 border border-blush/40 text-left max-w-xl mx-auto mb-10 reveal reveal-delay-2" style="box-shadow: 0 20px 60px rgba(139,26,58,0.1), 0 8px 25px rgba(139,26,58,0.06);">
+        <ul class="space-y-4 mb-8">
+          <li class="flex items-start gap-3">
+            <span class="text-burgundy mt-1 text-sm">◆</span>
+            <div>
+              <span class="font-body text-base font-semibold text-charcoal">AccompliSHE Full Program</span>
+              <span class="font-body text-sm text-charcoal/50 ml-2">(Value: <span class="tbd">$1,497</span>)</span>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-burgundy mt-1 text-sm">◆</span>
+            <div>
+              <span class="font-body text-base font-semibold text-charcoal">Broke Dude Detection Checklist</span>
+              <span class="font-body text-sm text-charcoal/50 ml-2">(Value: $97)</span>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-burgundy mt-1 text-sm">◆</span>
+            <div>
+              <span class="font-body text-base font-semibold text-charcoal">Pre-Wedding Money Talk Checklist</span>
+              <span class="font-body text-sm text-charcoal/50 ml-2">(Value: $97)</span>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-burgundy mt-1 text-sm">◆</span>
+            <div>
+              <span class="font-body text-base font-semibold text-charcoal">14-Day Clarity Guarantee</span>
+            </div>
+          </li>
+        </ul>
+
+        <div class="border-t border-blush/40 pt-6">
+          <p class="font-body text-base text-charcoal/60 mb-2">
+            Total Value: <span class="line-through tbd">$1,691</span>
+          </p>
+          <p class="font-body text-lg md:text-xl text-charcoal mb-1">
+            Join today for only:
+          </p>
+          <p class="font-display text-4xl md:text-5xl font-bold text-burgundy tbd" style="letter-spacing: -0.02em;">
+            $997
+          </p>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-3">
+        <a href="#" class="cta-primary font-body font-bold text-base uppercase tracking-button px-12 py-5 rounded-lg inline-block text-lg" style="box-shadow: 0 8px 30px rgba(139,26,58,0.3), 0 4px 12px rgba(139,26,58,0.2);">
+          Join AccompliSHE Now
+        </a>
+        <p class="font-body text-xs text-charcoal/50 mt-4">Secure checkout. Instant access. 14-day guarantee.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 14: FAQs -->
+  <!-- ============================================ -->
+  <section class="relative bg-ivory py-20 md:py-28 lg:py-36 overflow-hidden">
+    <div class="max-w-3xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-14">
+        <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">Got Questions?</p>
+        <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-charcoal leading-tight reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+          Frequently Asked Questions
+        </h2>
+      </div>
+
+      <div class="space-y-4 reveal reveal-delay-2">
+        <!-- FAQ 1 -->
+        <div class="border border-blush rounded-2xl overflow-hidden cursor-pointer" onclick="toggleAccordion(this)">
+          <div class="flex items-center justify-between px-6 md:px-8 py-5">
+            <h3 class="font-body text-sm md:text-base font-semibold text-charcoal pr-4">Is AccompliSHE right for me if I'm starting from zero?</h3>
+            <span class="accordion-icon text-burgundy text-xl font-light flex-shrink-0">+</span>
+          </div>
+          <div class="accordion-content px-6 md:px-8">
+            <div class="pb-5 border-t border-blush/30 pt-4">
+              <p class="font-body text-[15px] text-charcoal/80 leading-relaxed">Yes. AccompliSHE was designed for women at every stage of their financial journey. Whether you're carrying debt, starting to invest for the first time, or just realizing how little you were taught about money, the program meets you where you are and moves you forward.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="border border-blush rounded-2xl overflow-hidden cursor-pointer" onclick="toggleAccordion(this)">
+          <div class="flex items-center justify-between px-6 md:px-8 py-5">
+            <h3 class="font-body text-sm md:text-base font-semibold text-charcoal pr-4">I've tried other finance programs and they didn't stick. Why is this different?</h3>
+            <span class="accordion-icon text-burgundy text-xl font-light flex-shrink-0">+</span>
+          </div>
+          <div class="accordion-content px-6 md:px-8">
+            <div class="pb-5 border-t border-blush/30 pt-4">
+              <p class="font-body text-[15px] text-charcoal/80 leading-relaxed">Most financial programs focus on tactics without addressing the root. AccompliSHE combines real financial education with the mindset work that makes information actually usable. Pattie built this program because she saw what was missing from everything else out there.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="border border-blush rounded-2xl overflow-hidden cursor-pointer" onclick="toggleAccordion(this)">
+          <div class="flex items-center justify-between px-6 md:px-8 py-5">
+            <h3 class="font-body text-sm md:text-base font-semibold text-charcoal pr-4">How long does the program take?</h3>
+            <span class="accordion-icon text-burgundy text-xl font-light flex-shrink-0">+</span>
+          </div>
+          <div class="accordion-content px-6 md:px-8">
+            <div class="pb-5 border-t border-blush/30 pt-4">
+              <p class="font-body text-[15px] text-charcoal/80 leading-relaxed">AccompliSHE is designed to be self-paced so you can move through it in a way that works for your life. Most students complete the core curriculum over <span class="tbd">4–6 weeks</span> while beginning to apply the tools immediately.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="border border-blush rounded-2xl overflow-hidden cursor-pointer" onclick="toggleAccordion(this)">
+          <div class="flex items-center justify-between px-6 md:px-8 py-5">
+            <h3 class="font-body text-sm md:text-base font-semibold text-charcoal pr-4">What if I'm currently in a relationship? Is this still for me?</h3>
+            <span class="accordion-icon text-burgundy text-xl font-light flex-shrink-0">+</span>
+          </div>
+          <div class="accordion-content px-6 md:px-8">
+            <div class="pb-5 border-t border-blush/30 pt-4">
+              <p class="font-body text-[15px] text-charcoal/80 leading-relaxed">Absolutely. Whether you're single, partnered, or somewhere in between, financial independence is always a foundation worth building. AccompliSHE teaches you how to protect and grow your own wealth at every stage of your personal life.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 5 -->
+        <div class="border border-blush rounded-2xl overflow-hidden cursor-pointer" onclick="toggleAccordion(this)">
+          <div class="flex items-center justify-between px-6 md:px-8 py-5">
+            <h3 class="font-body text-sm md:text-base font-semibold text-charcoal pr-4">What is your refund policy?</h3>
+            <span class="accordion-icon text-burgundy text-xl font-light flex-shrink-0">+</span>
+          </div>
+          <div class="accordion-content px-6 md:px-8">
+            <div class="pb-5 border-t border-blush/30 pt-4">
+              <p class="font-body text-[15px] text-charcoal/80 leading-relaxed">Your investment is protected by our 14-Day Clarity Guarantee. Complete the first module and apply the framework. If you don't feel clearer and more in control, email our team with your completed module work within 14 days for a full refund.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SECTION 15: FINAL CTA -->
+  <!-- ============================================ -->
+  <section class="relative py-20 md:py-28 lg:py-36 overflow-hidden noise-overlay" style="background: linear-gradient(135deg, #34161B 0%, #5C1128 60%, #8B1A3A 100%);">
+    <svg class="diamond-deco right-[10%] top-[8%] opacity-[0.04]" viewBox="0 0 100 100"><polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="#F5E6D0" stroke-width="0.5"/></svg>
+
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+      <div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <!-- Left: Image -->
+        <div class="reveal">
+          <div class="relative rounded-2xl overflow-hidden border border-blush/10" style="box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
+            <img src="/clients/test-client/brand/assets/photos/14f4ff77_pe-2-1-1024x945.png" alt="Pattie Ehsaei" class="w-full h-auto">
+            <div class="absolute inset-0 bg-gradient-to-t from-burgundy-darker/30 to-transparent mix-blend-multiply"></div>
+          </div>
+        </div>
+
+        <!-- Right: CTA Content -->
+        <div>
+          <p class="font-body text-xs font-bold uppercase tracking-label text-gold mb-5 reveal">This Is Your Moment</p>
+
+          <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-6 reveal reveal-delay-1" style="letter-spacing: -0.02em;">
+            Your Prince Charming Was Always You
+          </h2>
+
+          <div class="font-body text-base md:text-lg text-champagne/85 leading-relaxed space-y-5 reveal reveal-delay-2">
+            <p>You've spent enough time waiting. Waiting for the right partner. The right salary. The right moment to figure all of this out.</p>
+            <p>The truth is: no one is coming to rescue you from financial uncertainty. But you don't need them to. You have everything it takes to build the life you want. You just need the knowledge, the tools, and the right guide.</p>
+            <p class="text-white font-medium">AccompliSHE is how you become your own Prince Charming — the most powerful, financially free, and fully empowered version of yourself.</p>
+          </div>
+
+          <div class="mt-8 reveal reveal-delay-3">
+            <a href="#enroll" class="cta-light font-body font-bold text-sm uppercase tracking-button px-10 py-4 rounded inline-block">
+              Join AccompliSHE Today
+            </a>
+          </div>
+
+          <p class="font-body text-sm text-champagne/50 mt-6 reveal reveal-delay-4">
+            Questions? Email us at <a href="mailto:hello@pattieehsaei.com" class="underline hover:text-champagne"><span class="tbd">hello@pattieehsaei.com</span></a> and we'll get back to you within 24 hours.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- STICKY MOBILE CTA -->
+  <!-- ============================================ -->
+  <div class="sticky-cta" id="stickyCta">
+    <a href="#enroll" class="cta-primary font-body font-bold text-sm uppercase tracking-button py-3.5 rounded block text-center w-full">
+      Join AccompliSHE Today
+    </a>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- FOOTER -->
+  <!-- ============================================ -->
+  <footer class="bg-ivory py-12 md:py-16 border-t border-blush/30">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <img src="/clients/test-client/brand/assets/logos/8f205d45_footer-logo.svg" alt="Pattie Ehsaei" class="h-8 w-auto mx-auto mb-6 opacity-60">
+
+      <p class="font-body text-sm text-charcoal/40 mb-2">
+        &copy; 2026 Pattie Ehsaei. All rights reserved.
+      </p>
+      <p class="font-body text-xs text-charcoal/30">
+        <a href="#" class="hover:text-charcoal/60 underline">Privacy Policy</a>
+        <span class="mx-2">&#183;</span>
+        <a href="#" class="hover:text-charcoal/60 underline">Terms of Service</a>
+        <span class="mx-2">&#183;</span>
+        <a href="#" class="hover:text-charcoal/60 underline">Contact</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- ============================================ -->
+  <!-- SCRIPTS -->
+  <!-- ============================================ -->
+  <script>
+    // Accordion toggle
+    function toggleAccordion(el) {
+      const content = el.querySelector('.accordion-content');
+      const icon = el.querySelector('.accordion-icon');
+      if (!content) return;
+
+      const isOpen = content.classList.contains('open');
+
+      // Close all siblings
+      const parent = el.parentElement;
+      if (parent) {
+        parent.querySelectorAll('.accordion-content.open').forEach(c => {
+          c.classList.remove('open');
+          const sib = c.closest('.accordion-wrap, .module-card, [onclick]');
+          if (sib) {
+            const sibIcon = sib.querySelector('.accordion-icon');
+            if (sibIcon) sibIcon.classList.remove('rotated');
+          }
+        });
+      }
+
+      if (!isOpen) {
+        content.classList.add('open');
+        if (icon) icon.classList.add('rotated');
+      }
+    }
+
+    // Scroll reveal observer — generous rootMargin so items reveal before fully in view
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px 80px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Fallback: reveal everything after 1.5s for SSR/screenshot compatibility
+    setTimeout(() => {
+      document.querySelectorAll('.reveal:not(.visible)').forEach(el => el.classList.add('visible'));
+    }, 1500);
+
+    // Sticky nav background on scroll
+    const nav = document.getElementById('mainNav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 80) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    }, { passive: true });
+
+    // Sticky mobile CTA — show after hero, hide when enroll section is in view
+    const stickyCta = document.getElementById('stickyCta');
+    const heroEl = document.getElementById('top');
+    const enrollEl = document.getElementById('enroll');
+    function updateStickyCta() {
+      const heroBottom = heroEl.getBoundingClientRect().bottom;
+      const enrollRect = enrollEl.getBoundingClientRect();
+      const enrollVisible = enrollRect.top < window.innerHeight && enrollRect.bottom > 0;
+      if (heroBottom < 0 && !enrollVisible) {
+        stickyCta.classList.add('show');
+      } else {
+        stickyCta.classList.remove('show');
+      }
+    }
+    window.addEventListener('scroll', updateStickyCta, { passive: true });
+    updateStickyCta();
+
+    // Countdown timer (3 days from now)
+    const deadline = new Date();
+    deadline.setDate(deadline.getDate() + 3);
+    deadline.setHours(23, 59, 59, 0);
+
+    function updateCountdown() {
+      const now = new Date();
+      const diff = deadline - now;
+      if (diff <= 0) return;
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('cd-days').textContent = String(days).padStart(2, '0');
+      document.getElementById('cd-hours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('cd-mins').textContent = String(mins).padStart(2, '0');
+      document.getElementById('cd-secs').textContent = String(secs).padStart(2, '0');
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  </script>
+</body>
+</html>

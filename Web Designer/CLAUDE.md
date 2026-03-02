@@ -8,6 +8,51 @@
 - If no reference image: design from scratch with high craft (see guardrails below).
 - Screenshot your output, compare against reference, fix mismatches, re-screenshot. Do at least 2 comparison rounds. Stop only when no visible differences remain or user says so.
 
+## Input Separation Rules
+
+Three inputs feed every page build. Each has a strict, non-overlapping role:
+
+### 1. Reference Design → Structure Only
+The reference provides ONLY visual structure:
+- Section layout and ordering
+- Column counts and grid patterns
+- Visual hierarchy (what's big, what's small, what's emphasized)
+- Component patterns (hero style, card layout, testimonial format, CTA placement)
+- Spacing rhythm and decorative elements (dividers, background shapes, icons)
+
+**NEVER copy from the reference:** headings, subheadings, body text, button labels, CTAs, testimonials, stats, bios, product names, company names, or any written content. The reference is a visual blueprint — treat all its text as if it were lorem ipsum.
+
+### 2. Uploaded Copy → All Text Content
+The uploaded copy document (Google Doc, .docx, or text file) provides ALL text:
+- Every heading and subheading
+- All body paragraphs
+- Button labels and CTA text
+- Testimonials and social proof
+- Stats, numbers, and data points
+- Speaker/author bios
+- Navigation labels and footer text
+
+**Copy completeness rule:** Every text element in the output must come from the uploaded copy document. If the copy document doesn't have content for a section that the reference shows, use a clearly marked placeholder: `[COPY NEEDED: section description]`. Never fill gaps with text from the reference.
+
+### 3. Brand Document → All Visual Tokens
+The brand document (`brand.md`, style guide, or brand assets folder) provides ALL visual styling:
+- Colors — use exact hex values from the brand document
+- Fonts — use exact font names from the brand document
+- Logo files and usage rules
+- Spacing conventions and design patterns
+- Decorative patterns, textures, or motifs
+
+**Never derive colors or fonts from the reference.** If the reference uses blue and the brand document specifies burgundy, the output must be burgundy. The brand document always wins for visual tokens.
+
+### 4. Real Assets Rule
+Always check `clients/[name]/brand/assets/` for photos, logos, and images before using any placeholder. Use real asset files — NEVER generate inline SVG placeholders or base64 data URIs when real files exist in the assets folder. Only fall back to `https://placehold.co/WIDTHxHEIGHT` when no real asset is available for that slot.
+
+### Conflict Resolution
+If inputs conflict, this is the priority order:
+1. **Uploaded copy** wins for all text content
+2. **Brand document** wins for all visual tokens (colors, fonts, logos)
+3. **Reference design** wins for layout structure only
+
 ## Local Server
 - **Always serve on localhost** — never screenshot a `file:///` URL.
 - Start the dev server: `node serve.mjs` (serves the project root at `http://localhost:3000`)

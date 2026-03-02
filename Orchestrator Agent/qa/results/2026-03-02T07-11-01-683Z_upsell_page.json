@@ -1,0 +1,104 @@
+{
+  "pageType": "upsell_page",
+  "passed": true,
+  "timestamp": "2026-03-02T07:11:01.683Z",
+  "duration_ms": 107397,
+  "structural": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "page_loads",
+        "passed": true,
+        "detail": "HTTP 200"
+      },
+      {
+        "name": "no_console_errors",
+        "passed": true,
+        "detail": "No console errors"
+      },
+      {
+        "name": "all_images_load",
+        "passed": true,
+        "detail": "All images loaded"
+      },
+      {
+        "name": "has_content",
+        "passed": true,
+        "detail": "396 elements"
+      },
+      {
+        "name": "mobile_viewport",
+        "passed": true,
+        "detail": "scrollWidth=375 at 375px viewport"
+      },
+      {
+        "name": "brand_colors",
+        "passed": true,
+        "detail": "8/8 brand colors found: #34161B, #6B1A2C, #F2C5C8, #F5D8D9, #FAF0E6, #C9A84C, #E8556D, #F48A96"
+      },
+      {
+        "name": "copy_filled",
+        "passed": true,
+        "detail": "No placeholder text found"
+      },
+      {
+        "name": "links_work",
+        "passed": true,
+        "detail": "All internal anchors valid"
+      },
+      {
+        "name": "responsive_meta",
+        "passed": true,
+        "detail": "viewport meta present"
+      },
+      {
+        "name": "fonts_loaded",
+        "passed": true,
+        "detail": "Font loading detected"
+      }
+    ]
+  },
+  "visual": {
+    "passed": true,
+    "skipped": false,
+    "breakpoints": {
+      "mobile": {
+        "layout_match": 7,
+        "visual_quality": 8,
+        "brand_consistency": 8,
+        "mobile_readiness": 8,
+        "content_completeness": 7,
+        "average": 7.6,
+        "passed": true
+      },
+      "tablet": {
+        "layout_match": 9,
+        "visual_quality": 9,
+        "brand_consistency": 9,
+        "mobile_readiness": 9,
+        "content_completeness": 9,
+        "average": 9,
+        "passed": true
+      },
+      "desktop": {
+        "layout_match": 9,
+        "visual_quality": 8,
+        "brand_consistency": 9,
+        "mobile_readiness": 9,
+        "content_completeness": 8,
+        "average": 8.6,
+        "passed": true
+      }
+    },
+    "aggregate": {
+      "min_score": 7,
+      "overall_average": 8.4,
+      "passed": true
+    }
+  },
+  "screenshots": {
+    "mobile": "task-screenshots/upsell_page-mobile-375.png",
+    "tablet": "task-screenshots/upsell_page-tablet-768.png",
+    "desktop": "task-screenshots/upsell_page-desktop-1280.png"
+  }
+}

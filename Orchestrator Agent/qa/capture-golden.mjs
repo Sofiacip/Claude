@@ -140,7 +140,21 @@ async function captureScreenshots() {
 
         await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
         // Wait for fonts and images
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(1000);
+
+        // Freeze animations and force all scroll-reveal elements visible
+        await page.evaluate(() => {
+          const style = document.createElement('style');
+          style.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; }';
+          document.head.appendChild(style);
+
+          document.querySelectorAll('.reveal').forEach(el => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+            el.classList.add('visible');
+          });
+        });
+        await page.waitForTimeout(500);
 
         const screenshotPath = join(QA_ROOT, 'golden-outputs', pageType, `${bp.name}.png`);
         await page.screenshot({ path: screenshotPath, fullPage: true });

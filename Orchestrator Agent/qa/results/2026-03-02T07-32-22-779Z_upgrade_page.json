@@ -1,0 +1,104 @@
+{
+  "pageType": "upgrade_page",
+  "passed": true,
+  "timestamp": "2026-03-02T07:32:22.779Z",
+  "duration_ms": 76640,
+  "structural": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "page_loads",
+        "passed": true,
+        "detail": "HTTP 200"
+      },
+      {
+        "name": "no_console_errors",
+        "passed": true,
+        "detail": "No console errors"
+      },
+      {
+        "name": "all_images_load",
+        "passed": true,
+        "detail": "All images loaded"
+      },
+      {
+        "name": "has_content",
+        "passed": true,
+        "detail": "235 elements"
+      },
+      {
+        "name": "mobile_viewport",
+        "passed": true,
+        "detail": "scrollWidth=375 at 375px viewport"
+      },
+      {
+        "name": "brand_colors",
+        "passed": true,
+        "detail": "8/8 brand colors found: #34161B, #6B1A2C, #F2C5C8, #F5D8D9, #FAF0E6, #C9A84C, #E8556D, #F48A96"
+      },
+      {
+        "name": "copy_filled",
+        "passed": true,
+        "detail": "No placeholder text found"
+      },
+      {
+        "name": "links_work",
+        "passed": true,
+        "detail": "All internal anchors valid"
+      },
+      {
+        "name": "responsive_meta",
+        "passed": true,
+        "detail": "viewport meta present"
+      },
+      {
+        "name": "fonts_loaded",
+        "passed": true,
+        "detail": "Font loading detected"
+      }
+    ]
+  },
+  "visual": {
+    "passed": true,
+    "skipped": false,
+    "breakpoints": {
+      "mobile": {
+        "layout_match": 10,
+        "visual_quality": 10,
+        "brand_consistency": 10,
+        "mobile_readiness": 10,
+        "content_completeness": 10,
+        "average": 10,
+        "passed": true
+      },
+      "tablet": {
+        "layout_match": 9,
+        "visual_quality": 9,
+        "brand_consistency": 10,
+        "mobile_readiness": 9,
+        "content_completeness": 10,
+        "average": 9.4,
+        "passed": true
+      },
+      "desktop": {
+        "layout_match": 10,
+        "visual_quality": 9,
+        "brand_consistency": 10,
+        "mobile_readiness": 9,
+        "content_completeness": 10,
+        "average": 9.6,
+        "passed": true
+      }
+    },
+    "aggregate": {
+      "min_score": 9,
+      "overall_average": 9.7,
+      "passed": true
+    }
+  },
+  "screenshots": {
+    "mobile": "task-screenshots/upgrade_page-mobile-375.png",
+    "tablet": "task-screenshots/upgrade_page-tablet-768.png",
+    "desktop": "task-screenshots/upgrade_page-desktop-1280.png"
+  }
+}

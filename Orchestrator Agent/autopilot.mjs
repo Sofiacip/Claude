@@ -33,8 +33,8 @@ export class AutoPilot {
     const decision = await this.decideNext();
 
     if (!decision) {
-      console.error('❌ Auto-pilot could not determine next action.');
-      return false;
+      console.error('❌ Auto-pilot could not determine next action. Will retry next cycle.');
+      return true; // Return true to keep the loop running — don't stop on transient errors
     }
 
     // Step 3: Check if everything is done
@@ -78,7 +78,10 @@ export class AutoPilot {
       console.error('❌ Planner generated 0 tasks. Retrying with more specific prompt...');
       // Try once more with the reason included
       const retryResult = await this.planner.plan(`${decision.next}. Context: ${decision.reason}`);
-      return retryResult.tasksCreated > 0;
+      if (retryResult.tasksCreated === 0) {
+        console.error('❌ Planner retry also produced 0 tasks. Will retry next cycle.');
+      }
+      return true; // Keep running — don't stop on planner failures
     }
 
     console.log(`\n✅ Auto-pilot planned ${result.tasksCreated} tasks for: "${decision.next}"\n`);

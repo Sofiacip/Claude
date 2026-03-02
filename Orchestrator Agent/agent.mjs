@@ -220,12 +220,13 @@ async function processTask(task) {
   // Report to ClickUp
   await reportResults(task, result, qaResults);
 
-  // Check if this completes a phase → trigger summary report
+  // Check if this completes a tag group → trigger summary report
   if (result.success) {
     try {
+      console.log(`📊 Calling reporter for task: "${task.name}" (tags: ${(task.tags || []).map(t => t.name || t).join(', ') || 'none'})`);
       await reporter.onTaskComplete(task, result);
     } catch (err) {
-      log.warn(`Phase reporter error (non-fatal): ${err.message}`);
+      log.warn(`Reporter error (non-fatal): ${err.message}`);
     }
   }
 

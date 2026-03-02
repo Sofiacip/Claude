@@ -55,6 +55,13 @@ export class QARunner {
       if (!tscResult.passed) results.passed = false;
     }
 
+    // 7. Output QA (funnel-designer only) — structural + visual page checks
+    if (this._isFunnelOutput(checkPath)) {
+      const outputResult = await this._runOutputQA(checkPath);
+      results.checks.push(outputResult);
+      if (!outputResult.passed) results.passed = false;
+    }
+
     return results;
   }
 
@@ -175,6 +182,58 @@ export class QARunner {
         ? `Missing files: ${missing.join(', ')}`
         : `All ${realFiles.length} reported files verified`,
     };
+  }
+
+  _isFunnelOutput(checkPath) {
+    return checkPath.includes('funnel-designer') &&
+      existsSync(path.join(checkPath, 'output', 'landing_page', 'index.html'));
+  }
+
+  async _runOutputQA(checkPath) {
+    try {
+      const { OutputQARunner } = await import('./qa/qa-runner.mjs');
+      const runner = new OutputQARunner({ verbose: false });
+      const outputDir = path.join(checkPath, 'output');
+      const { passed, results } = await runner.runAll(outputDir);
+
+      const entries = Object.entries(results);
+      const total = entries.length;
+      const passedCount = entries.filter(([, r]) => r.passed).length;
+
+      let output;
+      if (passed) {
+        output = `${passedCount}/${total} pages passed (structural + visual)`;
+      } else {
+        const failures = entries
+          .filter(([, r]) => !r.passed)
+          .map(([page, r]) => {
+            const failedChecks = [];
+            if (r.structural && !r.structural.passed) {
+              const failedStructural = r.structural.checks
+                .filter(c => !c.passed)
+                .map(c => c.name);
+              failedChecks.push(...failedStructural);
+            }
+            if (r.visual && !r.visual.passed && !r.visual.skipped) {
+              const failedBps = Object.entries(r.visual.breakpoints)
+                .filter(([, b]) => !b.skipped && !b.passed)
+                .map(([bp, b]) => `visual ${bp} ${b.average || '?'}`);
+              failedChecks.push(...failedBps);
+            }
+            return `${page} (${failedChecks.join(', ') || 'failed'})`;
+          });
+        output = `${passedCount}/${total} passed. FAIL: ${failures.join(', ')}`;
+      }
+
+      return { name: 'output_qa', passed, exitCode: passed ? 0 : 1, output };
+    } catch (err) {
+      return {
+        name: 'output_qa',
+        passed: false,
+        exitCode: 2,
+        output: `Output QA error: ${err.message}`.slice(-500),
+      };
+    }
   }
 
   formatReport(results) {

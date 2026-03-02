@@ -211,6 +211,7 @@ async function processTask(task) {
       lint: qaResults.checks.find(c => c.name === 'lint')?.passed,
       test: qaResults.checks.find(c => c.name === 'test')?.passed,
       sanity: qaResults.checks.find(c => c.name === 'sanity')?.passed,
+      output_qa: qaResults.checks.find(c => c.name === 'output_qa')?.passed,
     } : null,
     errors: previousErrors.map((e, i) => ({
       attempt: i + 1,

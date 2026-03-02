@@ -71,6 +71,9 @@ export class ModuleChain {
     console.log(`\n🔗 Module Chain: ${total} module(s) — ${this.modules.join(', ')}`);
     console.log(`   Instruction: "${this.instruction}"\n`);
 
+    // Phase 0: Drain any existing tasks already in the ClickUp queue
+    await this._drainExistingTasks();
+
     for (let i = 0; i < total; i++) {
       const moduleName = this.modules[i];
       const moduleTag = this.moduleTags[i];
@@ -126,6 +129,51 @@ export class ModuleChain {
     this.state.status = 'completed';
     this.state.updatedAt = new Date().toISOString();
     this._saveState();
+  }
+
+  // ─── Drain Existing Tasks ─────────────────────────────────────────
+
+  /**
+   * Process all tasks already sitting in the ClickUp queue before starting
+   * per-module alignment. This handles recovered/orphaned tasks and any
+   * work left over from a previous run.
+   */
+  async _drainExistingTasks() {
+    const readyTasks = await this.clickup.getReadyTasks();
+    const inProgress = await this.clickup.getTasks(['in progress']);
+    const pending = readyTasks.length + inProgress.length;
+
+    if (pending === 0) {
+      console.log('📭 No existing tasks in queue. Starting module alignment.\n');
+      return;
+    }
+
+    console.log(`📥 Draining ${pending} existing task(s) before starting module chain...\n`);
+    await this.slack.postStatus(`📥 *Draining ${pending} existing task(s)* before starting module chain.`);
+
+    while (true) {
+      const ready = await this.clickup.getReadyTasks();
+      if (ready.length > 0) {
+        for (const task of ready) {
+          console.log(`  📌 [drain] Processing: "${task.name}"`);
+          await this.processTask(task);
+        }
+        continue;
+      }
+
+      const stillRunning = await this.clickup.getTasks(['in progress']);
+      if (stillRunning.length > 0) {
+        console.log(`  ⏳ [drain] ${stillRunning.length} task(s) still in progress...`);
+        await new Promise(r => setTimeout(r, this.config.pollInterval));
+        continue;
+      }
+
+      // Queue empty — done draining
+      break;
+    }
+
+    console.log('✅ Existing tasks drained. Starting module alignment.\n');
+    await this.slack.postStatus('✅ *Existing tasks drained.* Starting per-module alignment.');
   }
 
   // ─── Alignment Phase ────────────────────────────────────────────

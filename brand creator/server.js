@@ -22,12 +22,7 @@ import { buildZip } from './packager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT || '3000');
-const APP_PASSWORD = process.env.APP_PASSWORD;
-
-if (!APP_PASSWORD) {
-  console.error('ERROR: APP_PASSWORD is not set. Add it to your .env file.');
-  process.exit(1);
-}
+// No per-module auth — authentication is handled at the platform level
 
 // ── In-memory job store ───────────────────────────────────────────────────────
 
@@ -195,15 +190,6 @@ const upload = multer({
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-
-app.post('/api/auth', (req, res) => {
-  const { password } = req.body;
-  if (password === APP_PASSWORD) {
-    res.json({ ok: true });
-  } else {
-    res.status(401).json({ ok: false, error: 'Incorrect password' });
-  }
-});
 
 app.post('/api/generate', (req, res) => {
   const { url, clientName } = req.body;

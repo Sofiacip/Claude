@@ -80,25 +80,7 @@
 
 <div id="toast"></div>
 
-<!-- SCREEN 1 — LOGIN -->
-<div id="screen-login" class="screen">
-  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;">
-    <div style="width:100%;max-width:320px;text-align:center;">
-      <div style="display:flex;align-items:center;justify-content:center;gap:0.65rem;margin-bottom:2.5rem;">
-        <svg width="16" height="16" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg>
-        <span class="nav-wordmark">IMPACT OS</span>
-        <span class="nav-divider">—</span>
-        <span style="font-size:0.65rem;color:var(--text-muted);">Brand Creator</span>
-      </div>
-      <input id="login-pw" type="password" class="field" placeholder="Enter password" autocomplete="off"
-        style="width:100%;padding:0.65rem 0.85rem;border-radius:4px;font-size:0.78rem;margin-bottom:0.75rem;text-align:center;">
-      <button id="login-btn" class="btn-primary" style="width:100%;padding:0.65rem;border-radius:4px;">Enter</button>
-      <p id="login-err" style="display:none;margin-top:0.75rem;font-size:0.68rem;color:var(--red);"></p>
-    </div>
-  </div>
-</div>
-
-<!-- SCREEN 2 — INPUT -->
+<!-- SCREEN 1 — INPUT -->
 <div id="screen-input" class="screen">
   <div class="topnav">
     <div class="nav-logo"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg></div>
@@ -337,10 +319,13 @@ function toast(msg, ms = 2200) {
   clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), ms);
 }
 
+// Auto-detect base path (e.g. '/brand-creator' when served under a subpath)
+const BASE = window.location.pathname.replace(/\/+$/, '').replace(/\/[^/]*\.[^/]*$/, '') || '';
+
 async function api(method, path, body) {
   const opts = { method, headers: { 'Content-Type': 'application/json' } };
   if (body !== undefined) opts.body = JSON.stringify(body);
-  return (await fetch(path, opts)).json();
+  return (await fetch(BASE + path, opts)).json();
 }
 
 function show(name) {
@@ -350,22 +335,6 @@ function show(name) {
   el.style.display = 'flex';
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('active')));
 }
-
-// ── Login ──────────────────────────────────────────────────────────────────────
-const loginPw = document.getElementById('login-pw');
-const loginBtn = document.getElementById('login-btn');
-const loginErr = document.getElementById('login-err');
-loginPw.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
-loginBtn.addEventListener('click', async () => {
-  if (!loginPw.value) return;
-  loginBtn.disabled = true; loginBtn.textContent = '...'; loginErr.style.display = 'none';
-  try {
-    const d = await api('POST', '/api/auth', { password: loginPw.value });
-    if (d.ok) show('input');
-    else { loginErr.textContent = d.error || 'Incorrect password.'; loginErr.style.display = 'block'; loginPw.value = ''; loginPw.focus(); }
-  } catch { loginErr.textContent = 'Cannot connect to server.'; loginErr.style.display = 'block'; }
-  finally { loginBtn.disabled = false; loginBtn.textContent = 'Enter'; }
-});
 
 // ── Input ──────────────────────────────────────────────────────────────────────
 const genBtn = document.getElementById('generate-btn');
@@ -408,7 +377,7 @@ function startSSE() {
     else if (lo.includes('stage 3') || lo.includes('ready')) { s2.className='stage-pill done'; s3.className='stage-pill active'; }
   }
 
-  const sse = new EventSource(`/api/jobs/${S.jobId}/stream`);
+  const sse = new EventSource(`${BASE}/api/jobs/${S.jobId}/stream`);
   sse.addEventListener('message', e => {
     const { message } = JSON.parse(e.data);
     addLog(message, (message.includes('Done:') || message.includes('complete')) ? 'success' : '');
@@ -754,7 +723,7 @@ function renderImages() {
         const card = document.createElement('div');
         card.className = 'asset-card';
         const h = category === 'icons' ? 60 : (category === 'logos' || category === 'logos_partners') ? 80 : 110;
-        const src = `/api/jobs/${S.jobId}/asset-file/${category}/${encodeURIComponent(a.filename)}`;
+        const src = `${BASE}/api/jobs/${S.jobId}/asset-file/${category}/${encodeURIComponent(a.filename)}`;
         card.innerHTML = `
           <div style="position:relative;width:100%;height:${h}px;background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden;">
             <img src="${src}" alt="${escAttr(a.alt || a.filename)}" style="max-width:100%;max-height:100%;object-fit:contain;padding:4px;"
@@ -799,7 +768,7 @@ async function uploadFiles(files) {
   for (const f of files) {
     const fd = new FormData(); fd.append('file', f);
     try {
-      const res = await fetch(`/api/jobs/${S.jobId}/assets`, { method: 'POST', body: fd });
+      const res = await fetch(`${BASE}/api/jobs/${S.jobId}/assets`, { method: 'POST', body: fd });
       const d = await res.json();
       if (d.ok) {
         if (!S.job.imageLibrary.uploads) S.job.imageLibrary.uploads = [];
@@ -877,7 +846,7 @@ document.getElementById('to-download-btn').addEventListener('click', () => {
 
 document.getElementById('dl-btn').addEventListener('click', () => {
   const a = document.createElement('a');
-  a.href = `/api/jobs/${S.jobId}/download`;
+  a.href = `${BASE}/api/jobs/${S.jobId}/download`;
   a.download = `${(S.job?.clientName || 'brand').toLowerCase().replace(/\s+/g, '-')}-brand.zip`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   toast('Download started');
@@ -886,8 +855,7 @@ document.getElementById('dl-btn').addEventListener('click', () => {
 document.getElementById('back-edit-btn').addEventListener('click', () => { show('review'); activateTab('identity'); });
 
 // ── Boot ───────────────────────────────────────────────────────────────────────
-show('login');
-document.getElementById('login-pw').focus();
+show('input');
 </script>
 </body>
 </html>

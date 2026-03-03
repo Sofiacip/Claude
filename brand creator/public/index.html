@@ -3,38 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Impact OS — Brand Creator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Brand Creator — 4impactOS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0f0f0f;
-      --surface: #161616;
-      --surface2: #1e1e1e;
-      --border: #2a2a2a;
-      --border-hover: #3a3a3a;
-      --text: #f0f0f0;
-      --text-muted: #777;
-      --text-dim: #444;
-      --accent: #3b82f6;
-      --accent-dim: rgba(59,130,246,0.12);
-      --green: #22c55e;
-      --red: #ef4444;
+      --bg: #060606;
+      --surface: #111111;
+      --surface2: #181818;
+      --border: rgba(251,209,12,0.15);
+      --border-hover: rgba(251,209,12,0.25);
+      --border-subtle: rgba(251,209,12,0.08);
+      --text: #ffffff;
+      --text-muted: rgba(255,255,255,0.7);
+      --text-dim: rgba(255,255,255,0.4);
+      --text-ghost: rgba(255,255,255,0.18);
+      --accent: #fbd10c;
+      --accent-dark: #d4b00a;
+      --accent-dim: rgba(251,209,12,0.1);
+      --accent-mid: rgba(251,209,12,0.2);
+      --accent-strong: rgba(251,209,12,0.35);
+      --green: #34d399;
+      --red: #f87171;
+      --amber: #fbbf24;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; min-height: 100vh; font-size: 14px; }
-    body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px); pointer-events: none; z-index: 0; }
-    h1, h2, h3, .syne { font-family: 'Syne', sans-serif; }
+    body { background: var(--bg); color: var(--text); font-family: 'Open Sans', sans-serif; min-height: 100vh; font-size: 14px; -webkit-font-smoothing: antialiased; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events: none; z-index: 9999; }
+    h1, h2, h3, .display-font { font-family: 'Inter', system-ui, sans-serif; }
     .screen { display: none; min-height: 100vh; flex-direction: column; opacity: 0; transition: opacity 0.25s ease; position: relative; z-index: 1; }
     .screen.active { opacity: 1; }
-    .topnav { display: flex; align-items: center; gap: 0.65rem; padding: 0.75rem 2rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .topnav { display: flex; align-items: center; gap: 0.65rem; padding: 0.75rem 2rem; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; background: #0a0a0a; }
     .nav-logo { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
-    .nav-wordmark { font-family: 'Syne', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; }
-    .nav-divider { color: var(--text-dim); font-size: 0.65rem; }
-    .nav-subtitle { font-size: 0.65rem; color: var(--text-muted); }
-    .btn-primary { background: var(--accent); color: #fff; border: none; padding: 0.55rem 1.2rem; font-family: inherit; font-size: 0.72rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-    .btn-primary:hover { filter: brightness(1.15); }
+    .nav-wordmark { font-family: 'Open Sans', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; color: var(--text-dim); }
+    .nav-divider { color: var(--text-ghost); font-size: 0.75rem; }
+    .nav-subtitle { font-family: 'Inter', system-ui, sans-serif; font-size: 0.75rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+    .btn-primary { background: var(--accent); color: #000; border: none; padding: 0.55rem 1.2rem; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border-radius: 4px; }
+    .btn-primary:hover { background: var(--accent-dark); }
     .btn-primary:disabled { opacity: 0.4; cursor: default; }
     .btn-ghost { background: none; color: var(--text-muted); border: 1px solid var(--border); padding: 0.45rem 0.875rem; font-family: inherit; font-size: 0.68rem; cursor: pointer; transition: all 0.15s; }
     .btn-ghost:hover { border-color: var(--border-hover); color: var(--text); }
@@ -48,7 +53,7 @@
     .tab-panel.active { display: block; }
     .stage-pill { padding: 0.3rem 0.75rem; border-radius: 3px; font-size: 0.6rem; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); transition: all 0.2s; }
     .stage-pill.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-    .stage-pill.done { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.06); }
+    .stage-pill.done { border-color: var(--green); color: var(--green); background: rgba(52,211,153,0.08); }
     .cursor { width: 6px; height: 12px; background: var(--accent); animation: blink 0.9s step-end infinite; display: inline-block; }
     @keyframes blink { 50% { opacity: 0; } }
     .log-line { font-size: 0.68rem; line-height: 1.65; color: var(--text-muted); opacity: 0.55; transition: opacity 0.2s; }
@@ -63,7 +68,7 @@
     .dropzone:hover, .dropzone.drag-over { border-color: var(--accent); background: var(--accent-dim); }
     #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); font-size: 0.68rem; padding: 0.55rem 1rem; border-radius: 4px; z-index: 9999; opacity: 0; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
     #toast.show { opacity: 1; transform: translateY(0); }
-    .guide-ta { width: 100%; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.65rem 0.85rem; font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; line-height: 1.6; resize: vertical; outline: none; min-height: 60px; }
+    .guide-ta { width: 100%; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.65rem 0.85rem; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; line-height: 1.6; resize: vertical; outline: none; min-height: 60px; }
     .guide-ta:focus { border-color: var(--accent); }
     .prop-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(42,42,42,0.5); }
     .prop-row:last-child { border-bottom: none; }
@@ -83,14 +88,14 @@
 <!-- SCREEN 1 — INPUT -->
 <div id="screen-input" class="screen">
   <div class="topnav">
-    <div class="nav-logo"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg></div>
-    <span class="nav-wordmark">IMPACT OS</span>
-    <span class="nav-divider">—</span>
+    <div class="nav-logo"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="2" width="8" height="10" rx="1.5" fill="#fbd10c" opacity="0.9"/><rect x="12" y="2" width="8" height="10" rx="1.5" fill="#fbd10c" opacity="0.4"/><rect x="2" y="14" width="8" height="6" rx="1.5" fill="#fbd10c" opacity="0.4"/><rect x="12" y="14" width="8" height="6" rx="1.5" fill="#fbd10c" opacity="0.15"/></svg></div>
+    <span class="nav-wordmark">4impact<span style="color:var(--accent)">OS</span></span>
+    <span class="nav-divider">/</span>
     <span class="nav-subtitle">Brand Creator</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;">
     <div style="width:100%;max-width:420px;">
-      <h1 class="syne" style="font-size:1.5rem;font-weight:800;margin-bottom:0.35rem;">Create Brand Package</h1>
+      <h1 class="display-font" style="font-size:1.5rem;font-weight:800;margin-bottom:0.35rem;">Create Brand Package</h1>
       <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:2rem;line-height:1.5;">Enter a website URL to scrape brand assets, analyze the visual identity, and generate an AI-ready brand guide.</p>
       <label class="section-label">Website URL</label>
       <input id="inp-url" type="url" class="field" placeholder="https://example.com" style="width:100%;padding:0.6rem 0.85rem;border-radius:4px;font-size:0.78rem;margin-bottom:1rem;">
@@ -106,14 +111,14 @@
 <div id="screen-progress" class="screen">
   <div class="topnav">
     <div style="display:flex;align-items:center;gap:0.65rem;">
-      <div class="nav-logo"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg></div>
-      <span class="nav-wordmark">IMPACT OS</span>
-      <span class="nav-divider">—</span>
+      <div class="nav-logo"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="2" width="8" height="10" rx="1.5" fill="#fbd10c" opacity="0.9"/><rect x="12" y="2" width="8" height="10" rx="1.5" fill="#fbd10c" opacity="0.4"/><rect x="2" y="14" width="8" height="6" rx="1.5" fill="#fbd10c" opacity="0.4"/><rect x="12" y="14" width="8" height="6" rx="1.5" fill="#fbd10c" opacity="0.15"/></svg></div>
+      <span class="nav-wordmark">4impact<span style="color:var(--accent)">OS</span></span>
+      <span class="nav-divider">/</span>
       <span id="prog-client" class="nav-subtitle"></span>
     </div>
   </div>
   <div style="flex:1;display:flex;flex-direction:column;padding:2.5rem 2rem;max-width:680px;width:100%;margin:0 auto;">
-    <h1 class="syne" style="font-size:1.35rem;font-weight:700;margin-bottom:1.5rem;">Generating Brand Package</h1>
+    <h1 class="display-font" style="font-size:1.35rem;font-weight:700;margin-bottom:1.5rem;">Generating Brand Package</h1>
     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:2rem;flex-wrap:wrap;">
       <div id="stage-1" class="stage-pill">01 — Scraping</div>
       <span style="color:var(--text-dim);font-size:0.7rem;">></span>
@@ -134,9 +139,9 @@
 <div id="screen-review" class="screen">
   <div class="topnav" style="justify-content:space-between;">
     <div style="display:flex;align-items:center;gap:0.65rem;">
-      <div class="nav-logo"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg></div>
-      <span class="nav-wordmark">IMPACT OS</span>
-      <span class="nav-divider">—</span>
+      <div class="nav-logo"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="2" width="8" height="10" rx="1.5" fill="#fbd10c" opacity="0.9"/><rect x="12" y="2" width="8" height="10" rx="1.5" fill="#fbd10c" opacity="0.4"/><rect x="2" y="14" width="8" height="6" rx="1.5" fill="#fbd10c" opacity="0.4"/><rect x="12" y="14" width="8" height="6" rx="1.5" fill="#fbd10c" opacity="0.15"/></svg></div>
+      <span class="nav-wordmark">4impact<span style="color:var(--accent)">OS</span></span>
+      <span class="nav-divider">/</span>
       <span id="review-client" class="nav-subtitle"></span>
     </div>
     <button id="to-download-btn" class="btn-primary" style="padding:0.45rem 1.1rem;border-radius:4px;">Download Package</button>
@@ -158,7 +163,7 @@
     <!-- IDENTITY TAB -->
     <div id="panel-identity" class="tab-panel active">
       <div style="margin-bottom:1.5rem;">
-        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">1. Brand Identity</h2>
+        <h2 class="display-font" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">1. Brand Identity</h2>
         <p style="font-size:0.7rem;color:var(--text-muted);">Basic context so AI understands who you are. All changes auto-save.</p>
       </div>
       <div id="identity-fields" style="display:flex;flex-direction:column;gap:1rem;max-width:600px;"></div>
@@ -167,7 +172,7 @@
     <!-- COLORS TAB -->
     <div id="panel-colors" class="tab-panel">
       <div style="margin-bottom:1.5rem;">
-        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">2. Color System (Function-Mapped)</h2>
+        <h2 class="display-font" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">2. Color System (Function-Mapped)</h2>
         <p style="font-size:0.7rem;color:var(--text-muted);">Each color is mapped to a specific UI function. This eliminates guesswork for AI page building.</p>
       </div>
       <div style="max-width:720px;">
@@ -181,7 +186,7 @@
     <!-- TYPOGRAPHY TAB -->
     <div id="panel-typography" class="tab-panel">
       <div style="margin-bottom:1.5rem;">
-        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">3. Typography</h2>
+        <h2 class="display-font" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">3. Typography</h2>
         <p style="font-size:0.7rem;color:var(--text-muted);">Font families and the exact type scale for every heading level.</p>
       </div>
       <div style="max-width:800px;">
@@ -195,7 +200,7 @@
     <!-- COMPONENTS TAB -->
     <div id="panel-components" class="tab-panel">
       <div style="margin-bottom:1.5rem;">
-        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">4. Component Styles</h2>
+        <h2 class="display-font" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">4. Component Styles</h2>
         <p style="font-size:0.7rem;color:var(--text-muted);">Visual rules for buttons, cards, and form inputs.</p>
       </div>
       <div style="max-width:800px;">
@@ -211,7 +216,7 @@
     <!-- LAYOUT TAB -->
     <div id="panel-layout" class="tab-panel">
       <div style="margin-bottom:1.5rem;">
-        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">5. Spacing & Layout</h2>
+        <h2 class="display-font" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">5. Spacing & Layout</h2>
         <p style="font-size:0.7rem;color:var(--text-muted);">Controls breathing room between sections and overall page rhythm.</p>
       </div>
       <div id="spacing-fields" style="max-width:600px;"></div>
@@ -221,7 +226,7 @@
     <div id="panel-effects" class="tab-panel">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
         <div>
-          <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">6. Decorative Effects</h2>
+          <h2 class="display-font" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">6. Decorative Effects</h2>
           <p style="font-size:0.7rem;color:var(--text-muted);">Subtle details for premium feel. Skip if the brand is clean and flat.</p>
         </div>
         <button id="add-effect-btn" class="btn-ghost" style="padding:0.4rem 0.875rem;border-radius:4px;">+ Add Effect</button>
@@ -232,7 +237,7 @@
     <!-- IMAGES TAB -->
     <div id="panel-images" class="tab-panel">
       <div style="margin-bottom:1.5rem;">
-        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">7. Image Library</h2>
+        <h2 class="display-font" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">7. Image Library</h2>
         <p style="font-size:0.7rem;color:var(--text-muted);">All images organized by category. Hover to delete. Upload missing files below.</p>
       </div>
       <div id="image-folders"></div>
@@ -250,7 +255,7 @@
     <!-- LOGOS TAB -->
     <div id="panel-logos" class="tab-panel">
       <div style="margin-bottom:1.5rem;">
-        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">8. Logo Usage</h2>
+        <h2 class="display-font" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">8. Logo Usage</h2>
         <p style="font-size:0.7rem;color:var(--text-muted);">How logos should appear across pages. Also includes image placement map.</p>
       </div>
       <div style="max-width:700px;">
@@ -271,27 +276,29 @@
 <!-- SCREEN 5 — DOWNLOAD -->
 <div id="screen-download" class="screen">
   <div class="topnav">
-    <div class="nav-logo"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg></div>
-    <span class="nav-wordmark">IMPACT OS</span>
+    <div class="nav-logo"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="2" width="8" height="10" rx="1.5" fill="#fbd10c" opacity="0.9"/><rect x="12" y="2" width="8" height="10" rx="1.5" fill="#fbd10c" opacity="0.4"/><rect x="2" y="14" width="8" height="6" rx="1.5" fill="#fbd10c" opacity="0.4"/><rect x="12" y="14" width="8" height="6" rx="1.5" fill="#fbd10c" opacity="0.15"/></svg></div>
+    <span class="nav-wordmark">4impact<span style="color:var(--accent)">OS</span></span>
+    <span class="nav-divider">/</span>
+    <span class="nav-subtitle">Brand Creator</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:3rem 2rem;">
     <div style="width:100%;max-width:500px;text-align:center;">
       <div style="width:56px;height:56px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <h1 class="syne" style="font-size:1.75rem;font-weight:800;margin-bottom:0.4rem;">Brand Package Ready</h1>
+      <h1 class="display-font" style="font-size:1.75rem;font-weight:800;margin-bottom:0.4rem;">Brand Package Ready</h1>
       <p id="dl-subtitle" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2.25rem;line-height:1.6;"></p>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.875rem;margin-bottom:2.25rem;">
         <div class="stat-card">
-          <div class="syne" id="stat-colors" style="font-size:2rem;font-weight:800;color:var(--accent);">0</div>
+          <div class="display-font" id="stat-colors" style="font-size:2rem;font-weight:800;color:var(--accent);">0</div>
           <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-top:0.2rem;">Colors</div>
         </div>
         <div class="stat-card">
-          <div class="syne" id="stat-fonts" style="font-size:2rem;font-weight:800;color:var(--accent);">0</div>
+          <div class="display-font" id="stat-fonts" style="font-size:2rem;font-weight:800;color:var(--accent);">0</div>
           <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-top:0.2rem;">Fonts</div>
         </div>
         <div class="stat-card">
-          <div class="syne" id="stat-assets" style="font-size:2rem;font-weight:800;color:var(--accent);">0</div>
+          <div class="display-font" id="stat-assets" style="font-size:2rem;font-weight:800;color:var(--accent);">0</div>
           <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-top:0.2rem;">Images</div>
         </div>
       </div>
@@ -456,10 +463,10 @@ function renderColorList(containerId, colors, paletteKey) {
         style="width:38px;height:38px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;padding:2px;background:none;flex-shrink:0;">
       <div style="width:120px;flex-shrink:0;">
         <div style="font-size:0.72rem;font-weight:500;">${esc(c.name)}</div>
-        <div class="hex-label" style="font-size:0.62rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;">${esc(c.hex)}</div>
+        <div class="hex-label" style="font-size:0.62rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">${esc(c.hex)}</div>
       </div>
       <input type="text" class="field color-hex" data-i="${i}" value="${escAttr(c.hex || '')}" placeholder="Hex or rgba"
-        style="width:160px;padding:0.3rem 0.5rem;border-radius:3px;font-size:0.7rem;font-family:'IBM Plex Mono',monospace;">
+        style="width:160px;padding:0.3rem 0.5rem;border-radius:3px;font-size:0.7rem;font-family:'JetBrains Mono',monospace;">
       <input type="text" class="field color-usage" data-i="${i}" value="${escAttr(c.usedFor || '')}" placeholder="Used for..."
         style="flex:1;padding:0.3rem 0.5rem;border-radius:3px;font-size:0.68rem;color:var(--text-muted);">
     `;

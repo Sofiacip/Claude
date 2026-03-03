@@ -3,8 +3,20 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import AdmZip from 'adm-zip';
+import { GeminiBuilder } from './gemini-builder.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Load .env
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  for (const line of fs.readFileSync(envPath, 'utf-8').split('\n')) {
+    const eq = line.indexOf('=');
+    if (eq > 0 && !line.trimStart().startsWith('#')) {
+      process.env[line.substring(0, eq).trim()] = line.substring(eq + 1).trim();
+    }
+  }
+}
 
 // Parse --dir argument
 const dirArgIndex = process.argv.indexOf('--dir');
@@ -97,10 +109,20 @@ function handleHealth(req, res) {
 async function handleGetClients(req, res) {
   const clientsDir = path.join(serveDir, 'clients');
   if (!fs.existsSync(clientsDir)) { sendJSON(res, []); return; }
-  const clients = fs.readdirSync(clientsDir).filter(name => {
-    if (name === '_template' || name.startsWith('.')) return false;
-    return fs.existsSync(path.join(clientsDir, name, 'output', 'index.html'));
-  });
+  const clients = fs.readdirSync(clientsDir)
+    .filter(name => {
+      if (name === '_template' || name.startsWith('.') || name === 'README.md') return false;
+      const cDir = path.join(clientsDir, name);
+      return fs.statSync(cDir).isDirectory();
+    })
+    .map(name => {
+      const cDir = path.join(clientsDir, name);
+      const hasOutput = fs.existsSync(path.join(cDir, 'output', 'index.html'));
+      const hasBrand = fs.existsSync(path.join(cDir, 'brand', 'brand.md'));
+      const hasCopy = fs.existsSync(path.join(cDir, 'copy')) &&
+        fs.readdirSync(path.join(cDir, 'copy')).length > 0;
+      return { name, hasOutput, hasBrand, hasCopy };
+    });
   sendJSON(res, clients);
 }
 
@@ -166,8 +188,10 @@ function extractBrandZip(zipPath, clientDir) {
     const ext = path.extname(fileName).toLowerCase();
     let destPath = null;
 
-    if (lowerPath === 'brand_guide.md') {
+    if (lowerPath === 'brand_guide.md' || lowerPath === 'brand-guide.md') {
       destPath = path.join(brandDir, 'brand.md');
+    } else if (lowerPath === 'brand-guide.json') {
+      destPath = path.join(brandDir, 'brand-guide.json');
     } else if (lowerPath === 'assets/colors.md') {
       destPath = path.join(assetsDir, 'colors.md');
     } else if (lowerPath === 'testimonials.json') {
@@ -187,6 +211,12 @@ function extractBrandZip(zipPath, clientDir) {
       destPath = path.join(assetsDir, 'fonts', fileName);
     } else if (lowerPath.startsWith('assets/uploads/')) {
       destPath = path.join(assetsDir, 'uploads', fileName);
+    } else if (lowerPath.startsWith('brand-assets/')) {
+      // Brand Creator format: brand-assets/[subfolder]/[file]
+      const brandAssetRel = relativePath.replace(/^brand-assets\//, '');
+      if (brandAssetRel) {
+        destPath = path.join(assetsDir, brandAssetRel);
+      }
     } else {
       // Fallback: preserve relative structure under brand/
       destPath = path.join(brandDir, relativePath);
@@ -263,27 +293,111 @@ async function handleUpload(req, res) {
   sendJSON(res, { success: true, path: fp, filename: safeName });
 }
 
-// ─── Build Handler ──────────────────────────────────────
+// ─── Build Handler (Gemini-powered) ─────────────────────
+
+const activeBuilds = new Map(); // client → { status, listeners[] }
 
 async function handleBuild(req, res) {
   const body = await readBody(req);
   let parsed;
   try { parsed = JSON.parse(body); } catch { sendError(res, 400, 'Invalid JSON in request body'); return; }
-  const { client, templateUrl: tplUrl, brandUploaded, copyUploaded, copyFileCount } = parsed;
+  const { client, referenceUrl } = parsed;
   if (!client) { sendError(res, 400, 'Missing client'); return; }
-  const configPath = path.join(serveDir, 'clients', client, 'build-config.json');
-  if (!configPath.startsWith(serveDir)) { sendError(res, 403, 'Forbidden'); return; }
-  const config = {
-    client,
-    templateUrl: tplUrl || null,
-    brandUploaded: !!brandUploaded,
-    copyUploaded: !!copyUploaded,
-    copyFileCount: copyFileCount || 0,
-    createdAt: new Date().toISOString(),
-  };
+  if (!referenceUrl) { sendError(res, 400, 'Missing referenceUrl'); return; }
+
+  const clientDir = path.join(serveDir, 'clients', client);
+  if (!clientDir.startsWith(serveDir)) { sendError(res, 403, 'Forbidden'); return; }
+  if (!fs.existsSync(path.join(clientDir, 'brand', 'brand.md'))) {
+    sendError(res, 400, 'No brand guide found. Upload a brand ZIP first.'); return;
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) { sendError(res, 500, 'GEMINI_API_KEY not configured'); return; }
+
+  // Prevent duplicate builds
+  if (activeBuilds.has(client)) {
+    sendError(res, 409, 'Build already in progress for this client'); return;
+  }
+
+  // Save build config
+  const configPath = path.join(clientDir, 'build-config.json');
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
-  sendJSON(res, { success: true, message: `Build config saved for ${client}. Run Claude Code to build the page.` });
+  fs.writeFileSync(configPath, JSON.stringify({ client, referenceUrl, createdAt: new Date().toISOString() }, null, 2));
+
+  // Start build in background, respond immediately
+  const buildState = { status: 'running', listeners: [], events: [] };
+  activeBuilds.set(client, buildState);
+
+  const emitBuildEvent = (data) => {
+    const event = { ...data, timestamp: Date.now() };
+    buildState.events.push(event);
+    for (const listener of buildState.listeners) {
+      try { listener.write(`data: ${JSON.stringify(event)}\n\n`); } catch (e) {}
+    }
+  };
+
+  sendJSON(res, { success: true, message: 'Build started', client, referenceUrl });
+
+  // Run Gemini pipeline
+  const builder = new GeminiBuilder(apiKey, {
+    onProgress: (msg) => {
+      console.log(`[build:${client}] [${msg.type}] ${msg.message || ''}`);
+      emitBuildEvent(msg);
+    },
+  });
+
+  try {
+    const result = await builder.build(clientDir, referenceUrl);
+    emitBuildEvent({ type: 'done', message: 'Build complete', outputPath: result.outputPath, duration: result.duration });
+    buildState.status = 'done';
+  } catch (err) {
+    console.error(`[build:${client}] Error:`, err);
+    emitBuildEvent({ type: 'error', message: err.message });
+    buildState.status = 'error';
+  } finally {
+    // Close all SSE listeners
+    for (const listener of buildState.listeners) {
+      try { listener.end(); } catch (e) {}
+    }
+    // Clean up after 5 min
+    setTimeout(() => activeBuilds.delete(client), 300000);
+  }
+}
+
+// SSE endpoint for build progress
+async function handleBuildProgress(req, res, params) {
+  const client = params.get('client');
+  if (!client) { sendError(res, 400, 'Missing client parameter'); return; }
+
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
+  res.write('\n');
+
+  const buildState = activeBuilds.get(client);
+  if (!buildState) {
+    res.write(`data: ${JSON.stringify({ type: 'error', message: 'No active build for this client' })}\n\n`);
+    res.end();
+    return;
+  }
+
+  // Replay past events
+  for (const event of buildState.events) {
+    res.write(`data: ${JSON.stringify(event)}\n\n`);
+  }
+
+  // If build is already done, close
+  if (buildState.status !== 'running') {
+    res.end();
+    return;
+  }
+
+  // Subscribe to future events
+  buildState.listeners.push(res);
+  const heartbeat = setInterval(() => { try { res.write(':ping\n\n'); } catch(e) {} }, 15000);
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    const idx = buildState.listeners.indexOf(res);
+    if (idx >= 0) buildState.listeners.splice(idx, 1);
+  });
 }
 
 // ─── SSE File Watcher ───────────────────────────────────
@@ -328,6 +442,7 @@ const server = http.createServer(async (req, res) => {
         case 'POST /api/update-text': await handleUpdateText(req, res); return;
         case 'POST /api/upload': await handleUpload(req, res); return;
         case 'POST /api/build': await handleBuild(req, res); return;
+        case 'GET /api/build-progress': await handleBuildProgress(req, res, parsedUrl.searchParams); return;
         case 'GET /api/watch': await handleWatch(req, res, parsedUrl.searchParams); return;
         default: sendError(res, 404, `API route not found: ${route}`); return;
       }

@@ -8,7 +8,9 @@
     "screenshot": "node screenshot.mjs"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "adm-zip": "^0.5.16",
+    "mammoth": "^1.11.0",
     "playwright": "^1.40.0"
   }
 }

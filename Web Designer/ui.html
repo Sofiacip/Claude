@@ -476,19 +476,17 @@
       });
     }
 
-    async function triggerBuild(client) {
+    async function triggerBuild(client, refUrl) {
       const res = await fetch('/api/build', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client,
-          templateUrl: templateUrl.value,
-          brandUploaded: !!state.brandFile,
-          copyUploaded: !!(state.copyFiles?.length),
-          copyFileCount: state.copyFiles?.length || 0,
-        }),
+        body: JSON.stringify({ client, referenceUrl: refUrl }),
       });
       return res.json();
+    }
+
+    function subscribeBuildProgress(client) {
+      return new EventSource(`/api/build-progress?client=${encodeURIComponent(client)}`);
     }
 
     // ─── SSE Connection ──────────────────────────────────
@@ -597,10 +595,18 @@
         return;
       }
       clientSelect.innerHTML = '<option value="">Select a client...</option>';
+      // Add "New Client" option
+      const newOpt = document.createElement('option');
+      newOpt.value = '__new__';
+      newOpt.textContent = '+ New Client';
+      clientSelect.appendChild(newOpt);
+
       for (const c of clients) {
+        const name = typeof c === 'string' ? c : c.name;
         const opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = c;
+        opt.value = name;
+        const status = typeof c === 'object' ? (c.hasOutput ? ' ✓' : c.hasBrand ? ' ◐' : ' ○') : '';
+        opt.textContent = name + status;
         clientSelect.appendChild(opt);
       }
     }
@@ -770,6 +776,29 @@
     // Client selection
     clientSelect.addEventListener('change', async (e) => {
       const client = e.target.value;
+
+      // Handle "New Client"
+      if (client === '__new__') {
+        const name = prompt('Enter client name (lowercase, no spaces):');
+        if (!name) { clientSelect.value = state.activeClient || ''; return; }
+        const safeName = name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        // Create client dir by uploading a dummy then reload
+        try {
+          await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ client: safeName, type: 'copy', files: [] }),
+          });
+        } catch (e) {}
+        // Reload clients
+        const clients = await fetchClients();
+        state.clients = clients;
+        renderClientSelector(clients);
+        clientSelect.value = safeName;
+        clientSelect.dispatchEvent(new Event('change'));
+        return;
+      }
+
       if (!client) {
         state.activeClient = null;
         previewFrame.classList.add('hidden');
@@ -785,34 +814,45 @@
       state.activeClient = client;
       state.modified.clear();
       updateModifiedUI();
-      exportBtn.disabled = false;
 
-      // Load preview
-      loadPreview(client);
+      // Check if client has output
+      const clientInfo = state.clients.find(c => (typeof c === 'string' ? c : c.name) === client);
+      const hasOutput = typeof clientInfo === 'object' ? clientInfo.hasOutput : true;
 
-      // Show loading state
-      editorEmpty.classList.add('hidden');
-      editorLoading.classList.remove('hidden');
-      sectionsContainer.querySelectorAll('.section-card').forEach(el => el.remove());
+      if (hasOutput) {
+        exportBtn.disabled = false;
+        loadPreview(client);
 
-      // Connect SSE
-      connectSSE(client);
+        editorEmpty.classList.add('hidden');
+        editorLoading.classList.remove('hidden');
+        sectionsContainer.querySelectorAll('.section-card').forEach(el => el.remove());
 
-      // Wait for iframe to load, then extract sections
-      previewFrame.onload = () => {
-        try {
-          const doc = previewFrame.contentDocument;
-          if (doc) {
-            state.sections = extractSections(doc);
-            renderSections(state.sections);
+        connectSSE(client);
+
+        previewFrame.onload = () => {
+          try {
+            const doc = previewFrame.contentDocument;
+            if (doc) {
+              state.sections = extractSections(doc);
+              renderSections(state.sections);
+            }
+          } catch (err) {
+            console.error('Failed to extract sections:', err);
+            toast('Failed to extract sections from page', 'error');
+            editorLoading.classList.add('hidden');
+            editorEmpty.classList.remove('hidden');
           }
-        } catch (err) {
-          console.error('Failed to extract sections:', err);
-          toast('Failed to extract sections from page', 'error');
-          editorLoading.classList.add('hidden');
-          editorEmpty.classList.remove('hidden');
-        }
-      };
+        };
+      } else {
+        exportBtn.disabled = true;
+        previewFrame.classList.add('hidden');
+        previewEmpty.classList.remove('hidden');
+        previewUrl.textContent = '';
+        editorEmpty.classList.remove('hidden');
+        sectionsContainer.querySelectorAll('.section-card').forEach(el => el.remove());
+        setStatus('idle', `${client} — upload brand + copy, then build`);
+        toast('Upload brand ZIP and copy docs, enter reference URL, then click Build', 'info');
+      }
     });
 
     // File uploads
@@ -878,6 +918,12 @@
         toast('Select a client first', 'warning');
         return;
       }
+      const refUrl = templateUrl.value.trim();
+      if (!refUrl) {
+        toast('Enter a reference URL first', 'warning');
+        templateUrl.focus();
+        return;
+      }
 
       buildBtn.disabled = true;
       buildBtn.innerHTML = `
@@ -887,21 +933,165 @@
         Building...
       `;
 
+      // Show build progress overlay
+      showBuildProgress();
+
       try {
-        const result = await triggerBuild(state.activeClient);
-        toast(result.message || 'Build config saved', 'success');
+        const result = await triggerBuild(state.activeClient, refUrl);
+        if (result.error) {
+          toast(result.error, 'error');
+          hideBuildProgress();
+          resetBuildBtn();
+          return;
+        }
+
+        // Subscribe to SSE build progress
+        const sse = subscribeBuildProgress(state.activeClient);
+        sse.onmessage = (e) => {
+          const data = JSON.parse(e.data);
+          updateBuildProgress(data);
+
+          if (data.type === 'done') {
+            sse.close();
+            toast(`Build complete in ${data.duration}s`, 'success');
+            setTimeout(() => {
+              hideBuildProgress();
+              resetBuildBtn();
+              // Reload preview + sections
+              loadPreview(state.activeClient);
+              connectSSE(state.activeClient);
+              previewFrame.onload = () => {
+                try {
+                  const doc = previewFrame.contentDocument;
+                  if (doc) {
+                    state.sections = extractSections(doc);
+                    renderSections(state.sections);
+                  }
+                } catch (err) {}
+              };
+            }, 1500);
+          } else if (data.type === 'error') {
+            sse.close();
+            toast(`Build failed: ${data.message}`, 'error');
+            setTimeout(() => {
+              hideBuildProgress();
+              resetBuildBtn();
+            }, 2000);
+          }
+        };
+        sse.onerror = () => {
+          sse.close();
+          hideBuildProgress();
+          resetBuildBtn();
+        };
       } catch (err) {
         toast('Build trigger failed', 'error');
-      } finally {
-        buildBtn.disabled = false;
-        buildBtn.innerHTML = `
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/>
-          </svg>
-          Build Page
-        `;
+        hideBuildProgress();
+        resetBuildBtn();
       }
     });
+
+    function resetBuildBtn() {
+      buildBtn.disabled = false;
+      buildBtn.innerHTML = `
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/>
+        </svg>
+        Build Page
+      `;
+    }
+
+    // ─── Build Progress Overlay ─────────────────────────
+    function showBuildProgress() {
+      let overlay = document.getElementById('build-overlay');
+      if (overlay) { overlay.classList.remove('hidden'); return; }
+
+      overlay = document.createElement('div');
+      overlay.id = 'build-overlay';
+      overlay.className = 'fixed inset-0 z-40 flex items-center justify-center';
+      overlay.style.background = 'rgba(12,12,16,0.85)';
+      overlay.style.backdropFilter = 'blur(4px)';
+      overlay.innerHTML = `
+        <div class="bg-s1 border border-bd rounded-xl w-full max-w-lg mx-4" style="box-shadow: 0 24px 64px rgba(0,0,0,0.6);">
+          <div class="flex items-center gap-3 px-6 py-4 border-b border-bd/50">
+            <svg class="w-5 h-5 text-acc spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M12 2a10 10 0 0110 10"/>
+            </svg>
+            <span class="font-display font-700 text-sm text-tp">Gemini Build Pipeline</span>
+          </div>
+          <div class="p-6 space-y-4" id="build-steps">
+            ${[
+              ['1', 'Reference Audit', 'Fetching and analyzing reference page structure'],
+              ['2', 'Asset Mapping', 'Mapping brand assets and colors to reference slots'],
+              ['3', 'HTML Generation', 'Building page with Gemini AI'],
+              ['4', 'Verification', 'Checking output against reference audit'],
+            ].map(([n, title, desc]) => `
+              <div class="flex items-start gap-3 build-step" data-step="${n}">
+                <div class="w-7 h-7 rounded-full border border-bd flex items-center justify-center flex-shrink-0 mt-0.5 step-icon">
+                  <span class="font-mono text-[10px] font-600 text-tm">${n}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-600 text-ts step-title">${title}</div>
+                  <div class="text-[10px] text-tm mt-0.5 step-desc">${desc}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="px-6 pb-4">
+            <div class="font-mono text-[10px] text-tm" id="build-log">Initializing...</div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    function hideBuildProgress() {
+      const overlay = document.getElementById('build-overlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+
+    function updateBuildProgress(data) {
+      const log = document.getElementById('build-log');
+      if (log && data.message) log.textContent = data.message;
+
+      if (data.type === 'step' && data.step) {
+        const steps = document.querySelectorAll('.build-step');
+        steps.forEach(el => {
+          const n = parseInt(el.dataset.step);
+          const icon = el.querySelector('.step-icon');
+          const title = el.querySelector('.step-title');
+
+          if (n < data.step) {
+            // Completed
+            icon.className = 'w-7 h-7 rounded-full bg-ok/20 border border-ok/30 flex items-center justify-center flex-shrink-0 mt-0.5 step-icon';
+            icon.innerHTML = '<svg class="w-3.5 h-3.5 text-ok" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>';
+            title.className = 'text-xs font-600 text-ok step-title';
+          } else if (n === data.step) {
+            // Active
+            icon.className = 'w-7 h-7 rounded-full bg-acc/20 border border-acc/30 flex items-center justify-center flex-shrink-0 mt-0.5 step-icon';
+            icon.innerHTML = '<svg class="w-3.5 h-3.5 text-acc spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 2a10 10 0 0110 10"/></svg>';
+            title.className = 'text-xs font-600 text-acc step-title';
+          }
+        });
+      }
+
+      if (data.type === 'complete' || data.type === 'done') {
+        const steps = document.querySelectorAll('.build-step');
+        steps.forEach(el => {
+          const icon = el.querySelector('.step-icon');
+          const title = el.querySelector('.step-title');
+          icon.className = 'w-7 h-7 rounded-full bg-ok/20 border border-ok/30 flex items-center justify-center flex-shrink-0 mt-0.5 step-icon';
+          icon.innerHTML = '<svg class="w-3.5 h-3.5 text-ok" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>';
+          title.className = 'text-xs font-600 text-ok step-title';
+        });
+        // Stop spinner in header
+        const headerSpin = document.querySelector('#build-overlay .spin');
+        if (headerSpin) {
+          headerSpin.classList.remove('spin');
+          headerSpin.outerHTML = '<svg class="w-5 h-5 text-ok" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>';
+        }
+      }
+    }
 
     // Text editing — delegated
     sectionsContainer.addEventListener('input', (e) => {
@@ -1206,7 +1396,8 @@ ${bodyHTML}
 
         // Auto-select if only one client
         if (clients.length === 1) {
-          clientSelect.value = clients[0];
+          const name = typeof clients[0] === 'string' ? clients[0] : clients[0].name;
+          clientSelect.value = name;
           clientSelect.dispatchEvent(new Event('change'));
         }
 

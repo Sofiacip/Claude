@@ -1,0 +1,272 @@
+{
+  "brandIdentity": {
+    "brandName": "Growth Institute",
+    "tagline": "Scale Impact & Reduce Drama",
+    "industry": "Online Executive Education & Business Coaching",
+    "targetAudience": "Founders and C-suite executives scaling businesses from $1M to $50M+ revenue, seeking proven methodologies, leadership frameworks, and peer community",
+    "brandPersonality": "Authoritative, Premium, Results-Driven, Ambitious, Community-Focused"
+  },
+  "colorSystem": {
+    "primary": [
+      {
+        "name": "Page Background",
+        "hex": "#0d0f1e",
+        "usedFor": "Main page background for all sections, hero areas, and full-bleed dark panels — the deepest layer of every page"
+      },
+      {
+        "name": "Card Background",
+        "hex": "#242328",
+        "usedFor": "Card surfaces, nav bar background, footer container, modal backgrounds, all elevated surfaces sitting above the page background"
+      },
+      {
+        "name": "Primary CTA",
+        "hex": "#6453e5",
+        "usedFor": "All primary action buttons (Download Now, Contact Us, Back to Homepage, Master Business Growth Today), active nav states, category filter pills, label chips, focus rings"
+      },
+      {
+        "name": "Accent / Highlight",
+        "hex": "#897aeb",
+        "usedFor": "Gradient endpoint for accent words within H1/H2 headings (linear-gradient from #6453e5 to #897aeb), hover tint on Primary CTA, decorative purple section labels like 'Our Purpose'"
+      },
+      {
+        "name": "Heading Text",
+        "hex": "#ffffff",
+        "usedFor": "All H1, H2, H3 text, large stat numbers, card titles, bold navigation labels, any text requiring maximum contrast"
+      },
+      {
+        "name": "Body Text",
+        "hex": "#dddddd",
+        "usedFor": "Paragraph copy, card descriptions, nav link text, footer link text, list items — slightly dimmed white to reduce eye strain on dark backgrounds"
+      },
+      {
+        "name": "Secondary Text",
+        "hex": "#949fa7",
+        "usedFor": "Subtitles, instructor job titles, date stamps, caption text, meta information, stat labels beneath large numbers, helper text"
+      },
+      {
+        "name": "Border / Divider",
+        "hex": "rgba(100,83,229,0.15)",
+        "usedFor": "Card borders, footer container outline, section separators, input field borders — subtle purple-tinted line that echoes the Primary CTA"
+      }
+    ],
+    "utility": [
+      {
+        "name": "Success",
+        "hex": "#22C55E",
+        "usedFor": "Success states, form confirmations, check mark icons"
+      },
+      {
+        "name": "Warning",
+        "hex": "#F59E0B",
+        "usedFor": "Alert messages, caution banners"
+      },
+      {
+        "name": "Error / Alert Accent",
+        "hex": "#f04124",
+        "usedFor": "Form validation errors, destructive action states; also the dominant color of the Scaling Up book cover imagery and some decorative icon fills repeated throughout the site — do not use as a UI CTA color"
+      },
+      {
+        "name": "Glow / Aura",
+        "hex": "rgba(100,83,229,0.15)",
+        "usedFor": "Ambient radial-gradient background glow placed behind hero sections and bottom CTA blocks — Primary CTA (#6453e5) at 15% opacity"
+      }
+    ]
+  },
+  "fontFamilies": [
+    {
+      "role": "Headings",
+      "family": "Plus Jakarta Sans",
+      "source": "Google Fonts"
+    },
+    {
+      "role": "Body",
+      "family": "Plus Jakarta Sans",
+      "source": "Google Fonts"
+    },
+    {
+      "role": "Accent / Display",
+      "family": "",
+      "source": ""
+    }
+  ],
+  "typeScale": [
+    {
+      "element": "H1 / Hero",
+      "size": "64px",
+      "weight": "800",
+      "lineHeight": "1.05",
+      "transform": "none",
+      "colorToken": "Heading Text"
+    },
+    {
+      "element": "H2 / Section",
+      "size": "44px",
+      "weight": "700",
+      "lineHeight": "1.1",
+      "transform": "none",
+      "colorToken": "Heading Text"
+    },
+    {
+      "element": "H3 / Card Title",
+      "size": "20px",
+      "weight": "700",
+      "lineHeight": "1.3",
+      "transform": "none",
+      "colorToken": "Heading Text"
+    },
+    {
+      "element": "Body",
+      "size": "16px",
+      "weight": "400",
+      "lineHeight": "1.65",
+      "transform": "none",
+      "colorToken": "Body Text"
+    },
+    {
+      "element": "Label / Overline",
+      "size": "13px",
+      "weight": "600",
+      "lineHeight": "1.4",
+      "transform": "uppercase",
+      "colorToken": "Primary CTA"
+    },
+    {
+      "element": "Caption / Small",
+      "size": "13px",
+      "weight": "400",
+      "lineHeight": "1.5",
+      "transform": "none",
+      "colorToken": "Secondary Text"
+    }
+  ],
+  "buttons": {
+    "primary": {
+      "background": "#6453e5",
+      "textColor": "#ffffff",
+      "border": "none",
+      "borderRadius": "8px",
+      "padding": "14px 32px",
+      "fontSize": "15px",
+      "fontWeight": "600",
+      "hoverEffect": "background: #7465e8; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(100,83,229,0.4); transition: all 0.2s ease"
+    },
+    "secondary": {
+      "background": "transparent",
+      "textColor": "#ffffff",
+      "border": "1px solid rgba(255,255,255,0.25)",
+      "borderRadius": "8px",
+      "padding": "13px 28px",
+      "fontSize": "15px",
+      "fontWeight": "600",
+      "hoverEffect": "border-color: #6453e5; background: rgba(100,83,229,0.08); transition: all 0.2s ease"
+    }
+  },
+  "cards": {
+    "background": "#242328",
+    "border": "1px solid rgba(100,83,229,0.15)",
+    "borderRadius": "16px",
+    "padding": "28px 24px standard, 48px 40px large hero cards",
+    "shadow": "0 4px 24px rgba(0,0,0,0.35)"
+  },
+  "formInputs": {
+    "background": "rgba(255,255,255,0.06)",
+    "border": "1px solid rgba(255,255,255,0.12)",
+    "borderRadius": "8px",
+    "focusState": "border-color: #6453e5; box-shadow: 0 0 0 3px rgba(100,83,229,0.2)",
+    "placeholderColor": "#949fa7"
+  },
+  "spacing": {
+    "maxContentWidth": "1200px",
+    "sectionPadding": "96px top/bottom desktop, 60px mobile",
+    "containerSidePadding": "24px",
+    "gridGap": "24px between cards",
+    "desktopColumns": "2-col for resource and course grids, 3-col for instructor/team and values grids, 3-col for pathway cards",
+    "mobileBreakpoint": "768px — all multi-column grids collapse to 1 column"
+  },
+  "effects": [
+    {
+      "name": "Hero Purple Ambient Glow",
+      "description": "background: radial-gradient(ellipse at 65% 0%, rgba(100,83,229,0.25) 0%, transparent 60%) layered over the Page Background; used in hero sections and large CTA blocks to create depth without images"
+    },
+    {
+      "name": "Heading Gradient Accent Word",
+      "description": "Selected emphasis words in H1/H2 apply: background: linear-gradient(135deg, #6453e5 0%, #897aeb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text — examples: 'Top' in Top Thought Leaders, 'Approach' in Our Approach, 'Team' in Our Team"
+    },
+    {
+      "name": "Card Hover Lift",
+      "description": "transition: transform 0.2s ease, box-shadow 0.2s ease; hover state: transform: translateY(-3px); box-shadow: 0 12px 32px rgba(100,83,229,0.2); applied to course cards, resource download cards, and pathway cards"
+    },
+    {
+      "name": "Circular Purple Blob Glow",
+      "description": "Absolute-positioned element with border-radius: 50%, width: 600px, height: 600px, background: rgba(100,83,229,0.15), filter: blur(80px), pointer-events: none; placed behind hero content and bottom CTA sections to create atmospheric depth"
+    },
+    {
+      "name": "Section Background Alternation",
+      "description": "Sections alternate between pure #0d0f1e and rgba(36,35,40,0.6) — a subtle elevated panel — to create visual rhythm and section separation without hard borders or sharp color jumps"
+    },
+    {
+      "name": "404 Large Type Glow",
+      "description": "Oversized decorative text (404, large stat numbers) uses: color: transparent; background: linear-gradient(135deg, #6453e5 0%, #522583 100%); -webkit-background-clip: text; background-clip: text; opacity: 0.4; positioned as an absolute background layer"
+    }
+  ],
+  "logoUsage": [
+    {
+      "context": "Page Header / Nav",
+      "versionAndSize": "White logo mark (angular slash/chevron icon) + 'GROWTH INSTITUTE' uppercase wordmark side-by-side, total lockup height: 36px, top-left aligned in nav bar"
+    },
+    {
+      "context": "Footer",
+      "versionAndSize": "Same white logo mark + wordmark lockup, height: 32px, bottom-left aligned within the footer card container"
+    },
+    {
+      "context": "Favicon",
+      "versionAndSize": "Standalone slash/chevron icon mark only, 32x32px, white on transparent or dark background"
+    },
+    {
+      "context": "Minimum Clear Space",
+      "versionAndSize": "At least 16px on all sides of the full logo lockup; logo always appears on dark (#0d0f1e or #242328) or purple surfaces — never on light or white backgrounds"
+    }
+  ],
+  "imagePlacementMap": [
+    {
+      "pageSection": "Hero Section",
+      "imageFile": "hero/hero-homepage-bg.jpg",
+      "notes": "Full-width dark background; course book mockup or platform dashboard visual placed to the left of or beneath the headline; purple ambient glow overlay layered on top; no heavy dark overlay needed if source image is already dark"
+    },
+    {
+      "pageSection": "Author / Instructor Profile Grid",
+      "imageFile": "instructors_team/instructor-[name].jpg",
+      "notes": "Circular mask, 80–100px diameter for team overview grids; larger 200–280px rectangular crop for individual course author hero panels; grayscale-to-color treatment optional on hover"
+    },
+    {
+      "pageSection": "Course Card Thumbnail",
+      "imageFile": "courses/course-[name].jpg",
+      "notes": "16:9 aspect ratio, full-width within card container, border-radius applied to top corners only matching the 16px card radius, no dark overlay; thumbnail sits above the card text block"
+    },
+    {
+      "pageSection": "Resource / Free Tool Download Card",
+      "imageFile": "misc/resource-[name].jpg",
+      "notes": "Square or 4:3 crop in the upper half of the resource card; slight dark overlay (rgba(0,0,0,0.3)) acceptable to ensure card title legibility if image is light"
+    },
+    {
+      "pageSection": "Testimonial / Social Proof",
+      "imageFile": "testimonials/testimonial-[name].jpg",
+      "notes": "Circular avatar, 56–64px diameter, left-aligned beside the quote text block; five-star rating row rendered above the quote in #f04124 or yellow; name and title below in Secondary Text color"
+    },
+    {
+      "pageSection": "Book / Product Mockup CTA",
+      "imageFile": "hero/book-scaling-up-mockup.png",
+      "notes": "Used in mini-course CTA and membership join sections; drop-shadow applied (box-shadow: 0 20px 60px rgba(0,0,0,0.5)), no border-radius; placed left of text block on desktop (50/50 split), stacked above text on mobile"
+    },
+    {
+      "pageSection": "Social Media Brand Cards",
+      "imageFile": "icons/social-linkedin.svg, icons/social-instagram.svg, icons/social-youtube.svg",
+      "notes": "Large social platform icon centered in a Card Background (#242328) tile with Primary CTA border; LinkedIn card spans full width on left, Instagram and YouTube stack on right in a 2:1 column layout"
+    },
+    {
+      "pageSection": "Pathway / Product Cards (Master Courses, Learning Hub, Consulting)",
+      "imageFile": "courses/pathway-[name].jpg or hero/pathway-[name].jpg",
+      "notes": "Thumbnail image fills top third of pathway card; card has dark overlay gradient (linear-gradient from transparent to #242328) over image bottom edge to blend into card body text; 3-column grid desktop"
+    }
+  ]
+}

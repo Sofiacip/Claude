@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impact OS — Brand Creator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --border-hover: #3a3a3a;
+      --text: #f0f0f0;
+      --text-muted: #777;
+      --text-dim: #444;
+      --accent: #3b82f6;
+      --accent-dim: rgba(59,130,246,0.12);
+      --green: #22c55e;
+      --red: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; min-height: 100vh; font-size: 14px; }
+    body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px); pointer-events: none; z-index: 0; }
+    h1, h2, h3, .syne { font-family: 'Syne', sans-serif; }
+    .screen { display: none; min-height: 100vh; flex-direction: column; opacity: 0; transition: opacity 0.25s ease; position: relative; z-index: 1; }
+    .screen.active { opacity: 1; }
+    .topnav { display: flex; align-items: center; gap: 0.65rem; padding: 0.75rem 2rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .nav-logo { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+    .nav-wordmark { font-family: 'Syne', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; }
+    .nav-divider { color: var(--text-dim); font-size: 0.65rem; }
+    .nav-subtitle { font-size: 0.65rem; color: var(--text-muted); }
+    .btn-primary { background: var(--accent); color: #fff; border: none; padding: 0.55rem 1.2rem; font-family: inherit; font-size: 0.72rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+    .btn-primary:hover { filter: brightness(1.15); }
+    .btn-primary:disabled { opacity: 0.4; cursor: default; }
+    .btn-ghost { background: none; color: var(--text-muted); border: 1px solid var(--border); padding: 0.45rem 0.875rem; font-family: inherit; font-size: 0.68rem; cursor: pointer; transition: all 0.15s; }
+    .btn-ghost:hover { border-color: var(--border-hover); color: var(--text); }
+    .field { background: var(--surface); color: var(--text); border: 1px solid var(--border); font-family: inherit; outline: none; transition: border-color 0.15s; }
+    .field:focus { border-color: var(--accent); }
+    .section-label { display: block; font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.45rem; font-weight: 500; }
+    .tab-btn { background: none; border: none; color: var(--text-muted); font-family: inherit; font-size: 0.68rem; padding: 0.75rem 1rem; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .stage-pill { padding: 0.3rem 0.75rem; border-radius: 3px; font-size: 0.6rem; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); transition: all 0.2s; }
+    .stage-pill.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .stage-pill.done { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.06); }
+    .cursor { width: 6px; height: 12px; background: var(--accent); animation: blink 0.9s step-end infinite; display: inline-block; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .log-line { font-size: 0.68rem; line-height: 1.65; color: var(--text-muted); opacity: 0.55; transition: opacity 0.2s; }
+    .log-line.current { opacity: 1; color: var(--text); }
+    .log-line.success { color: var(--green); opacity: 0.9; }
+    .log-line.error-line { color: var(--red); opacity: 0.9; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1rem; text-align: center; }
+    .asset-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; position: relative; }
+    .asset-card .del-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); color: #ef4444; border: none; padding: 2px 6px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+    .asset-card:hover .del-btn { opacity: 1; }
+    .dropzone { border: 1px dashed var(--border); cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+    .dropzone:hover, .dropzone.drag-over { border-color: var(--accent); background: var(--accent-dim); }
+    #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); font-size: 0.68rem; padding: 0.55rem 1rem; border-radius: 4px; z-index: 9999; opacity: 0; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    .guide-ta { width: 100%; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.65rem 0.85rem; font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; line-height: 1.6; resize: vertical; outline: none; min-height: 60px; }
+    .guide-ta:focus { border-color: var(--accent); }
+    .prop-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(42,42,42,0.5); }
+    .prop-row:last-child { border-bottom: none; }
+    .prop-label { font-size: 0.68rem; color: var(--text-muted); width: 140px; flex-shrink: 0; }
+    .prop-input { flex: 1; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 3px; padding: 0.35rem 0.6rem; font-family: inherit; font-size: 0.72rem; outline: none; }
+    .prop-input:focus { border-color: var(--accent); }
+    .color-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.85rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; }
+    .folder-section { margin-bottom: 2rem; }
+    .folder-label { font-size: 0.7rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .folder-count { font-size: 0.6rem; color: var(--text-dim); font-weight: 400; }
+  </style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- SCREEN 1 — LOGIN -->
+<div id="screen-login" class="screen">
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;">
+    <div style="width:100%;max-width:320px;text-align:center;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:0.65rem;margin-bottom:2.5rem;">
+        <svg width="16" height="16" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg>
+        <span class="nav-wordmark">IMPACT OS</span>
+        <span class="nav-divider">—</span>
+        <span style="font-size:0.65rem;color:var(--text-muted);">Brand Creator</span>
+      </div>
+      <input id="login-pw" type="password" class="field" placeholder="Enter password" autocomplete="off"
+        style="width:100%;padding:0.65rem 0.85rem;border-radius:4px;font-size:0.78rem;margin-bottom:0.75rem;text-align:center;">
+      <button id="login-btn" class="btn-primary" style="width:100%;padding:0.65rem;border-radius:4px;">Enter</button>
+      <p id="login-err" style="display:none;margin-top:0.75rem;font-size:0.68rem;color:var(--red);"></p>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2 — INPUT -->
+<div id="screen-input" class="screen">
+  <div class="topnav">
+    <div class="nav-logo"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg></div>
+    <span class="nav-wordmark">IMPACT OS</span>
+    <span class="nav-divider">—</span>
+    <span class="nav-subtitle">Brand Creator</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;">
+    <div style="width:100%;max-width:420px;">
+      <h1 class="syne" style="font-size:1.5rem;font-weight:800;margin-bottom:0.35rem;">Create Brand Package</h1>
+      <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:2rem;line-height:1.5;">Enter a website URL to scrape brand assets, analyze the visual identity, and generate an AI-ready brand guide.</p>
+      <label class="section-label">Website URL</label>
+      <input id="inp-url" type="url" class="field" placeholder="https://example.com" style="width:100%;padding:0.6rem 0.85rem;border-radius:4px;font-size:0.78rem;margin-bottom:1rem;">
+      <label class="section-label">Client / Brand Name</label>
+      <input id="inp-client" type="text" class="field" placeholder="Acme Corp" style="width:100%;padding:0.6rem 0.85rem;border-radius:4px;font-size:0.78rem;margin-bottom:1.25rem;">
+      <button id="generate-btn" class="btn-primary" style="width:100%;padding:0.75rem;border-radius:4px;font-size:0.8rem;">Generate Brand Package</button>
+      <p id="inp-err" style="display:none;margin-top:0.75rem;font-size:0.68rem;color:var(--red);"></p>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3 — PROGRESS -->
+<div id="screen-progress" class="screen">
+  <div class="topnav">
+    <div style="display:flex;align-items:center;gap:0.65rem;">
+      <div class="nav-logo"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg></div>
+      <span class="nav-wordmark">IMPACT OS</span>
+      <span class="nav-divider">—</span>
+      <span id="prog-client" class="nav-subtitle"></span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;padding:2.5rem 2rem;max-width:680px;width:100%;margin:0 auto;">
+    <h1 class="syne" style="font-size:1.35rem;font-weight:700;margin-bottom:1.5rem;">Generating Brand Package</h1>
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:2rem;flex-wrap:wrap;">
+      <div id="stage-1" class="stage-pill">01 — Scraping</div>
+      <span style="color:var(--text-dim);font-size:0.7rem;">></span>
+      <div id="stage-2" class="stage-pill">02 — Analysing</div>
+      <span style="color:var(--text-dim);font-size:0.7rem;">></span>
+      <div id="stage-3" class="stage-pill">03 — Ready</div>
+    </div>
+    <div id="log-wrap" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:1.25rem;overflow-y:auto;min-height:280px;max-height:420px;">
+      <div style="font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.875rem;">— system log</div>
+      <div id="log-lines"></div>
+      <div id="log-cursor" class="cursor"></div>
+    </div>
+    <div id="prog-err" style="display:none;margin-top:1rem;padding:0.75rem 1rem;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:4px;font-size:0.72rem;color:var(--red);"></div>
+  </div>
+</div>
+
+<!-- SCREEN 4 — REVIEW & EDIT -->
+<div id="screen-review" class="screen">
+  <div class="topnav" style="justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:0.65rem;">
+      <div class="nav-logo"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg></div>
+      <span class="nav-wordmark">IMPACT OS</span>
+      <span class="nav-divider">—</span>
+      <span id="review-client" class="nav-subtitle"></span>
+    </div>
+    <button id="to-download-btn" class="btn-primary" style="padding:0.45rem 1.1rem;border-radius:4px;">Download Package</button>
+  </div>
+
+  <div style="border-bottom:1px solid var(--border);display:flex;padding:0 2rem;overflow-x:auto;flex-shrink:0;">
+    <button class="tab-btn active" data-tab="identity">Identity</button>
+    <button class="tab-btn" data-tab="colors">Colors</button>
+    <button class="tab-btn" data-tab="typography">Typography</button>
+    <button class="tab-btn" data-tab="components">Components</button>
+    <button class="tab-btn" data-tab="layout">Layout</button>
+    <button class="tab-btn" data-tab="effects">Effects</button>
+    <button class="tab-btn" data-tab="images">Images</button>
+    <button class="tab-btn" data-tab="logos">Logos</button>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:2rem;">
+
+    <!-- IDENTITY TAB -->
+    <div id="panel-identity" class="tab-panel active">
+      <div style="margin-bottom:1.5rem;">
+        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">1. Brand Identity</h2>
+        <p style="font-size:0.7rem;color:var(--text-muted);">Basic context so AI understands who you are. All changes auto-save.</p>
+      </div>
+      <div id="identity-fields" style="display:flex;flex-direction:column;gap:1rem;max-width:600px;"></div>
+    </div>
+
+    <!-- COLORS TAB -->
+    <div id="panel-colors" class="tab-panel">
+      <div style="margin-bottom:1.5rem;">
+        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">2. Color System (Function-Mapped)</h2>
+        <p style="font-size:0.7rem;color:var(--text-muted);">Each color is mapped to a specific UI function. This eliminates guesswork for AI page building.</p>
+      </div>
+      <div style="max-width:720px;">
+        <h3 style="font-size:0.75rem;font-weight:600;margin-bottom:0.75rem;color:var(--text);">Primary Palette</h3>
+        <div id="colors-primary" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:2rem;"></div>
+        <h3 style="font-size:0.75rem;font-weight:600;margin-bottom:0.75rem;color:var(--text);">Utility Palette</h3>
+        <div id="colors-utility" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+      </div>
+    </div>
+
+    <!-- TYPOGRAPHY TAB -->
+    <div id="panel-typography" class="tab-panel">
+      <div style="margin-bottom:1.5rem;">
+        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">3. Typography</h2>
+        <p style="font-size:0.7rem;color:var(--text-muted);">Font families and the exact type scale for every heading level.</p>
+      </div>
+      <div style="max-width:800px;">
+        <h3 style="font-size:0.75rem;font-weight:600;margin-bottom:0.75rem;">Font Families</h3>
+        <div id="font-families" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:2rem;"></div>
+        <h3 style="font-size:0.75rem;font-weight:600;margin-bottom:0.75rem;">Type Scale</h3>
+        <div id="type-scale" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+      </div>
+    </div>
+
+    <!-- COMPONENTS TAB -->
+    <div id="panel-components" class="tab-panel">
+      <div style="margin-bottom:1.5rem;">
+        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">4. Component Styles</h2>
+        <p style="font-size:0.7rem;color:var(--text-muted);">Visual rules for buttons, cards, and form inputs.</p>
+      </div>
+      <div style="max-width:800px;">
+        <h3 style="font-size:0.75rem;font-weight:600;margin-bottom:0.75rem;">Buttons</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;" id="buttons-grid"></div>
+        <h3 style="font-size:0.75rem;font-weight:600;margin-bottom:0.75rem;">Cards & Containers</h3>
+        <div id="cards-props" style="margin-bottom:2rem;"></div>
+        <h3 style="font-size:0.75rem;font-weight:600;margin-bottom:0.75rem;">Form Inputs</h3>
+        <div id="forms-props"></div>
+      </div>
+    </div>
+
+    <!-- LAYOUT TAB -->
+    <div id="panel-layout" class="tab-panel">
+      <div style="margin-bottom:1.5rem;">
+        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">5. Spacing & Layout</h2>
+        <p style="font-size:0.7rem;color:var(--text-muted);">Controls breathing room between sections and overall page rhythm.</p>
+      </div>
+      <div id="spacing-fields" style="max-width:600px;"></div>
+    </div>
+
+    <!-- EFFECTS TAB -->
+    <div id="panel-effects" class="tab-panel">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+        <div>
+          <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">6. Decorative Effects</h2>
+          <p style="font-size:0.7rem;color:var(--text-muted);">Subtle details for premium feel. Skip if the brand is clean and flat.</p>
+        </div>
+        <button id="add-effect-btn" class="btn-ghost" style="padding:0.4rem 0.875rem;border-radius:4px;">+ Add Effect</button>
+      </div>
+      <div id="effects-list" style="display:flex;flex-direction:column;gap:0.75rem;max-width:700px;"></div>
+    </div>
+
+    <!-- IMAGES TAB -->
+    <div id="panel-images" class="tab-panel">
+      <div style="margin-bottom:1.5rem;">
+        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">7. Image Library</h2>
+        <p style="font-size:0.7rem;color:var(--text-muted);">All images organized by category. Hover to delete. Upload missing files below.</p>
+      </div>
+      <div id="image-folders"></div>
+      <div style="padding-top:2rem;border-top:1px solid var(--border);">
+        <div style="font-size:0.75rem;font-weight:500;margin-bottom:0.75rem;">Upload Missing Assets</div>
+        <label id="upload-zone" class="dropzone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;border-radius:4px;gap:0.5rem;max-width:480px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span style="font-size:0.72rem;color:var(--text-muted);">Click or drag & drop files</span>
+          <span style="font-size:0.62rem;color:var(--text-dim);">Images, SVG — max 10MB each</span>
+          <input type="file" id="upload-input" style="display:none;" multiple accept="image/*,.svg">
+        </label>
+      </div>
+    </div>
+
+    <!-- LOGOS TAB -->
+    <div id="panel-logos" class="tab-panel">
+      <div style="margin-bottom:1.5rem;">
+        <h2 class="syne" style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">8. Logo Usage</h2>
+        <p style="font-size:0.7rem;color:var(--text-muted);">How logos should appear across pages. Also includes image placement map.</p>
+      </div>
+      <div style="max-width:700px;">
+        <h3 style="font-size:0.75rem;font-weight:600;margin-bottom:0.75rem;">Logo Contexts</h3>
+        <div id="logo-usage" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:2rem;"></div>
+        <h3 style="font-size:0.75rem;font-weight:600;margin-bottom:0.75rem;">Image Placement Map</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+          <p style="font-size:0.68rem;color:var(--text-muted);">Map images to specific page sections for maximum precision.</p>
+          <button id="add-placement-btn" class="btn-ghost" style="padding:0.35rem 0.75rem;border-radius:4px;font-size:0.62rem;">+ Add</button>
+        </div>
+        <div id="placement-map" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SCREEN 5 — DOWNLOAD -->
+<div id="screen-download" class="screen">
+  <div class="topnav">
+    <div class="nav-logo"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4.5" height="4.5" fill="white" opacity="0.95"/><rect x="7.5" y="1" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="1" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.6"/><rect x="7.5" y="7.5" width="4.5" height="4.5" fill="white" opacity="0.25"/></svg></div>
+    <span class="nav-wordmark">IMPACT OS</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:3rem 2rem;">
+    <div style="width:100%;max-width:500px;text-align:center;">
+      <div style="width:56px;height:56px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h1 class="syne" style="font-size:1.75rem;font-weight:800;margin-bottom:0.4rem;">Brand Package Ready</h1>
+      <p id="dl-subtitle" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2.25rem;line-height:1.6;"></p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.875rem;margin-bottom:2.25rem;">
+        <div class="stat-card">
+          <div class="syne" id="stat-colors" style="font-size:2rem;font-weight:800;color:var(--accent);">0</div>
+          <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-top:0.2rem;">Colors</div>
+        </div>
+        <div class="stat-card">
+          <div class="syne" id="stat-fonts" style="font-size:2rem;font-weight:800;color:var(--accent);">0</div>
+          <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-top:0.2rem;">Fonts</div>
+        </div>
+        <div class="stat-card">
+          <div class="syne" id="stat-assets" style="font-size:2rem;font-weight:800;color:var(--accent);">0</div>
+          <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-top:0.2rem;">Images</div>
+        </div>
+      </div>
+      <button id="dl-btn" class="btn-primary" style="width:100%;padding:1rem;border-radius:4px;font-size:0.8rem;margin-bottom:0.875rem;">Download Brand Package (.zip)</button>
+      <button id="back-edit-btn" class="btn-ghost" style="width:100%;padding:0.65rem;border-radius:4px;">Back to Edit</button>
+      <p style="font-size:0.6rem;color:var(--text-dim);margin-top:1.75rem;">Contains: brand-guide.md, brand-guide.json, brand-assets/ (logos, hero, instructors, testimonials, courses, icons, lifestyle, misc, README.md)</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+const S = { jobId: null, job: null };
+const debounceTimers = {};
+
+// ── Utility ────────────────────────────────────────────────────────────────────
+function esc(s) { return s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return s == null ? '' : String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function debounce(key, fn, ms = 900) { clearTimeout(debounceTimers[key]); debounceTimers[key] = setTimeout(fn, ms); }
+
+let toastT;
+function toast(msg, ms = 2200) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  return (await fetch(path, opts)).json();
+}
+
+function show(name) {
+  document.querySelectorAll('.screen').forEach(el => { el.classList.remove('active'); el.style.display = 'none'; });
+  const el = document.getElementById(`screen-${name}`);
+  if (!el) return;
+  el.style.display = 'flex';
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('active')));
+}
+
+// ── Login ──────────────────────────────────────────────────────────────────────
+const loginPw = document.getElementById('login-pw');
+const loginBtn = document.getElementById('login-btn');
+const loginErr = document.getElementById('login-err');
+loginPw.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+loginBtn.addEventListener('click', async () => {
+  if (!loginPw.value) return;
+  loginBtn.disabled = true; loginBtn.textContent = '...'; loginErr.style.display = 'none';
+  try {
+    const d = await api('POST', '/api/auth', { password: loginPw.value });
+    if (d.ok) show('input');
+    else { loginErr.textContent = d.error || 'Incorrect password.'; loginErr.style.display = 'block'; loginPw.value = ''; loginPw.focus(); }
+  } catch { loginErr.textContent = 'Cannot connect to server.'; loginErr.style.display = 'block'; }
+  finally { loginBtn.disabled = false; loginBtn.textContent = 'Enter'; }
+});
+
+// ── Input ──────────────────────────────────────────────────────────────────────
+const genBtn = document.getElementById('generate-btn');
+genBtn.addEventListener('click', async () => {
+  const url = document.getElementById('inp-url').value.trim();
+  const client = document.getElementById('inp-client').value.trim();
+  const inpErr = document.getElementById('inp-err');
+  inpErr.style.display = 'none';
+  if (!url) { inpErr.textContent = 'Please enter a website URL.'; inpErr.style.display = 'block'; return; }
+  if (!client) { inpErr.textContent = 'Please enter the client name.'; inpErr.style.display = 'block'; return; }
+  try { new URL(url); } catch { inpErr.textContent = 'Enter a valid URL.'; inpErr.style.display = 'block'; return; }
+  genBtn.disabled = true; genBtn.textContent = 'Starting...';
+  try {
+    const d = await api('POST', '/api/generate', { url, clientName: client });
+    if (d.error) throw new Error(d.error);
+    S.jobId = d.jobId;
+    document.getElementById('prog-client').textContent = client;
+    show('progress'); startSSE();
+  } catch (err) { inpErr.textContent = err.message; inpErr.style.display = 'block'; }
+  finally { genBtn.disabled = false; genBtn.textContent = 'Generate Brand Package'; }
+});
+
+// ── Progress SSE ───────────────────────────────────────────────────────────────
+function startSSE() {
+  const logEl = document.getElementById('log-lines');
+  const cursor = document.getElementById('log-cursor');
+  const errEl = document.getElementById('prog-err');
+  const s1 = document.getElementById('stage-1'), s2 = document.getElementById('stage-2'), s3 = document.getElementById('stage-3');
+  [s1,s2,s3].forEach(s => s.className = 'stage-pill'); s1.classList.add('active'); logEl.innerHTML = '';
+
+  function addLog(msg, cls='') {
+    logEl.querySelectorAll('.log-line.current').forEach(l => l.classList.remove('current'));
+    const d = document.createElement('div');
+    d.className = `log-line ${cls || 'current'}`;
+    d.innerHTML = `<span style="color:var(--text-dim);margin-right:0.75rem;">${new Date().toLocaleTimeString('en-US',{hour12:false})}</span>${esc(msg)}`;
+    logEl.appendChild(d);
+    document.getElementById('log-wrap').scrollTop = 99999;
+    const lo = msg.toLowerCase();
+    if (lo.includes('stage 2') || lo.includes('claude') || lo.includes('analysing')) { s1.className='stage-pill done'; s2.className='stage-pill active'; }
+    else if (lo.includes('stage 3') || lo.includes('ready')) { s2.className='stage-pill done'; s3.className='stage-pill active'; }
+  }
+
+  const sse = new EventSource(`/api/jobs/${S.jobId}/stream`);
+  sse.addEventListener('message', e => {
+    const { message } = JSON.parse(e.data);
+    addLog(message, (message.includes('Done:') || message.includes('complete')) ? 'success' : '');
+  });
+  sse.addEventListener('status', e => {
+    const { status, error } = JSON.parse(e.data);
+    sse.close(); cursor.style.display = 'none';
+    if (status === 'complete') { s3.className='stage-pill done'; addLog('Brand package ready.', 'success'); setTimeout(loadReview, 900); }
+    else { addLog(`Pipeline failed: ${error}`, 'error-line'); errEl.textContent = `Error: ${error}`; errEl.style.display = 'block'; }
+  });
+  sse.onerror = () => { cursor.style.display = 'none'; addLog('Lost connection to server.', 'error-line'); };
+}
+
+// ── Review Screen ──────────────────────────────────────────────────────────────
+async function loadReview() {
+  const d = await api('GET', `/api/jobs/${S.jobId}`);
+  if (d.error) { toast('Failed to load data.'); return; }
+  S.job = d;
+  document.getElementById('review-client').textContent = d.clientName;
+  renderIdentity();
+  renderColors();
+  renderTypography();
+  renderComponents();
+  renderSpacing();
+  renderEffects();
+  renderImages();
+  renderLogos();
+  show('review');
+  activateTab('identity');
+}
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => activateTab(b.dataset.tab)));
+function activateTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === `panel-${name}`);
+  });
+}
+
+// ── 1. Identity ────────────────────────────────────────────────────────────────
+function renderIdentity() {
+  const el = document.getElementById('identity-fields');
+  const bi = S.job.brandIdentity || {};
+  const fields = [
+    ['brandName', 'Brand Name', bi.brandName || ''],
+    ['tagline', 'Tagline', bi.tagline || ''],
+    ['industry', 'Industry', bi.industry || ''],
+    ['targetAudience', 'Target Audience', bi.targetAudience || ''],
+    ['brandPersonality', 'Brand Personality', bi.brandPersonality || '']
+  ];
+  el.innerHTML = fields.map(([key, label, val]) => `
+    <div>
+      <label class="section-label">${label}</label>
+      <input type="text" class="field identity-input" data-key="${key}" value="${escAttr(val)}"
+        style="width:100%;padding:0.5rem 0.75rem;border-radius:4px;font-size:0.78rem;">
+    </div>
+  `).join('');
+  el.querySelectorAll('.identity-input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      S.job.brandIdentity[e.target.dataset.key] = e.target.value;
+      debounce('identity', () => { api('PUT', `/api/jobs/${S.jobId}/identity`, S.job.brandIdentity); toast('Saved'); });
+    });
+  });
+}
+
+// ── 2. Colors ──────────────────────────────────────────────────────────────────
+function renderColorList(containerId, colors, paletteKey) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  colors.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'color-row';
+    row.innerHTML = `
+      <input type="color" value="${esc(c.hex?.startsWith('#') ? c.hex : '#888888')}" data-i="${i}"
+        style="width:38px;height:38px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;padding:2px;background:none;flex-shrink:0;">
+      <div style="width:120px;flex-shrink:0;">
+        <div style="font-size:0.72rem;font-weight:500;">${esc(c.name)}</div>
+        <div class="hex-label" style="font-size:0.62rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;">${esc(c.hex)}</div>
+      </div>
+      <input type="text" class="field color-hex" data-i="${i}" value="${escAttr(c.hex || '')}" placeholder="Hex or rgba"
+        style="width:160px;padding:0.3rem 0.5rem;border-radius:3px;font-size:0.7rem;font-family:'IBM Plex Mono',monospace;">
+      <input type="text" class="field color-usage" data-i="${i}" value="${escAttr(c.usedFor || '')}" placeholder="Used for..."
+        style="flex:1;padding:0.3rem 0.5rem;border-radius:3px;font-size:0.68rem;color:var(--text-muted);">
+    `;
+    el.appendChild(row);
+  });
+
+  el.querySelectorAll('input[type="color"]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const i = +e.target.dataset.i;
+      colors[i].hex = e.target.value;
+      e.target.closest('.color-row').querySelector('.hex-label').textContent = e.target.value;
+      e.target.closest('.color-row').querySelector('.color-hex').value = e.target.value;
+      saveColors();
+    });
+  });
+  el.querySelectorAll('.color-hex').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const i = +e.target.dataset.i;
+      colors[i].hex = e.target.value;
+      const picker = e.target.closest('.color-row').querySelector('input[type="color"]');
+      if (/^#[0-9a-f]{6}$/i.test(e.target.value)) picker.value = e.target.value;
+      e.target.closest('.color-row').querySelector('.hex-label').textContent = e.target.value;
+      debounce('colors', saveColors);
+    });
+  });
+  el.querySelectorAll('.color-usage').forEach(inp => {
+    inp.addEventListener('input', e => { colors[+e.target.dataset.i].usedFor = e.target.value; debounce('colors', saveColors); });
+  });
+}
+
+function renderColors() {
+  const cs = S.job.colorSystem || {};
+  renderColorList('colors-primary', cs.primary || [], 'primary');
+  renderColorList('colors-utility', cs.utility || [], 'utility');
+}
+
+function saveColors() {
+  api('PUT', `/api/jobs/${S.jobId}/colors`, { colorSystem: S.job.colorSystem });
+  toast('Colors saved');
+}
+
+// ── 3. Typography ──────────────────────────────────────────────────────────────
+function renderTypography() {
+  // Font families
+  const ffEl = document.getElementById('font-families');
+  const families = S.job.fontFamilies || [];
+  ffEl.innerHTML = families.map((f, i) => `
+    <div style="display:flex;gap:0.75rem;align-items:center;padding:0.5rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+      <div style="width:90px;font-size:0.68rem;color:var(--text-muted);flex-shrink:0;">${esc(f.role)}</div>
+      <input type="text" class="field ff-family" data-i="${i}" value="${escAttr(f.family)}" placeholder="Font name"
+        style="flex:1;padding:0.35rem 0.5rem;border-radius:3px;font-size:0.75rem;">
+      <input type="text" class="field ff-source" data-i="${i}" value="${escAttr(f.source)}" placeholder="Google Fonts / self-hosted"
+        style="flex:1;padding:0.35rem 0.5rem;border-radius:3px;font-size:0.68rem;color:var(--text-muted);">
+    </div>
+  `).join('');
+
+  ffEl.querySelectorAll('.ff-family').forEach(inp => {
+    inp.addEventListener('input', e => { S.job.fontFamilies[+e.target.dataset.i].family = e.target.value; debounce('typo', saveTypography); });
+  });
+  ffEl.querySelectorAll('.ff-source').forEach(inp => {
+    inp.addEventListener('input', e => { S.job.fontFamilies[+e.target.dataset.i].source = e.target.value; debounce('typo', saveTypography); });
+  });
+
+  // Type scale
+  const tsEl = document.getElementById('type-scale');
+  const scale = S.job.typeScale || [];
+  const headers = ['Element', 'Size', 'Weight', 'Line-H', 'Transform', 'Color Token'];
+  const keys = ['element', 'size', 'weight', 'lineHeight', 'transform', 'colorToken'];
+
+  let html = `<div style="display:grid;grid-template-columns:140px repeat(5,1fr);gap:0.35rem;font-size:0.6rem;color:var(--text-dim);padding:0 0.5rem;margin-bottom:0.25rem;">
+    ${headers.map(h => `<div>${h}</div>`).join('')}
+  </div>`;
+
+  scale.forEach((row, i) => {
+    html += `<div style="display:grid;grid-template-columns:140px repeat(5,1fr);gap:0.35rem;padding:0.35rem 0;border-bottom:1px solid rgba(42,42,42,0.5);">`;
+    keys.forEach((key, ki) => {
+      if (ki === 0) {
+        html += `<div style="font-size:0.7rem;color:var(--text-muted);padding:0.35rem 0.5rem;">${esc(row[key])}</div>`;
+      } else {
+        html += `<input type="text" class="field ts-input" data-i="${i}" data-key="${key}" value="${escAttr(row[key])}"
+          style="padding:0.3rem 0.45rem;border-radius:3px;font-size:0.68rem;">`;
+      }
+    });
+    html += `</div>`;
+  });
+  tsEl.innerHTML = html;
+
+  tsEl.querySelectorAll('.ts-input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      S.job.typeScale[+e.target.dataset.i][e.target.dataset.key] = e.target.value;
+      debounce('typo', saveTypography);
+    });
+  });
+}
+
+function saveTypography() {
+  api('PUT', `/api/jobs/${S.jobId}/typography`, { fontFamilies: S.job.fontFamilies, typeScale: S.job.typeScale });
+  toast('Typography saved');
+}
+
+// ── 4. Components ──────────────────────────────────────────────────────────────
+function renderComponents() {
+  const btn = S.job.buttons || {};
+  const btnProps = ['background', 'textColor', 'border', 'borderRadius', 'padding', 'fontSize', 'fontWeight', 'hoverEffect'];
+  const btnLabels = { background:'Background', textColor:'Text Color', border:'Border', borderRadius:'Border Radius', padding:'Padding', fontSize:'Font Size', fontWeight:'Font Weight', hoverEffect:'Hover Effect' };
+
+  const grid = document.getElementById('buttons-grid');
+  grid.innerHTML = ['primary', 'secondary'].map(type => {
+    const b = btn[type] || {};
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1rem;">
+      <div style="font-size:0.72rem;font-weight:600;margin-bottom:0.75rem;text-transform:capitalize;">${type} Button</div>
+      ${btnProps.map(prop => `
+        <div class="prop-row">
+          <div class="prop-label">${btnLabels[prop]}</div>
+          <input type="text" class="prop-input btn-prop" data-type="${type}" data-prop="${prop}" value="${escAttr(b[prop] || '')}">
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.btn-prop').forEach(inp => {
+    inp.addEventListener('input', e => {
+      if (!S.job.buttons[e.target.dataset.type]) S.job.buttons[e.target.dataset.type] = {};
+      S.job.buttons[e.target.dataset.type][e.target.dataset.prop] = e.target.value;
+      debounce('components', saveComponents);
+    });
+  });
+
+  // Cards
+  const cardsEl = document.getElementById('cards-props');
+  const cards = S.job.cards || {};
+  const cardProps = ['background', 'border', 'borderRadius', 'padding', 'shadow'];
+  const cardLabels = { background:'Background', border:'Border', borderRadius:'Border Radius', padding:'Padding', shadow:'Shadow' };
+  cardsEl.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1rem;">
+    ${cardProps.map(prop => `
+      <div class="prop-row">
+        <div class="prop-label">${cardLabels[prop]}</div>
+        <input type="text" class="prop-input card-prop" data-prop="${prop}" value="${escAttr(cards[prop] || '')}">
+      </div>
+    `).join('')}
+  </div>`;
+  cardsEl.querySelectorAll('.card-prop').forEach(inp => {
+    inp.addEventListener('input', e => { S.job.cards[e.target.dataset.prop] = e.target.value; debounce('components', saveComponents); });
+  });
+
+  // Form inputs
+  const formsEl = document.getElementById('forms-props');
+  const forms = S.job.formInputs || {};
+  const formProps = ['background', 'border', 'borderRadius', 'focusState', 'placeholderColor'];
+  const formLabels = { background:'Background', border:'Border', borderRadius:'Border Radius', focusState:'Focus State', placeholderColor:'Placeholder Color' };
+  formsEl.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1rem;">
+    ${formProps.map(prop => `
+      <div class="prop-row">
+        <div class="prop-label">${formLabels[prop]}</div>
+        <input type="text" class="prop-input form-prop" data-prop="${prop}" value="${escAttr(forms[prop] || '')}">
+      </div>
+    `).join('')}
+  </div>`;
+  formsEl.querySelectorAll('.form-prop').forEach(inp => {
+    inp.addEventListener('input', e => { S.job.formInputs[e.target.dataset.prop] = e.target.value; debounce('components', saveComponents); });
+  });
+}
+
+function saveComponents() {
+  api('PUT', `/api/jobs/${S.jobId}/components`, { buttons: S.job.buttons, cards: S.job.cards, formInputs: S.job.formInputs });
+  toast('Components saved');
+}
+
+// ── 5. Spacing ─────────────────────────────────────────────────────────────────
+function renderSpacing() {
+  const el = document.getElementById('spacing-fields');
+  const sp = S.job.spacing || {};
+  const fields = [
+    ['maxContentWidth', 'Max Content Width'],
+    ['sectionPadding', 'Section Padding'],
+    ['containerSidePadding', 'Container Side Padding'],
+    ['gridGap', 'Grid Gap'],
+    ['desktopColumns', 'Desktop Columns'],
+    ['mobileBreakpoint', 'Mobile Breakpoint']
+  ];
+  el.innerHTML = fields.map(([key, label]) => `
+    <div class="prop-row">
+      <div class="prop-label">${label}</div>
+      <input type="text" class="prop-input spacing-input" data-key="${key}" value="${escAttr(sp[key] || '')}">
+    </div>
+  `).join('');
+  el.querySelectorAll('.spacing-input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      S.job.spacing[e.target.dataset.key] = e.target.value;
+      debounce('spacing', () => { api('PUT', `/api/jobs/${S.jobId}/spacing`, S.job.spacing); toast('Saved'); });
+    });
+  });
+}
+
+// ── 6. Effects ─────────────────────────────────────────────────────────────────
+function renderEffects() {
+  const el = document.getElementById('effects-list');
+  const effects = S.job.effects || [];
+  el.innerHTML = '';
+  if (!effects.length) {
+    el.innerHTML = '<p style="font-size:0.72rem;color:var(--text-muted);">No decorative effects detected. Add them if needed.</p>';
+    return;
+  }
+  effects.forEach((e, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:0.75rem;align-items:flex-start;padding:0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:4px;';
+    row.innerHTML = `
+      <input type="text" class="field eff-name" data-i="${i}" value="${escAttr(e.name)}" placeholder="Effect name"
+        style="width:160px;padding:0.35rem 0.5rem;border-radius:3px;font-size:0.72rem;flex-shrink:0;">
+      <input type="text" class="field eff-desc" data-i="${i}" value="${escAttr(e.description)}" placeholder="CSS description"
+        style="flex:1;padding:0.35rem 0.5rem;border-radius:3px;font-size:0.68rem;color:var(--text-muted);">
+      <button class="btn-ghost del-effect" data-i="${i}" style="padding:0.3rem 0.5rem;border-radius:3px;font-size:0.62rem;opacity:0.5;">x</button>
+    `;
+    el.appendChild(row);
+  });
+  el.querySelectorAll('.eff-name').forEach(inp => { inp.addEventListener('input', e => { S.job.effects[+e.target.dataset.i].name = e.target.value; debounce('effects', saveEffects); }); });
+  el.querySelectorAll('.eff-desc').forEach(inp => { inp.addEventListener('input', e => { S.job.effects[+e.target.dataset.i].description = e.target.value; debounce('effects', saveEffects); }); });
+  el.querySelectorAll('.del-effect').forEach(btn => { btn.addEventListener('click', e => { S.job.effects.splice(+e.currentTarget.dataset.i, 1); renderEffects(); saveEffects(); }); });
+}
+
+document.getElementById('add-effect-btn').addEventListener('click', () => {
+  if (!S.job.effects) S.job.effects = [];
+  S.job.effects.push({ name: '', description: '' });
+  renderEffects(); saveEffects();
+});
+
+function saveEffects() { api('PUT', `/api/jobs/${S.jobId}/effects`, { effects: S.job.effects }); toast('Effects saved'); }
+
+// ── 7. Images ──────────────────────────────────────────────────────────────────
+const FOLDER_LABELS = {
+  logos: 'Logos',
+  logos_partners: 'Partner / Trust Logos',
+  hero: 'Hero Backgrounds',
+  instructors: 'Instructor / Founder Photos',
+  instructors_team: 'Team Members',
+  testimonials: 'Testimonial Photos',
+  courses: 'Course / Product Images',
+  icons: 'Icons',
+  lifestyle: 'Lifestyle Photography',
+  misc: 'Miscellaneous'
+};
+
+function renderImages() {
+  const container = document.getElementById('image-folders');
+  container.innerHTML = '';
+  const il = S.job.imageLibrary || {};
+
+  for (const [category, label] of Object.entries(FOLDER_LABELS)) {
+    const items = il[category] || [];
+    const section = document.createElement('div');
+    section.className = 'folder-section';
+    section.innerHTML = `<div class="folder-label">${label} <span class="folder-count">(${items.length})</span></div>`;
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.5rem;';
+
+    if (!items.length) {
+      grid.innerHTML = `<p style="font-size:0.65rem;color:var(--text-dim);grid-column:1/-1;">No images in this folder.</p>`;
+    } else {
+      items.forEach((a, i) => {
+        const card = document.createElement('div');
+        card.className = 'asset-card';
+        const h = category === 'icons' ? 60 : (category === 'logos' || category === 'logos_partners') ? 80 : 110;
+        const src = `/api/jobs/${S.jobId}/asset-file/${category}/${encodeURIComponent(a.filename)}`;
+        card.innerHTML = `
+          <div style="position:relative;width:100%;height:${h}px;background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <img src="${src}" alt="${escAttr(a.alt || a.filename)}" style="max-width:100%;max-height:100%;object-fit:contain;padding:4px;"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:0.55rem;color:#555;">Failed</div>
+          </div>
+          <div style="padding:0.25rem 0.4rem;border-top:1px solid var(--border);">
+            <div style="font-size:0.55rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escAttr(a.filename)}">${esc(a.filename)}</div>
+          </div>
+          <button class="del-btn" data-cat="${category}" data-i="${i}">x</button>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    section.appendChild(grid);
+    container.appendChild(section);
+  }
+
+  container.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      const cat = e.currentTarget.dataset.cat;
+      const i = +e.currentTarget.dataset.i;
+      await api('DELETE', `/api/jobs/${S.jobId}/assets/${cat}/${i}`);
+      S.job.imageLibrary[cat].splice(i, 1);
+      renderImages();
+      toast('Image removed');
+    });
+  });
+}
+
+// Upload
+const uploadInput = document.getElementById('upload-input');
+const uploadZone = document.getElementById('upload-zone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); uploadFiles(e.dataTransfer.files); });
+uploadInput.addEventListener('change', e => uploadFiles(e.target.files));
+
+async function uploadFiles(files) {
+  for (const f of files) {
+    const fd = new FormData(); fd.append('file', f);
+    try {
+      const res = await fetch(`/api/jobs/${S.jobId}/assets`, { method: 'POST', body: fd });
+      const d = await res.json();
+      if (d.ok) {
+        if (!S.job.imageLibrary.uploads) S.job.imageLibrary.uploads = [];
+        S.job.imageLibrary.misc = S.job.imageLibrary.misc || [];
+        S.job.imageLibrary.misc.push(d.asset);
+        renderImages();
+        toast(`Uploaded: ${f.name}`);
+      }
+    } catch { toast(`Failed: ${f.name}`); }
+  }
+  uploadInput.value = '';
+}
+
+// ── 8. Logos ────────────────────────────────────────────────────────────────────
+function renderLogos() {
+  // Logo usage
+  const luEl = document.getElementById('logo-usage');
+  const usage = S.job.logoUsage || [];
+  luEl.innerHTML = usage.map((l, i) => `
+    <div style="display:flex;gap:0.75rem;align-items:center;padding:0.5rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+      <div style="width:120px;font-size:0.68rem;color:var(--text-muted);flex-shrink:0;">${esc(l.context)}</div>
+      <input type="text" class="field lu-val" data-i="${i}" value="${escAttr(l.versionAndSize)}" placeholder="Logo version & size"
+        style="flex:1;padding:0.3rem 0.5rem;border-radius:3px;font-size:0.68rem;">
+    </div>
+  `).join('');
+  luEl.querySelectorAll('.lu-val').forEach(inp => {
+    inp.addEventListener('input', e => {
+      S.job.logoUsage[+e.target.dataset.i].versionAndSize = e.target.value;
+      debounce('logos', saveLogos);
+    });
+  });
+
+  // Image placement map
+  const pmEl = document.getElementById('placement-map');
+  const placements = S.job.imagePlacementMap || [];
+  pmEl.innerHTML = placements.map((p, i) => `
+    <div style="display:flex;gap:0.5rem;align-items:center;padding:0.5rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+      <input type="text" class="field pm-section" data-i="${i}" value="${escAttr(p.pageSection)}" placeholder="Page Section"
+        style="width:150px;padding:0.3rem 0.5rem;border-radius:3px;font-size:0.68rem;">
+      <input type="text" class="field pm-file" data-i="${i}" value="${escAttr(p.imageFile)}" placeholder="Image file path"
+        style="flex:1;padding:0.3rem 0.5rem;border-radius:3px;font-size:0.68rem;">
+      <input type="text" class="field pm-notes" data-i="${i}" value="${escAttr(p.notes)}" placeholder="Notes"
+        style="flex:1;padding:0.3rem 0.5rem;border-radius:3px;font-size:0.68rem;color:var(--text-muted);">
+      <button class="btn-ghost del-pm" data-i="${i}" style="padding:0.25rem 0.45rem;font-size:0.6rem;opacity:0.5;">x</button>
+    </div>
+  `).join('');
+  pmEl.querySelectorAll('.pm-section').forEach(inp => { inp.addEventListener('input', e => { S.job.imagePlacementMap[+e.target.dataset.i].pageSection = e.target.value; debounce('logos', saveLogos); }); });
+  pmEl.querySelectorAll('.pm-file').forEach(inp => { inp.addEventListener('input', e => { S.job.imagePlacementMap[+e.target.dataset.i].imageFile = e.target.value; debounce('logos', saveLogos); }); });
+  pmEl.querySelectorAll('.pm-notes').forEach(inp => { inp.addEventListener('input', e => { S.job.imagePlacementMap[+e.target.dataset.i].notes = e.target.value; debounce('logos', saveLogos); }); });
+  pmEl.querySelectorAll('.del-pm').forEach(btn => { btn.addEventListener('click', e => { S.job.imagePlacementMap.splice(+e.currentTarget.dataset.i, 1); renderLogos(); saveLogos(); }); });
+}
+
+document.getElementById('add-placement-btn').addEventListener('click', () => {
+  if (!S.job.imagePlacementMap) S.job.imagePlacementMap = [];
+  S.job.imagePlacementMap.push({ pageSection: '', imageFile: '', notes: '' });
+  renderLogos(); saveLogos();
+});
+
+function saveLogos() {
+  api('PUT', `/api/jobs/${S.jobId}/logos`, { logoUsage: S.job.logoUsage, imagePlacementMap: S.job.imagePlacementMap });
+  toast('Saved');
+}
+
+// ── Download ───────────────────────────────────────────────────────────────────
+document.getElementById('to-download-btn').addEventListener('click', () => {
+  const il = S.job.imageLibrary || {};
+  const totalImages = Object.values(il).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+  const totalColors = ((S.job.colorSystem?.primary || []).length) + ((S.job.colorSystem?.utility || []).length);
+  document.getElementById('stat-colors').textContent = totalColors;
+  document.getElementById('stat-fonts').textContent = (S.job.fontFamilies || []).length;
+  document.getElementById('stat-assets').textContent = totalImages;
+  document.getElementById('dl-subtitle').textContent = `${S.job.clientName} brand package is ready for download.`;
+  show('download');
+});
+
+document.getElementById('dl-btn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = `/api/jobs/${S.jobId}/download`;
+  a.download = `${(S.job?.clientName || 'brand').toLowerCase().replace(/\s+/g, '-')}-brand.zip`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toast('Download started');
+});
+
+document.getElementById('back-edit-btn').addEventListener('click', () => { show('review'); activateTab('identity'); });
+
+// ── Boot ───────────────────────────────────────────────────────────────────────
+show('login');
+document.getElementById('login-pw').focus();
+</script>
+</body>
+</html>
